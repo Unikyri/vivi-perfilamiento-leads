@@ -30,3 +30,7 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Tooling / repo anidado de la wiki (repo aparte)
+.atl/
+Docs/vivi-perfilamiento-leads.wiki/
