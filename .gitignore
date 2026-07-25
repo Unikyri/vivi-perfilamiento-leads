@@ -45,3 +45,14 @@ internal/adapters/http/estaticos/*
 # Node
 web/node_modules/
 web/dist/
+
+# Local non-repository folder and files
+archivos_locales/
+*.rar
+*.zip
+
+# Excel source data (privacy — solo se commitea el JSON generado)
+data/*.xlsx
+data/*.html
+data/*_files/
+
