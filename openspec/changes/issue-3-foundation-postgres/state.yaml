@@ -1,0 +1,44 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-3-foundation-postgres
+issue:
+  number: 3
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/3
+  title: "[F3] PostgreSQL schema, migrations, and local environment"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: verify
+next_recommended: verify
+delivery:
+  strategy: feature-branch-pr-to-main
+  branch: feat/foundation-postgres
+  target: main
+  review_budget_changed_lines: 400
+  budget_risk: low
+  chained_prs: false
+scope:
+  include:
+    - Contract v1.1 PostgreSQL schema
+    - migration embedding and execution
+    - local Docker compose and environment example
+  exclude:
+    - Docs/
+    - README.md
+constraints:
+  contract_authority: "Wiki document 10 section 5"
+  strict_tdd: false
+  prohibited_paths:
+    - Docs/
+    - README.md
+phases:
+  explore: done
+  propose: done
+  spec: done
+  design: done
+  tasks: done
+  apply: done
+  verify: pending
+  archive: pending
+last_updated: 2026-07-25T02:38:12-05:00
