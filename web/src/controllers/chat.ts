@@ -1,6 +1,6 @@
 import { api, ErrorAPI } from '../models/api';
-import { actualizar, obtener } from '../models/estado';
-import { renderMensajes, renderEscribiendo, renderShellChat } from '../views/chat';
+import { actualizar, obtener, suscribir } from '../models/estado';
+import { renderMensajes, renderEscribiendo, renderShellChat, renderHeaderChat } from '../views/chat';
 
 const MAX_SEGUNDOS_AUDIO = 60;
 const INTERVALO_POLL_MS = 1500;
@@ -60,8 +60,11 @@ export function iniciarChat(panel: HTMLElement): void {
     scrollManual = false;
   });
 
-  // ── Polling ──────────────────────────────────────────────
+  // ── Polling & Reactividad de Estado ─────────────────────
   pollTimer = setInterval(() => poll(contenedor, scrollEl, indicador, btnNuevos), INTERVALO_POLL_MS);
+
+  // Actualizar inmediatamente al cambiar de lead activo (clic en '💬 Ver chat')
+  suscribir(() => poll(contenedor, scrollEl, indicador, btnNuevos));
 
   // Primera carga inmediata
   poll(contenedor, scrollEl, indicador, btnNuevos);
@@ -82,6 +85,12 @@ async function poll(
 ): Promise<void> {
   const estado = obtener();
   if (!estado.leadActivo) return;
+
+  // Actualizar nombre del lead en la cabecera de WhatsApp
+  const leadEnCola = estado.cola?.leads.find(l => l.lead_id === estado.leadActivo);
+  if (leadEnCola) {
+    renderHeaderChat(leadEnCola.nombre);
+  }
 
   try {
     const conv = await api.conversacion(estado.leadActivo);

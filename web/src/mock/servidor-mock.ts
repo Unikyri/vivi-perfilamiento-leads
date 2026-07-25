@@ -1,21 +1,53 @@
 import type { Conversacion, ColaLeads, Ficha, BuyerPersona, Mensaje } from '../models/tipos';
 
-let msgCounter = 1;
+let msgCounter = 50;
 let turnoSimulado = false;
 
-const mensajesDemo: Mensaje[] = [
-  {
-    mensaje_id: 'm1', autor: 'VIVI', tipo_contenido: 'TEXTO',
-    texto: '¡Hola Ana! 👋 Como afiliada tienes un subsidio de hasta $52,5M. ¿Sueñas con comprar este año?',
-    creado_en: new Date().toISOString(), adjunto: null,
-  },
-];
+const conversacionesDemo: Record<string, Mensaje[]> = {
+  'mock-1': [
+    {
+      mensaje_id: 'm1', autor: 'VIVI', tipo_contenido: 'TEXTO',
+      texto: '¡Hola Ana! 👋 Como afiliada tienes un subsidio de hasta $52,5M. ¿Sueñas con comprar este año?',
+      creado_en: new Date().toISOString(), adjunto: null,
+    },
+  ],
+  'mock-2': [
+    {
+      mensaje_id: 'm20', autor: 'VIVI', tipo_contenido: 'TEXTO',
+      texto: '¡Hola Carlos! 👋 Vi tu interés en opciones de vivienda. ¿Tienes algún proyecto en mente o presupuesto inicial?',
+      creado_en: new Date().toISOString(), adjunto: null,
+    },
+    {
+      mensaje_id: 'm21', autor: 'LEAD', tipo_contenido: 'TEXTO',
+      texto: 'Hola, tengo ahorrados $30M y busco un apto con buena ubicación.',
+      creado_en: new Date().toISOString(), adjunto: null,
+    },
+    {
+      mensaje_id: 'm22', autor: 'VIVI', tipo_contenido: 'TEXTO',
+      texto: '¡Excelente! Con tus recursos y capacidad crediticia, el proyecto Versalles aplica muy bien a tus metas.',
+      creado_en: new Date().toISOString(), adjunto: null,
+    },
+  ],
+  'mock-3': [
+    {
+      mensaje_id: 'm30', autor: 'VIVI', tipo_contenido: 'TEXTO',
+      texto: '¡Hola Luisa! 👋 Como afiliada Cat. B podemos armar un plan de ahorro progresivo para tu cuota inicial.',
+      creado_en: new Date().toISOString(), adjunto: null,
+    },
+    {
+      mensaje_id: 'm31', autor: 'LEAD', tipo_contenido: 'TEXTO',
+      texto: 'Me interesa mucho la zona de Soacha, ¿qué proyectos tienen?',
+      creado_en: new Date().toISOString(), adjunto: null,
+    },
+  ],
+};
 
-function obtenerConversacion(): Conversacion {
+function obtenerConversacion(leadId: string): Conversacion {
+  const mensajes = conversacionesDemo[leadId] ?? conversacionesDemo['mock-1'];
   return {
-    lead_id: 'mock-1', estado: 'PERFILANDO',
+    lead_id: leadId, estado: 'PERFILANDO',
     turno_en_proceso: turnoSimulado,
-    mensajes: [...mensajesDemo],
+    mensajes: [...mensajes],
   };
 }
 
@@ -95,6 +127,27 @@ const fichasDemo: Record<string, Ficha> = {
     alerta_desistimiento: { activa: false, tasa_vecinos: 0.08, detalle: null },
     consume_cupo_10: true,
   },
+  'mock-3': {
+    ficha_id: 'f3', lead_id: 'mock-3', generada_en: new Date().toISOString(),
+    confianza_perfil: 0.88, banda_advertencia: null,
+    identificacion: { nombre: 'Luisa Gómez', afiliada: true, categoria: 'B', telefono: '+57 320 456 7890' },
+    capacidad: {
+      presupuesto_max: 145000000, credito_max: 95000000, subsidio_aplicable: 40000000,
+      recursos_propios: 10000000, ratio: 0.25, confianza: 0.88,
+      desglose: [
+        { concepto: 'Subsidio Colsubsidio Cat B', monto: 40000000, regla: 'Afiliado Cat B', fuente: 'VERIFICADO_BASE' },
+        { concepto: 'Preaprobado Hipotecario', monto: 95000000, regla: 'Capacidad 30%', fuente: 'INFERIDO' },
+        { concepto: 'Ahorro Declarado', monto: 10000000, regla: 'Recursos declarados', fuente: 'DECLARADO' },
+      ],
+    },
+    perfil: {},
+    intencion: { nivel: 'ALTA', confianza: 'MEDIA', senales: ['Busca vivienda en zona Soacha', 'Evaluando plan de ahorro de cuota inicial'] },
+    recomendaciones: [],
+    beneficios: ['Subsidio de vivienda Colsubsidio Cat B'],
+    argumentos_venta: ['Proyecto La Macarena ofrece el valor por m² más competitivo de la zona'],
+    alerta_desistimiento: { activa: false, tasa_vecinos: 0.08, detalle: null },
+    consume_cupo_10: false,
+  },
 };
 
 const buyerPersonaDemo: Record<string, BuyerPersona> = {
@@ -121,11 +174,12 @@ const buyerPersonaDemo: Record<string, BuyerPersona> = {
   },
 };
 
-function simularRespuesta(textoLead: string): void {
+function simularRespuesta(leadId: string, textoLead: string): void {
   turnoSimulado = true;
 
   setTimeout(() => {
     msgCounter++;
+    const lista = conversacionesDemo[leadId] ?? conversacionesDemo['mock-1'];
 
     const hablaDeProyectos = /proyecto|comprar|vivienda|casa|apto/i.test(textoLead);
 
@@ -162,7 +216,7 @@ function simularRespuesta(textoLead: string): void {
       } : null,
     };
 
-    mensajesDemo.push(respuesta);
+    lista.push(respuesta);
     turnoSimulado = false;
   }, 2000);
 }
@@ -178,17 +232,22 @@ export function activarMock(): void {
 
     // GET conversación
     if (url.includes('/conversacion') && metodo === 'GET') {
-      return json(obtenerConversacion());
+      const match = url.match(/\/leads\/([^/]+)\/conversacion/);
+      const leadId = match ? match[1] : 'mock-1';
+      return json(obtenerConversacion(leadId));
     }
 
     // POST mensaje (texto o audio)
     if (url.includes('/mensajes') && metodo === 'POST') {
+      const match = url.match(/\/leads\/([^/]+)\/mensajes/);
+      const leadId = match ? match[1] : 'mock-1';
       msgCounter++;
       let body: { tipo?: string; texto?: string } = {};
       try { body = JSON.parse((opciones?.body as string) || '{}'); } catch { body = {}; }
       const esAudio = body.tipo === 'AUDIO';
 
-      mensajesDemo.push({
+      const lista = conversacionesDemo[leadId] ?? conversacionesDemo['mock-1'];
+      lista.push({
         mensaje_id: `m${msgCounter}`, autor: 'LEAD',
         tipo_contenido: 'TEXTO',
         texto: esAudio ? '🎙️ [Nota de voz]' : (body.texto || ''),
@@ -196,7 +255,7 @@ export function activarMock(): void {
         adjunto: esAudio ? { audio_original: true } : null,
       });
 
-      simularRespuesta(esAudio ? 'audio' : (body.texto || ''));
+      simularRespuesta(leadId, esAudio ? 'audio' : (body.texto || ''));
       return json({ mensaje_id: `m${msgCounter}`, turno_en_proceso: true }, 201);
     }
 
@@ -226,7 +285,7 @@ export function activarMock(): void {
 
     // POST demo reiniciar
     if (url.includes('/demo/reiniciar') && metodo === 'POST') {
-      mensajesDemo.length = 1;
+      Object.values(conversacionesDemo).forEach(arr => { arr.length = 1; });
       return json({ reiniciado: true, fecha_simulada: new Date().toISOString() });
     }
 
@@ -242,5 +301,5 @@ export function activarMock(): void {
 
     return original(entrada, opciones);
   };
-  console.info('[mock] servidor simulado completo activo (Chat + Ficha + Cola + Gerencia + Demo)');
+  console.info('[mock] servidor simulado completo activo (Chat multi-lead + Ficha + Cola + Gerencia + Demo)');
 }

@@ -39,6 +39,13 @@ export function renderEscribiendo(el: HTMLElement, activo: boolean): void {
   el.classList.toggle('visible', activo);
 }
 
+export function renderHeaderChat(nombre: string): void {
+  const el = document.querySelector('.nombre-vivi');
+  if (el) {
+    el.textContent = `Vivi — ${nombre}`;
+  }
+}
+
 /** Renderiza la estructura HTML inicial del panel de chat (se monta una vez). */
 export function renderShellChat(panel: HTMLElement): void {
   panel.innerHTML = `
