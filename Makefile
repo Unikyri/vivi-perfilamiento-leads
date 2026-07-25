@@ -1,4 +1,4 @@
-.PHONY: build test vet run datos limpiar db-up db-down db-reset db-validate ci-local
+.PHONY: build test vet run datos validar-datos limpiar db-up db-down db-reset db-validate ci-local
 
 build:
 	go build -o bin/servidor ./cmd/servidor
@@ -15,6 +15,9 @@ run:
 
 datos:
 	go run ./cmd/pipeline
+
+validar-datos:
+	go run ./cmd/pipeline -validar
 
 limpiar:
 	rm -rf bin/
