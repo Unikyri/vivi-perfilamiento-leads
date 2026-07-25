@@ -9,8 +9,8 @@ artifact_store:
   primary: engram
   repository: openspec
 status: active
-current_phase: apply
-next_recommended: publish-matrix-slice
+current_phase: verify
+next_recommended: archive
 dependency_gate:
   issue_8: required-before-apply
   status: satisfied
@@ -38,5 +38,5 @@ phases:
   design: success
   tasks: success
   apply: success
-  verify: pending
-  archive: pending
+  verify: success
+  archive: ready
