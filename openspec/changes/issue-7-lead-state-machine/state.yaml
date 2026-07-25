@@ -9,8 +9,8 @@ artifact_store:
   primary: engram
   repository: openspec
 status: active
-current_phase: apply
-next_recommended: apply
+current_phase: verify
+next_recommended: verify
 delivery:
   strategy: feature-branch-pr-to-main
   branch: feat/issue-7-lead-state-machine
@@ -34,6 +34,6 @@ phases:
   spec: success
   design: success
   tasks: success
-  apply: ready
+  apply: success
   verify: pending
   archive: pending
