@@ -1,0 +1,40 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-9-knn-buyer-twin
+issue:
+  number: 9
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/9
+  title: "[A4] Buyer-twin kNN"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: explore
+next_recommended: explore
+delivery:
+  strategy: feature-branch-pr-to-main
+  branch: feat/issue-9-knn-buyer-twin
+  target: main
+  review_budget_changed_lines: 400
+scope:
+  include:
+    - internal/domain/motor/knn.go
+    - internal/domain/motor/knn_test.go
+  exclude:
+    - internal/domain/motor/capacidad.go
+    - internal/domain/motor/capacidad_test.go
+    - all other production files
+    - Docs/
+constraints:
+  contract_authority: "Wiki documents 10 and 13 section 3"
+  sketch_reconciliation: "No buyer zone field, no unsafe parallel slices, no price-based proxy/imputation"
+  strict_tdd: false
+phases:
+  explore: pending
+  propose: pending
+  spec: pending
+  design: pending
+  tasks: pending
+  apply: pending
+  verify: pending
+  archive: pending
