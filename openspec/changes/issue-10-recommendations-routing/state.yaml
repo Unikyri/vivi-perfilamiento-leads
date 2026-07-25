@@ -1,0 +1,42 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-10-recommendations-routing
+issue:
+  number: 10
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/10
+  title: "[A5] Recommendations and 2x2 routing"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply
+next_recommended: publish-planning-slice-1
+dependency_gate:
+  issue_8: required-before-apply
+  status: satisfied
+  merge_sha: "7a5b02a613c581568905936a35cb8feb841e62ab"
+  verified_at: "2026-07-25T02:41:44-05:00"
+  evidence: "Issue #8 closed after PR #55; git merge-base --is-ancestor 7a5b02a613c581568905936a35cb8feb841e62ab origin/main and HEAD both succeeded after rebasing #10 to 7a5b02a."
+scope:
+  include:
+    - internal/domain/motor/recomendar.go
+    - internal/domain/motor/matriz.go
+    - focused tests
+  exclude:
+    - internal/domain/motor/capacidad.go
+    - internal/domain/motor/capacidad_test.go
+    - all Issue #8 branches/files
+    - Docs/
+authority_reconciliation:
+  ratio_filter: "integer-safe Ratio >= 0.8"
+  matrix_output: "Ruta only; affiliate milestone is downstream"
+  sketch_role: supplementary
+phases:
+  explore: success
+  propose: success
+  spec: success
+  design: success
+  tasks: success
+  apply: ready
+  verify: pending
+  archive: pending
