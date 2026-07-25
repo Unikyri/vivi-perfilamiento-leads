@@ -35,8 +35,8 @@ Each PR targets `main`, merges before the next begins, and contains only its nam
 
 ## Phase 2: Contract-Safe Projection (PR 3)
 
-- [ ] 2.1 RED: in `knn_test.go`, cover keyed/absent catalog zones, income A/B/C boundaries, all age brackets including `55+=60`, normalization, and missing optional values.
-- [ ] 2.2 GREEN: in `knn.go`, add `EntradaGemelo`/`Vecino` and pure projection from records plus exact-ID catalog zones; forbid parallel inputs, name, slug, and price reads.
+- [x] 2.1 RED: in `knn_test.go`, cover keyed/absent catalog zones, income A/B/C boundaries, all age brackets including `55+=60`, normalization, and missing optional values.
+- [x] 2.2 GREEN: in `knn.go`, add `EntradaGemelo`/`Vecino` and pure projection from records plus exact-ID catalog zones; forbid parallel inputs, name, slug, and price reads.
 
 ## Phase 3: Local Statistics and Gower (PR 4)
 
