@@ -104,9 +104,9 @@ phases:
   archive: blocked
 task_progress:
   total: 12
-  completed: 11
-  pending: 1
-  all_complete: false
+  completed: 12
+  pending: 0
+  all_complete: true
 artifacts:
   exploration:
     engram: sdd/issue-1-repo-foundation/exploration

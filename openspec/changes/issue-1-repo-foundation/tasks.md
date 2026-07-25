@@ -48,4 +48,4 @@ Chain strategy: not applicable
 
 - [x] 4.1 User decision recorded: explicit `size:exception` for one consolidated delivery. (Complete decision; delivery execution remains pending.)
 - [x] 4.2 Path-explicitly staged only approved foundation paths plus `.kiro/` and `openspec/`; `Docs/` and `README.md` are absent from the index and `git add .` was never used.
-- [ ] 4.3 Open the approved PR to `main`, recording the size decision and preserving the selected rollback boundaries.
+- [x] 4.3 Opened approved PR [#33](https://github.com/Unikyri/vivi-perfilamiento-leads/pull/33) from `feat/repo-foundation` to `main`, linked to Issue #1 with the `type:feature` label.

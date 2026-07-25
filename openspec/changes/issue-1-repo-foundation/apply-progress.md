@@ -78,4 +78,4 @@ The whole-file `.gitignore` diff check reports the file's pre-existing CRLF carr
 ## Remaining Tasks
 
 - [x] 4.2 Path-explicit staging completed for approved foundation, `.kiro/`, and `openspec/` paths; `Docs/` and `README.md` are absent from the index.
-- [ ] 4.3 Open the approved PR to `main`
+- [x] 4.3 Opened PR #33 from `feat/repo-foundation` to `main`, linked to Issue #1 and labeled `type:feature`.
