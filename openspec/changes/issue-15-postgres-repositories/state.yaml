@@ -1,0 +1,51 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-15-postgres-repositories
+issue:
+  number: 15
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/15
+  title: "[A7] Repositories Postgres and ULID ID generator"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply
+next_recommended: apply
+dependencies:
+  issue_3:
+    status: satisfied
+    merge_sha: "4f3065235a62772405ddf32d366ec9f21d6abb6f"
+    evidence: "GitHub Issue #3 is CLOSED; schema and PostgreSQL helpers are on origin/main."
+  issue_11:
+    status: satisfied
+    merge_sha: "ffaf9f17621471966042689c28780355c035c811"
+    evidence: "GitHub Issue #11 is CLOSED; application-owned repository ports are on origin/main."
+scope:
+  include:
+    - internal/infrastructure/postgres/
+    - internal/infrastructure/ids/
+    - focused infrastructure tests
+    - go.mod
+    - Issue #15 OpenSpec artifacts
+  exclude:
+    - internal/domain/
+    - internal/usecase/ public port contracts
+    - internal/adapters/
+    - migrations/ schema changes
+    - Docs/
+authority_reconciliation:
+  sketch_role: supplementary
+  governing_sources:
+    - "Contract v1.1 §§0, 3.5, 4, 5"
+    - "NFR-E-01, NFR-E-04, NFR-M-01, NFR-M-03.4"
+    - "Software Architecture §3"
+phases:
+  explore: success
+  propose: success
+  spec: success
+  design: success
+  tasks: success
+  apply: ready
+  verify: not-started
+  archive: not-started
+last_updated: 2026-07-25
