@@ -1,0 +1,117 @@
+/* Vivi — base.css — shell de doble pantalla (doc 12 §3.1) */
+
+:root {
+  --color-primario: #1a73e8;
+  --color-fondo: #f8f9fa;
+  --color-texto: #202124;
+  --radio: 8px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.barra-superior {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-primario);
+  color: white;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.subtitulo {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.botonera-demo {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge-demo {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radio);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.split {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.panel {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.panel-chat {
+  flex: 1;
+  border-right: 1px solid #e0e0e0;
+}
+
+.panel-asesor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-bottom: 2px solid transparent;
+}
+
+.tabs button[aria-selected="true"] {
+  border-bottom-color: var(--color-primario);
+  font-weight: 600;
+}
+
+#contenido-tab {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.pie {
+  text-align: center;
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  background: #e8eaed;
+  color: #5f6368;
+}

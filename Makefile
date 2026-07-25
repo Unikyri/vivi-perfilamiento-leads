@@ -36,3 +36,17 @@ db-validate:
 
 ci-local: vet test build
 	@echo "OK: listo para push"
+
+# ─── Frontend ───────────────────────────────────────────────────────────────────
+
+front-instalar:
+	cd web && npm ci
+
+front-dev:
+	cd web && npm run dev
+
+front-build:
+	cd web && npm run build
+
+front-verificar:
+	cd web && npm run verificar

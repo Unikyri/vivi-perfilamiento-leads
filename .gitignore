@@ -37,3 +37,11 @@ Docs/vivi-perfilamiento-leads.wiki/
 
 # Binarios compilados
 bin/
+
+# Frontend build output (pero conservar placeholder para go:embed)
+internal/adapters/http/estaticos/*
+!internal/adapters/http/estaticos/index.html
+
+# Node
+web/node_modules/
+web/dist/
