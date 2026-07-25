@@ -13,48 +13,21 @@ func TestEnumJSONWireValues(t *testing.T) {
 		value any
 		want  string
 	}{
-		{"EstadoLead", EstadoLeadEnNutricion, `"EN_NUTRICION"`},
-		{"Ruta", RutaRemarketing, `"REMARKETING"`},
-		{"FuenteCampo", FuenteCampoVerificadoBase, `"VERIFICADO_BASE"`},
-		{"Nivel", NivelMedia, `"MEDIA"`},
-		{"TipoMensaje", TipoMensajeAudio, `"AUDIO"`},
-		{"TipoContenido", TipoContenidoTarjetasProyectos, `"TARJETAS_PROYECTOS"`},
-		{"AutorMensaje", AutorMensajeVivi, `"VIVI"`},
-		{"EstadoPlan", EstadoPlanCompletado, `"COMPLETADO"`},
-		{"TipoHito", TipoHitoCesantias, `"CESANTIAS"`},
-		{"EstadoHito", EstadoHitoNotificado, `"NOTIFICADO"`},
+		{"EstadoLead", EstadoLeadEnNutricion, `"EN_NUTRICION"`}, {"Ruta", RutaRemarketing, `"REMARKETING"`},
+		{"FuenteCampo", FuenteCampoVerificadoBase, `"VERIFICADO_BASE"`}, {"Nivel", NivelMedia, `"MEDIA"`},
+		{"TipoMensaje", TipoMensajeAudio, `"AUDIO"`}, {"TipoContenido", TipoContenidoTarjetasProyectos, `"TARJETAS_PROYECTOS"`},
+		{"AutorMensaje", AutorMensajeVivi, `"VIVI"`}, {"EstadoPlan", EstadoPlanCompletado, `"COMPLETADO"`},
+		{"TipoHito", TipoHitoCesantias, `"CESANTIAS"`}, {"EstadoHito", EstadoHitoNotificado, `"NOTIFICADO"`},
 		{"Semaforo", SemaforoAmbar, `"AMBAR"`},
 	}
-
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
+			if reflect.TypeOf(tt.value).Kind() != reflect.String {
+				t.Errorf("underlying kind = %s, want string", reflect.TypeOf(tt.value).Kind())
+			}
 			got, err := json.Marshal(tt.value)
-			if err != nil {
-				t.Fatalf("json.Marshal() error: %v", err)
-			}
-			if string(got) != tt.want {
-				t.Errorf("json.Marshal() = %s, want %s", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestEnumUnderlyingTypes(t *testing.T) {
-	cases := []struct {
-		name  string
-		value any
-	}{
-		{"EstadoLead", EstadoLeadNuevo}, {"Ruta", RutaAsesor},
-		{"FuenteCampo", FuenteCampoDeclarado}, {"Nivel", NivelAlta},
-		{"TipoMensaje", TipoMensajeTexto}, {"TipoContenido", TipoContenidoTexto},
-		{"AutorMensaje", AutorMensajeLead}, {"EstadoPlan", EstadoPlanActivo},
-		{"TipoHito", TipoHitoAfiliacion}, {"EstadoHito", EstadoHitoPendiente},
-		{"Semaforo", SemaforoVerde},
-	}
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := reflect.TypeOf(tt.value).Kind(); got != reflect.String {
-				t.Errorf("underlying kind = %s, want string", got)
+			if err != nil || string(got) != tt.want {
+				t.Errorf("json.Marshal() = %s, %v; want %s", got, err, tt.want)
 			}
 		})
 	}
