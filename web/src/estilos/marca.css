@@ -321,24 +321,30 @@
 
 .btn-ver-chat {
   grid-area: acciones;
-  background: #25D366;
+  background: #075E54;
   color: #FFFFFF;
-  border: none;
-  padding: 0.35rem 0.7rem;
-  border-radius: 14px;
-  font-size: 0.78rem;
+  border: 1px solid #128C7E;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  transition: background 0.15s, transform 0.1s;
+  gap: 0.35rem;
+  box-shadow: 0 2px 5px rgba(7, 94, 84, 0.25);
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
 }
 
 .btn-ver-chat:hover {
   background: #128C7E;
-  transform: scale(1.04);
+  box-shadow: 0 4px 8px rgba(7, 94, 84, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-ver-chat:active {
+  transform: translateY(0);
 }
 
 .lead-resumen {

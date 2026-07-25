@@ -66,7 +66,7 @@ function renderFilaLead(l: LeadEnCola): string {
       <span class="lead-ruta">${escapar(l.ruta)}</span>
       <span class="lead-prio-badge" title="Prioridad calculada">Prio ${l.prioridad.toFixed(2)}</span>
       <button class="btn-ver-chat" data-btn-chat="true" title="Ver chat en vivo con ${escapar(l.nombre)}" type="button">
-        💬 Chat
+        💬 Ver chat
       </button>
       <p class="lead-resumen">${escapar(l.resumen)}</p>
     </li>
