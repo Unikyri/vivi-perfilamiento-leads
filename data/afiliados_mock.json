@@ -1,0 +1,112 @@
+[
+  {
+    "cedula": "1032456789",
+    "nombre": "Ana",
+    "categoria": "A",
+    "segmento": "BASICO",
+    "ingreso_mensual": 2600000,
+    "personas_a_cargo": 2,
+    "tipo_hogar": "MONOPARENTAL",
+    "empresa_piramide": "5_MICRO",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1015789456",
+    "nombre": "Marta",
+    "categoria": "A",
+    "segmento": "BASICO",
+    "ingreso_mensual": 1900000,
+    "personas_a_cargo": 1,
+    "tipo_hogar": "NUCLEAR",
+    "empresa_piramide": "3_PYMES",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1098765432",
+    "nombre": "Luisa",
+    "categoria": "A",
+    "segmento": "BASICO",
+    "ingreso_mensual": 1800000,
+    "personas_a_cargo": 1,
+    "tipo_hogar": "MONOPARENTAL",
+    "empresa_piramide": "5_MICRO",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1020304050",
+    "nombre": "Jorge",
+    "categoria": "B",
+    "segmento": "MEDIO",
+    "ingreso_mensual": 4200000,
+    "personas_a_cargo": 3,
+    "tipo_hogar": "NUCLEAR",
+    "empresa_piramide": "1_GRANDES",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1011223344",
+    "nombre": "Diana",
+    "categoria": "A",
+    "segmento": "JOVEN",
+    "ingreso_mensual": 1750905,
+    "personas_a_cargo": 0,
+    "tipo_hogar": "UNIPERSONAL",
+    "empresa_piramide": "5_MICRO",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1055667788",
+    "nombre": "Andrés",
+    "categoria": "B",
+    "segmento": "MEDIO",
+    "ingreso_mensual": 5500000,
+    "personas_a_cargo": 2,
+    "tipo_hogar": "NUCLEAR",
+    "empresa_piramide": "1_GRANDES",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1066778899",
+    "nombre": "Paola",
+    "categoria": "A",
+    "segmento": "BASICO",
+    "ingreso_mensual": 2100000,
+    "personas_a_cargo": 2,
+    "tipo_hogar": "MONOPARENTAL_AMPLIADA",
+    "empresa_piramide": "3_PYMES",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1077889900",
+    "nombre": "Camilo",
+    "categoria": "C",
+    "segmento": "ALTO",
+    "ingreso_mensual": 9000000,
+    "personas_a_cargo": 1,
+    "tipo_hogar": "NUCLEAR",
+    "empresa_piramide": "1_GRANDES",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1088990011",
+    "nombre": "Sara",
+    "categoria": "A",
+    "segmento": "JOVEN",
+    "ingreso_mensual": 2000000,
+    "personas_a_cargo": 0,
+    "tipo_hogar": "UNIPERSONAL",
+    "empresa_piramide": "5_MICRO",
+    "afiliado_activo": true
+  },
+  {
+    "cedula": "1099001122",
+    "nombre": "Ricardo",
+    "categoria": "B",
+    "segmento": "MEDIO",
+    "ingreso_mensual": 3800000,
+    "personas_a_cargo": 2,
+    "tipo_hogar": "NUCLEAR",
+    "empresa_piramide": "3_PYMES",
+    "afiliado_activo": false
+  }
+]
