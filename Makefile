@@ -1,4 +1,4 @@
-.PHONY: build test vet run datos limpiar db-up db-down db-reset db-validate
+.PHONY: build test vet run datos limpiar db-up db-down db-reset db-validate ci-local
 
 build:
 	go build -o bin/servidor ./cmd/servidor
@@ -33,3 +33,6 @@ db-validate:
 	@docker compose exec -T postgres psql -U vivi -d vivi -f /dev/stdin < migrations/001_esquema_inicial.sql > /dev/null
 	@COUNT=$$(docker compose exec -T postgres psql -U vivi -d vivi -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';" | tr -d ' \r\n'); \
 	if [ "$$COUNT" = "7" ]; then echo "OK: 7 tables found"; else echo "FAIL: expected 7 tables, got $$COUNT"; exit 1; fi
+
+ci-local: vet test build
+	@echo "OK: listo para push"
