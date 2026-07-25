@@ -15,7 +15,9 @@ func main() {
 	flag.Parse()
 
 	const entrada = "data/hackathon_VIVIENDAv2.xlsx"
-	const salida = "data/compradores.json"
+	const salidaCompradores = "data/compradores.json"
+	const salidaProyectos = "data/proyectos.json"
+	const rutaMapa = "data/mapa_proyectos.json"
 
 	cs, err := pipeline.LeerCompradores(entrada)
 	if err != nil {
@@ -34,20 +36,43 @@ func main() {
 		return
 	}
 
+	// Cargar mapa de proyectos y asignar IDs canónicos antes de escribir compradores.json
+	mapa, err := pipeline.CargarMapa(rutaMapa)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR cargando mapa: %v\n", err)
+		os.Exit(1)
+	}
+	cs = pipeline.AsignarProyectoID(mapa, cs)
+
 	sort.Slice(cs, func(i, j int) bool { return cs[i].ID < cs[j].ID }) // determinismo
 
-	f, err := os.Create(salida)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR creando %s: %v\n", salida, err)
+	if err := escribirJSON(salidaCompradores, cs); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR escribiendo %s: %v\n", salidaCompradores, err)
 		os.Exit(1)
+	}
+	fmt.Printf("OK: %d compradores → %s\n", len(cs), salidaCompradores)
+
+	// Construir catálogo de proyectos cruzando mapa con compradores
+	proys, err := pipeline.ConstruirProyectos(mapa, cs)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR construyendo proyectos: %v\n", err)
+		os.Exit(1)
+	}
+	if err := escribirJSON(salidaProyectos, proys); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR escribiendo %s: %v\n", salidaProyectos, err)
+		os.Exit(1)
+	}
+	fmt.Printf("OK: %d proyectos → %s\n", len(proys), salidaProyectos)
+}
+
+// escribirJSON crea un archivo con JSON indentado y determinista.
+func escribirJSON(ruta string, v any) error {
+	f, err := os.Create(ruta)
+	if err != nil {
+		return err
 	}
 	defer f.Close()
-
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
-	if err := enc.Encode(cs); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR escribiendo JSON: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("OK: %d compradores → %s\n", len(cs), salida)
+	return enc.Encode(v)
 }
