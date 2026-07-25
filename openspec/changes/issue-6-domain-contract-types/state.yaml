@@ -1,0 +1,43 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-6-domain-contract-types
+issue:
+  number: 6
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/6
+  title: "[A1] Domain entities, enums, and contract types"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: verify
+next_recommended: verify
+delivery:
+  strategy: stacked-to-main
+  branch: feat/domain-contract-types
+  target: main
+  review_budget_changed_lines: 400
+scope:
+  include:
+    - Contract v1.1 enums and domain types
+    - profile accessors and tests
+    - reconciliation with existing Comprador and Proyecto types
+  exclude:
+    - internal/usecase/
+    - internal/adapters/
+    - internal/infrastructure/
+    - web/
+    - Docs/
+    - README.md
+constraints:
+  contract_authority: "Wiki document 10 sections 1 and 2"
+  architecture_authority: "NFR-M-01"
+  strict_tdd: false
+phases:
+  explore: success
+  propose: success
+  spec: success
+  design: success
+  tasks: success
+  apply: success
+  verify: pending
+  archive: pending
