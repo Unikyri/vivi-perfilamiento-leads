@@ -55,4 +55,5 @@ archivos_locales/
 data/*.xlsx
 data/*.html
 data/*_files/
+data/informacion_desglozada_proyectos/
 
