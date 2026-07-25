@@ -30,8 +30,8 @@ Each PR targets `main`, merges before the next begins, and contains only its nam
 
 ## Phase 1: SDD Review Slices
 
-- [ ] 1.1 PR 1: review `exploration.md`, `proposal.md`, and `state.yaml`; preserve the #8 exclusion and scope boundary.
-- [ ] 1.2 PR 2: review `specs/buyer-twin-knn/spec.md`, `design.md`, and this plan; retain all 13 scenarios.
+- [x] 1.1 PR 1: review `exploration.md`, `proposal.md`, and `state.yaml`; preserve the #8 exclusion and scope boundary.
+- [x] 1.2 PR 2: review `specs/buyer-twin-knn/spec.md`, `design.md`, and this plan; retain all 13 scenarios.
 
 ## Phase 2: Contract-Safe Projection (PR 3)
 
@@ -45,6 +45,6 @@ Each PR targets `main`, merges before the next begins, and contains only its nam
 
 ## Phase 4: Neighbors, Safety, and Evidence (PR 5)
 
-- [ ] 4.1 RED: test 30 ordered results, `K>n`, ID ties, `K<=0`/empty non-nil output, repeated/pure calls, and name/price inertness under fixed catalog zones.
-- [ ] 4.2 GREEN: add non-mutating distance ordering and value-only `Vecino`; keep `capacidad.go`, `capacidad_test.go`, finance, pipeline, data, and Docs untouched.
-- [ ] 4.3 Run focused tests per PR, then `go test ./internal/domain/motor/...`, `go test ./...`, `go build ./...`, ≥90% motor coverage, and the `origin/main...HEAD` path audit.
+- [x] 4.1 RED: test 30 ordered results, `K>n`, ID ties, `K<=0`/empty non-nil output, repeated/pure calls, and name/price inertness under fixed catalog zones.
+- [x] 4.2 GREEN: add non-mutating distance ordering and value-only `Vecino`; keep `capacidad.go`, `capacidad_test.go`, finance, pipeline, data, and Docs untouched.
+- [x] 4.3 Run focused tests per PR, then `go test ./internal/domain/motor/...`, `go test ./...`, `go build ./...`, ≥90% motor coverage, and the `origin/main...HEAD` path audit.

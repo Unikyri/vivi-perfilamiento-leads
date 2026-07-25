@@ -301,3 +301,133 @@ func TestGemeloKNNGower(t *testing.T) {
 		t.Fatalf("dependent distance with 0 versus 10 = %.12f, want %.12f", got, gowerDependentsWeight)
 	}
 }
+
+func TestGemeloKNNSelection(t *testing.T) {
+	t.Run("returns 30 deterministic distance-then-ID ordered neighbors", func(t *testing.T) {
+		buyers := make([]domain.Comprador, 0, 35)
+		// Twenty buyers have the closest age bracket; their input order is
+		// intentionally reversed so ID ordering is observable for ties.
+		for id := 20; id >= 1; id-- {
+			buyers = append(buyers, domain.Comprador{
+				ID: id, ProyectoID: "P-1", RangoEdad: "36-45",
+			})
+		}
+		for id := 35; id >= 21; id-- {
+			buyers = append(buyers, domain.Comprador{
+				ID: id, ProyectoID: "P-1", RangoEdad: "20-35",
+			})
+		}
+
+		got := GemeloKNN(EntradaGemelo{
+			Perfil:      domain.Perfil{"edad": {Valor: int64(40)}},
+			Compradores: buyers,
+			K:           30,
+		})
+		if len(got) != 30 {
+			t.Fatalf("neighbor count = %d, want 30", len(got))
+		}
+		for i, neighbor := range got {
+			if neighbor.ID != i+1 {
+				t.Fatalf("neighbor[%d].ID = %d, want %d; got %#v", i, neighbor.ID, i+1, got)
+			}
+			if i > 0 && got[i-1].Distancia > neighbor.Distancia {
+				t.Fatalf("distance order regressed at index %d: %#v", i, got)
+			}
+		}
+		for i := 1; i < 20; i++ {
+			if got[i-1].Distancia != got[i].Distancia {
+				t.Fatalf("close-distance tie changed at index %d: %#v", i, got)
+			}
+		}
+		if got[19].Distancia >= got[20].Distancia {
+			t.Fatalf("close buyers were not strictly nearer than distant buyers: %#v", got)
+		}
+	})
+
+	t.Run("returns all buyers when K exceeds N and orders equal distances by ID", func(t *testing.T) {
+		got := GemeloKNN(EntradaGemelo{
+			Compradores: []domain.Comprador{
+				{ID: 9, ProyectoID: "P-9"},
+				{ID: 2, ProyectoID: "P-2"},
+				{ID: 7, ProyectoID: "P-7"},
+			},
+			K: 99,
+		})
+		wantIDs := []int{2, 7, 9}
+		if len(got) != len(wantIDs) {
+			t.Fatalf("neighbor count = %d, want %d", len(got), len(wantIDs))
+		}
+		for i, wantID := range wantIDs {
+			if got[i].ID != wantID {
+				t.Fatalf("neighbor[%d].ID = %d, want %d", i, got[i].ID, wantID)
+			}
+		}
+	})
+
+	t.Run("returns non-nil empty output for non-positive K and empty input", func(t *testing.T) {
+		cases := map[string]EntradaGemelo{
+			"zero K":       {K: 0, Compradores: []domain.Comprador{{ID: 1}}},
+			"negative K":   {K: -1, Compradores: []domain.Comprador{{ID: 1}}},
+			"empty buyers": {K: 1},
+		}
+		for name, in := range cases {
+			t.Run(name, func(t *testing.T) {
+				got := GemeloKNN(in)
+				if got == nil {
+					t.Fatal("empty result is nil, want non-nil empty slice")
+				}
+				if len(got) != 0 {
+					t.Fatalf("empty result length = %d, want 0", len(got))
+				}
+			})
+		}
+	})
+
+	t.Run("is repeatable and does not mutate buyers or catalog", func(t *testing.T) {
+		buyers := []domain.Comprador{
+			{ID: 3, ProyectoID: "P-1", RangoEdad: "36-45", Proyecto: "Original", ValorCOP: 100},
+			{ID: 1, ProyectoID: "P-2", RangoEdad: "20-35", Proyecto: "Other", ValorCOP: 200},
+		}
+		zones := map[string]string{"P-1": "Bogotá - Bosa", "P-2": "Cali - Sur"}
+		in := EntradaGemelo{
+			Perfil:        domain.Perfil{"edad": {Valor: int64(40)}},
+			Compradores:   buyers,
+			ZonasCatalogo: zones,
+			K:             2,
+		}
+		beforeBuyers := append([]domain.Comprador(nil), in.Compradores...)
+		beforeZones := map[string]string{"P-1": zones["P-1"], "P-2": zones["P-2"]}
+
+		first := GemeloKNN(in)
+		second := GemeloKNN(in)
+		if !reflect.DeepEqual(first, second) {
+			t.Fatalf("repeated calls differ: first=%#v second=%#v", first, second)
+		}
+		if !reflect.DeepEqual(in.Compradores, beforeBuyers) || !reflect.DeepEqual(in.ZonasCatalogo, beforeZones) {
+			t.Fatalf("selection mutated inputs: before buyers=%#v zones=%#v after=%#v zones=%#v", beforeBuyers, beforeZones, in.Compradores, in.ZonasCatalogo)
+		}
+	})
+
+	t.Run("does not use project name or price when catalog zones are fixed", func(t *testing.T) {
+		base := domain.Comprador{
+			ID: 1, ProyectoID: "P-1", Proyecto: "Bogotá - Bosa", ValorCOP: 250_000_000,
+			Categoria: "A", RangoEdad: "36-45", PersonasACargo: 1,
+		}
+		changed := base
+		changed.Proyecto = "Cartagena - Manga"
+		changed.ValorCOP = 900_000_000
+		input := EntradaGemelo{
+			Perfil:      domain.Perfil{"edad": {Valor: int64(40)}},
+			Compradores: []domain.Comprador{base},
+			ZonasCatalogo: map[string]string{
+				"P-1": "Bogotá - Bosa",
+			},
+			K: 1,
+		}
+		changedInput := input
+		changedInput.Compradores = []domain.Comprador{changed}
+		if got, changedGot := GemeloKNN(input), GemeloKNN(changedInput); !reflect.DeepEqual(got, changedGot) {
+			t.Fatalf("name/price changed fixed-catalog result: base=%#v changed=%#v", got, changedGot)
+		}
+	})
+}

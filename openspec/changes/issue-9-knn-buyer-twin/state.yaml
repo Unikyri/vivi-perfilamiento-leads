@@ -9,11 +9,12 @@ artifact_store:
   primary: engram
   repository: openspec
 status: active
-current_phase: explore
-next_recommended: explore
+current_phase: apply
+next_recommended: verify
 delivery:
-  strategy: feature-branch-pr-to-main
-  branch: feat/issue-9-knn-buyer-twin
+  strategy: auto-chain
+  chain_strategy: stacked-to-main
+  branch: feat/issue-9-knn-selection
   target: main
   review_budget_changed_lines: 400
 scope:
@@ -24,17 +25,32 @@ scope:
     - internal/domain/motor/capacidad.go
     - internal/domain/motor/capacidad_test.go
     - all other production files
+    - data/
+    - pipeline/
     - Docs/
 constraints:
   contract_authority: "Wiki documents 10 and 13 section 3"
   sketch_reconciliation: "No buyer zone field, no unsafe parallel slices, no price-based proxy/imputation"
   strict_tdd: false
 phases:
-  explore: pending
-  propose: pending
-  spec: pending
-  design: pending
-  tasks: pending
-  apply: pending
+  explore: complete
+  propose: complete
+  spec: complete
+  design: complete
+  tasks: complete
+  apply: complete
   verify: pending
   archive: pending
+apply:
+  completed_tasks:
+    - 4.1
+    - 4.2
+    - 4.3
+  validation:
+    focused: "go test ./internal/domain/motor/... -run TestGemeloKNN -count=1"
+    full_tests: "go test ./..."
+    build: "go build ./..."
+    vet: "go vet ./..."
+    motor_coverage: "97.2%"
+    diff_check: pass
+    path_audit: "Only internal/domain/motor/knn.go and knn_test.go changed; pre-existing untracked Docs/ untouched."
