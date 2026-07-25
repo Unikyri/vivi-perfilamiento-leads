@@ -4,10 +4,17 @@ inclusion: always
 
 # Gentle AI SDD — Vivi (workspace-local Kiro CLI adaptation)
 
-This project uses the SDD workflow and selected skills from Gentle AI at commit `e01b114`.
-The project-local phase agents are JSON configs under `.kiro/agents/` and their prompts are
-under `.kiro/prompts/gentle-ai/`. The corresponding source-of-truth skills are under
-`.kiro/skills/`.
+This project uses its existing workspace-local SDD adaptation plus the checksum-verified official
+Gentle AI `v1.46.0` executable at `./.tools/gentle-ai` (upstream source commit
+`b22a7eb8730e0e255c7a6d142aedfc606cbb020e`). The project-local phase agents are JSON configs
+under `.kiro/agents/` and their prompts are under `.kiro/prompts/gentle-ai/`. The corresponding
+source-of-truth skills are under `.kiro/skills/`.
+
+For native dispatcher inspections, invoke `./.tools/gentle-ai`, never the global executable. The
+stable v1.46.0 CLI provides `sdd-status` and `sdd-continue`; it does not provide
+`sdd-verify-validate`, `sdd-attempt`, or `review`. Do not fabricate the unavailable admission or
+review-receipt lifecycle artifacts, and do not treat this version upgrade as authority to archive
+or close a gated SDD change.
 
 ## Existing integrations
 
