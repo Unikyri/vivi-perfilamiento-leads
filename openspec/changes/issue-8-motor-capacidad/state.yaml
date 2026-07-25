@@ -1,0 +1,46 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-8-motor-capacidad
+issue:
+  number: 8
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/8
+  title: "[A3] Motor: CalcularCapacidad (credito + subsidio + confianza)"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: archive
+next_recommended: archive
+delivery:
+  strategy: feature-branch-pr-to-main
+  branch: feat/issue-8-motor-capacidad
+  target: main
+  review_budget_changed_lines: 400
+  worktree: /home/daikyri/Workspace/Hackathon-Colsubsidio/vivi-issue-8
+  isolation_reason: "Issue #7 is being implemented concurrently by the user in the primary worktree; #8 must not mutate that working tree."
+  chained_prs: false
+  docs_code_split: "One PR, two commits. Commit 1 `docs(sdd)`: the openspec markdown artifacts (~600 lines). Commit 2 `feat(motor)`: capacidad.go + capacidad_test.go (~350 lines). Resolved by the orchestrator against the tasks forecast — the Go diff alone is under the 400-line budget, so a separate docs PR is ceremony that does not pay for itself; commit separation keeps reviewer attention on the code that moves money."
+scope:
+  include:
+    - internal/domain/motor/capacidad.go
+    - internal/domain/motor/capacidad_test.go
+  exclude:
+    - Anything outside internal/domain/motor/
+    - usecase, adapters, infrastructure, frontend, Docs
+    - kNN twin, project recommendation, 2x2 matrix (issues #9 and #10)
+constraints:
+  contract_authority: "Wiki document 10 section 2.2 (Capacidad structure)"
+  numeric_authority: "Wiki document 13 section 2 — exact expected values, no approximation"
+  eligibility_authority: "Wiki document 14 section 1 — subsidy eligibility conditions; doc 13 section 2.1 wins on conflict (doc 14 defers on numeric/motor rules). personas_hogar >= 1 and the 150-SMMLV property cap are out of CalcularCapacidad scope."
+  architecture_authority: "NFR-M-01 as enforced in .github/workflows/ci.yml:33 — internal/domain (incl. motor) must not import internal/{usecase,adapters,infrastructure}. Importing the root-level `references` package (go:embed leaf, only imports `embed`) does NOT violate this rule; the earlier paraphrase 'motor imports only internal/domain' was stricter than the enforced rule and is corrected here."
+  strict_tdd: false
+  testing_note: "Tests are mandatory and must assert the exact doc 13 values; red-green-refactor ordering is NOT enforced."
+phases:
+  explore: complete
+  propose: complete
+  spec: complete
+  design: complete
+  tasks: complete
+  apply: complete
+  verify: complete
+  archive: pending
