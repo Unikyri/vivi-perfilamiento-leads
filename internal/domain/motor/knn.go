@@ -322,3 +322,36 @@ func cappedNumericDistance(left, right, valueRange float64) float64 {
 	}
 	return distance
 }
+
+// GemeloKNN returns the closest buyers as value-only neighbors. Selection is
+// deterministic: distance ascending, then buyer ID ascending. The input
+// records and catalog are never modified.
+func GemeloKNN(in EntradaGemelo) []Vecino {
+	if in.K <= 0 || len(in.Compradores) == 0 {
+		return make([]Vecino, 0)
+	}
+
+	lead := projectLead(in)
+	projectStats := buildProjectAffiliateStats(in.Compradores)
+	neighbors := make([]Vecino, 0, len(in.Compradores))
+	for _, buyer := range in.Compradores {
+		features := projectBuyerWithStats(buyer, in.ZonasCatalogo, projectStats)
+		neighbors = append(neighbors, Vecino{
+			ID:         buyer.ID,
+			ProyectoID: buyer.ProyectoID,
+			Desistio:   buyer.Desistio,
+			Distancia:  gowerDistance(lead, features),
+		})
+	}
+
+	sort.SliceStable(neighbors, func(i, j int) bool {
+		if neighbors[i].Distancia != neighbors[j].Distancia {
+			return neighbors[i].Distancia < neighbors[j].Distancia
+		}
+		return neighbors[i].ID < neighbors[j].ID
+	})
+	if in.K < len(neighbors) {
+		neighbors = neighbors[:in.K]
+	}
+	return neighbors
+}
