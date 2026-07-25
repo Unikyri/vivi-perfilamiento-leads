@@ -1,0 +1,138 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-1-repo-foundation
+issue:
+  number: 1
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/1
+  title: "[F1] Repository structure, go.mod, and Makefile"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: verify
+next_recommended: resolve-blockers
+delivery:
+  strategy: feature-branch-pr-to-main
+  branch: feat/repo-foundation
+  target: main
+  review_budget_changed_lines: 400
+  size_decision: size-exception-authorized
+  size_decision_authorized_by: user
+  size_decision_authorized_at: 2026-07-24T20:17:46-05:00
+  apply_status: ready
+  forecast:
+    decision_needed_before_apply: false
+    chained_prs_recommended: false
+    budget_risk: accepted-by-size-exception
+    authored_go_surface_lines: 80
+    consolidated_untracked_lines: 5220
+    note: "User explicitly authorized a single consolidated delivery containing the Go foundation, .kiro/, and all SDD/OpenSpec artifacts. Docs/ remains excluded."
+scope:
+  include:
+    - Go module and Makefile
+    - cmd placeholders
+    - Clean Architecture package documentation
+    - required empty project directories
+    - .gitignore bin/ rule
+    - SDD artifacts and existing local .kiro configuration
+  exclude:
+    - Docs/
+    - README.md
+capabilities:
+  new:
+    - repository-foundation
+  modified: []
+constraints:
+  contract_authority: "Docs wiki document 10 (Contract v1.1)"
+  architecture_authority: "Docs wiki document 11 section 8 and NFR-M-01 (doc 09 section 5)"
+  strict_tdd: false
+  allowed_edit_root: /home/daikyri/Workspace/Hackathon-Colsubsidio/vivi-perfilamiento-leads
+  prohibited_paths:
+    - Docs/
+    - README.md
+validation:
+  status: complete
+  ready: true
+  verdict: PASS WITH WARNINGS
+  envelope_verdict: pass
+  blockers: 0
+  critical_findings: 0
+  requirements: 5/5
+  scenarios: 5/5
+  evidence_revision: sha256:65aceb2e910081e5e30a118672e0e3c96b158796f272958f042e8cb08c83550f
+  toolchain: go1.24.0 linux/amd64
+  gotoolchain: auto
+  head_baseline: d9d7c86e3750a1a408729edd65ee03cf9fd08ffa
+  completed_tasks:
+    - 3.1
+    - 3.2
+    - 3.3
+  commands:
+    - "go build ./... -> exit 0"
+    - "go vet ./... -> exit 0"
+    - "make build -> exit 0 (bin/servidor, bin/pipeline created)"
+    - "make test -> exit 0 (10 packages, no test files)"
+    - "make vet -> exit 0"
+    - "make run -> exit 0 (vivi servidor - placeholder)"
+    - "make datos -> exit 0 (vivi pipeline - placeholder)"
+    - "go run ./cmd/servidor -> exit 0 exact stdout"
+    - "go run ./cmd/pipeline -> exit 0 exact stdout"
+    - "git check-ignore -v bin/servidor -> exit 0 (.gitignore:38:bin/)"
+    - "make limpiar -> exit 0 (bin/ removed)"
+  test_command: make test
+  test_exit_code: 0
+  test_output_hash: sha256:46f32a11378eb603b33c6aa4ef718f72f38e28c8230a1dd6ce77d600c80199f6
+  build_command: make build
+  build_exit_code: 0
+  build_output_hash: sha256:546e8c6f988673f91a5fa2852c8c3661265c0d511fe8ef73cf88f7e7c156b042
+  native_admission: unavailable
+  native_admission_note: "gentle-ai 1.43.3 has no sdd-verify-validate/sdd-attempt/review subcommands; sdd-status reported verify ready with no blockedReasons and no prior verify-report existed, so strict admission was self-administered before the first write."
+  warnings:
+    - ".gitignore append re-emitted four pre-existing LF lines as CRLF (numstat 6/4); ignore semantics re-verified unchanged."
+    - "Engram state/tasks/apply-progress still name branch feature/f1-repo-foundation instead of feat/repo-foundation."
+    - "Native verify admission validator unavailable in installed gentle-ai 1.43.3."
+    - "Zero automated Go tests; scenarios proven by executed commands and exact byte inspection."
+    - "Delivery tasks 4.2 and 4.3 pending, so native dispatcher keeps archive blocked."
+phases:
+  explore: complete
+  propose: complete
+  spec: complete
+  design: complete
+  tasks: complete
+  apply: complete
+  verify: complete
+  archive: blocked
+task_progress:
+  total: 12
+  completed: 11
+  pending: 1
+  all_complete: false
+artifacts:
+  exploration:
+    engram: sdd/issue-1-repo-foundation/exploration
+    openspec: openspec/changes/issue-1-repo-foundation/exploration.md
+  proposal:
+    engram: sdd/issue-1-repo-foundation/proposal
+    openspec: openspec/changes/issue-1-repo-foundation/proposal.md
+  spec:
+    engram: sdd/issue-1-repo-foundation/spec
+    openspec: openspec/changes/issue-1-repo-foundation/specs/repository-foundation/spec.md
+  design:
+    engram: sdd/issue-1-repo-foundation/design
+    openspec: openspec/changes/issue-1-repo-foundation/design.md
+  tasks:
+    engram: sdd/issue-1-repo-foundation/tasks
+    openspec: openspec/changes/issue-1-repo-foundation/tasks.md
+  apply_progress:
+    engram: sdd/issue-1-repo-foundation/apply-progress
+    openspec: openspec/changes/issue-1-repo-foundation/apply-progress.md
+  verify_report:
+    engram: sdd/issue-1-repo-foundation/verify-report
+    openspec: openspec/changes/issue-1-repo-foundation/verify-report.md
+blocked_reasons:
+  - "Task 4.2 pending: path-explicit staging of approved foundation, .kiro/, and openspec/ paths (never Docs/, never git add .)."
+  - "Task 4.3 pending: open the approved PR from feat/repo-foundation to main recording the size:exception."
+open_questions:
+  - "Path-explicit staging of approved files and opening the PR to main remain pending; Docs/ must never be staged."
+  - "Accept or revert the .gitignore CRLF normalization of four pre-existing lines before staging."
+last_updated: 2026-07-24T20:26:30-05:00

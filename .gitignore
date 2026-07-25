@@ -34,3 +34,6 @@ go.work.sum
 # Tooling / repo anidado de la wiki (repo aparte)
 .atl/
 Docs/vivi-perfilamiento-leads.wiki/
+
+# Binarios compilados
+bin/

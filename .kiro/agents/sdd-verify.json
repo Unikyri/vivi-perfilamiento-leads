@@ -1,0 +1,28 @@
+{
+  "name": "sdd-verify",
+  "description": "Validate implementation against specs and tasks. Use when code is written and needs verification — runs tests, checks spec compliance, validates design coherence. Reports CRITICAL / WARNING / SUGGESTION findings. Read-only: does not modify code.",
+  "prompt": "file://../prompts/gentle-ai/sdd-verify.md",
+  "tools": [
+    "read",
+    "shell",
+    "grep",
+    "glob",
+    "code",
+    "introspect",
+    "@context7",
+    "@engram"
+  ],
+  "allowedTools": [
+    "@builtin",
+    "@context7",
+    "@engram"
+  ],
+  "resources": [
+    "skill://.kiro/skills/sdd-verify/SKILL.md",
+    "file://.kiro/skills/_shared/**/*.md",
+    "skill://.kiro/skills/go-testing/SKILL.md",
+    "skill://.kiro/skills/work-unit-commits/SKILL.md"
+  ],
+  "includeMcpJson": true,
+  "model": "claude-opus-5"
+}

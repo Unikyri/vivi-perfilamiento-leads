@@ -1,0 +1,62 @@
+schema: spec-driven
+
+persistence:
+  mode: hybrid
+  primary: engram
+  repository_artifacts: openspec
+
+context: |
+  Product: Vivi — intelligent housing lead profiling for Colsubsidio.
+  Planned backend: Go 1.24+ with ADK Go 2.0 and Clean Architecture.
+  Planned frontend: TypeScript MVC; data: PostgreSQL; deploy: Heroku.
+  Contract authority: Wiki document 10 (Contrato v1.1) defines the inter-block boundary.
+  Domain authority: Wiki document 13 defines exact deterministic engine criteria.
+  Delivery branches: feature/bloque-a and feature/bloque-b; main remains deployable.
+  Task source: GitHub issues are the primary implementation scope and breakdown.
+
+strict_tdd: false
+
+testing:
+  test_command: ""
+  build_command: ""
+  coverage_threshold: 0
+  capabilities:
+    test_runner: unavailable
+    unit: unavailable
+    integration: unavailable
+    e2e: unavailable
+    linter: unavailable
+    type_checker: unavailable
+    formatter: unavailable
+  note: "Strict TDD is disabled by explicit user preference; post-implementation validation remains required when tooling exists."
+
+workflow:
+  simple_task_criteria: "Unambiguous acceptance criteria; isolated concern; no contract, engine, API, schema, security, or architecture impact; one focused validation; approximately 100 or fewer authored changed lines."
+  complex_task_criteria: "Any task that fails a simple-task criterion, has uncertain scope, crosses modules or blocks, changes external integrations or data, requires multiple validation layers, or exceeds the line estimate."
+  simple_route: "Use only necessary phases, normally direct implementation plus focused verification; explore first if the scope is uncertain."
+  complex_route: "explore -> propose -> spec -> design -> tasks -> apply -> verify -> archive"
+  review_budget_changed_lines: 400
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes.
+  specs:
+    - Use Given/When/Then for scenarios.
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY).
+  design:
+    - Document architecture decisions and rationale.
+  tasks:
+    - Group implementation tasks by phase and keep them issue-traceable.
+    - Forecast review risk and recommend chained delivery for high-risk work.
+  apply:
+    guidelines:
+      - Follow the governing Contract v1.1 and deterministic engine criteria.
+      - Keep work within the assigned feature branch boundary.
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: ""
+    coverage_threshold: 0
+  archive:
+    - Preserve the complete change folder as an audit trail.

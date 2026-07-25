@@ -1,0 +1,25 @@
+{
+  "name": "sdd-explore",
+  "description": "Explore and investigate ideas before committing to a change. Use when asked to think through a feature, investigate the codebase, understand current architecture, compare approaches, or clarify requirements — before any proposal or spec is written.",
+  "prompt": "file://../prompts/gentle-ai/sdd-explore.md",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "introspect",
+    "@context7",
+    "@engram"
+  ],
+  "allowedTools": [
+    "@builtin",
+    "@context7",
+    "@engram"
+  ],
+  "resources": [
+    "skill://.kiro/skills/sdd-explore/SKILL.md",
+    "file://.kiro/skills/_shared/**/*.md"
+  ],
+  "includeMcpJson": true,
+  "model": "gpt-5.6-luna"
+}
