@@ -1,0 +1,39 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-7-lead-state-machine
+issue:
+  number: 7
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/7
+  title: "[A2] Lead state machine"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply
+next_recommended: apply
+delivery:
+  strategy: feature-branch-pr-to-main
+  branch: feat/issue-7-lead-state-machine
+  target: main
+  review_budget_changed_lines: 400
+scope:
+  include:
+    - Explicit lead lifecycle transition table
+    - Domain error and state mutation guard
+    - Domain tests
+  exclude:
+    - ADK agent implementation
+    - usecase, adapter, infrastructure, frontend, Docs
+constraints:
+  contract_authority: "Wiki document 10 section 1"
+  architecture_authority: "Wiki document 11 section 5; NFR-M-03.5"
+  strict_tdd: false
+phases:
+  explore: success
+  propose: success
+  spec: success
+  design: success
+  tasks: success
+  apply: ready
+  verify: pending
+  archive: pending
