@@ -38,7 +38,7 @@ Chain strategy: stacked-to-main
 
 - [x] 2.1 Create `internal/domain/enums.go` with the exact 11 typed-string enum groups and literals.
 - [x] 2.2 Create `internal/domain/perfil.go` with `CampoPerfil`, `Perfil`, the two exact sets, and only the four specified accessors.
-- [ ] 2.3 Create `internal/domain/capacidad.go` with capacity/recommendation types and field-identical `Comprador`/`Proyecto`; delete `comprador.go` and `proyecto.go` after consumer search.
+- [x] 2.3 Create `internal/domain/capacidad.go` with capacity/recommendation types and field-identical `Comprador`/`Proyecto`; delete `comprador.go` and `proyecto.go` after consumer search.
 - [ ] 2.4 Create `internal/domain/lead.go`, `plan.go`, and `ficha.go` with only the Contract layouts/tags and stdlib (`time`) dependency.
 
 ## Phase 3: Compatibility and Evidence

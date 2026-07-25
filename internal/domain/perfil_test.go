@@ -152,3 +152,26 @@ func assertKeys(t *testing.T, got map[string]bool, want []string) {
 		}
 	}
 }
+
+func TestCapacityContractTypes(t *testing.T) {
+	assertJSONFields(t, ItemDesglose{}, []string{"Concepto", "Monto", "Regla", "Fuente"})
+	assertJSONFields(t, Capacidad{}, []string{"PresupuestoMax", "CreditoMax", "SubsidioAplicable", "RecursosPropios", "Ratio", "Confianza", "Desglose"})
+	assertJSONFields(t, Intencion{}, []string{"Nivel", "Confianza", "Senales"})
+	assertJSONFields(t, Recomendacion{}, []string{"ProyectoID", "Nombre", "Zona", "PrecioDesde", "Razon", "Vecinos", "TasaDesistimiento", "BrochureURL", "Recorrido360URL"})
+	assertJSONFields(t, Proyecto{}, []string{"ProyectoID", "Nombre", "Zona", "PrecioDesde", "PrecioHasta", "EsVIS", "BrochureURL", "Recorrido360URL"})
+	assertJSONFields(t, Comprador{}, []string{"ID", "ProyectoID", "Proyecto", "Etapa", "Afiliado", "Categoria", "Segmento", "RangoEdad", "PersonasACargo", "Piramide", "ValorCOP", "Entidad", "Medio", "Desistio", "FechaOpcion"})
+}
+
+func assertJSONFields(t *testing.T, value any, names []string) {
+	t.Helper()
+	typ := reflect.TypeOf(value)
+	if typ.NumField() != len(names) {
+		t.Fatalf("%s fields = %d, want %d", typ.Name(), typ.NumField(), len(names))
+	}
+	for _, name := range names {
+		field, ok := typ.FieldByName(name)
+		if !ok || field.Tag.Get("json") == "" {
+			t.Errorf("%s.%s missing JSON metadata", typ.Name(), name)
+		}
+	}
+}
