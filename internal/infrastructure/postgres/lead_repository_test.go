@@ -66,6 +66,11 @@ func TestLeadRepository_RuntimeBehavior(t *testing.T) {
 		if err := NuevoLeadRepository(mock).Crear(ctx, lead); err != nil {
 			t.Fatal(err)
 		}
+		mock.ExpectQuery("SELECT lead_id,nombre").WithArgs(id).WillReturnRows(leadRows(mock, id, "Generated", 0))
+		stored, err := NuevoLeadRepository(mock).PorID(ctx, id)
+		if err != nil || stored.LeadID != id {
+			t.Fatalf("opaque ID read-back = %#v/%v, want %q", stored, err, id)
+		}
 		if err := mock.ExpectationsWereMet(); err != nil {
 			t.Fatal(err)
 		}
