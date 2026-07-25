@@ -8,9 +8,9 @@ artifact_store:
   mode: hybrid
   primary: engram
   repository: openspec
-status: active
-current_phase: apply
-next_recommended: publish-planning-slices
+status: verified
+current_phase: verify
+next_recommended: archive
 dependencies:
   issue_6:
     status: satisfied
@@ -42,6 +42,20 @@ phases:
   spec: success
   design: success
   tasks: success
-  apply: ready
-  verify: pending
-  archive: pending
+  apply: success
+  verify: success
+  archive: not-started
+verification:
+  verdict: pass
+  archive_ready: true
+  verified_sha: 99afcb429438bc21b16703082bee14056bcc900f
+  evidence_revision: sha256:01cb0a7944554203529931b09269b62c80e821dfe9bae05ce756bb84cff3354f
+  requirements: 5/5
+  scenarios: 10/10
+  blockers: 0
+  remediation_pr: 65
+  archive_preconditions:
+    - "Reconcile FakeLeadRepository vs LeadRepoFake spec naming before main-spec merge."
+    - "Orchestrator must accept manual envelope admission (gentle-ai 1.43.3 lacks sdd-verify-validate) and merged-PR-chain review authority (no review/sdd-attempt)."
+    - "Commit Issue #11 SDD metadata to main via documentation PR."
+  last_updated: 2026-07-25
