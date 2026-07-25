@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"os"
 	"strings"
 
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/infrastructure/config"
@@ -13,11 +14,15 @@ func NewFromConfig(cfg config.Config) (usecase.LLMProvider, error) {
 		return nil, err
 	}
 	fallbackName := strings.TrimSpace(strings.ToLower(cfg.LLMFallback))
-	if fallbackName == "" || fallbackName == strings.ToLower(primary.Nombre()) {
-		return NewFallbackProvider(primary, nil), nil
+	var fallback usecase.LLMProvider
+	if fallbackName != "" && fallbackName != strings.ToLower(primary.Nombre()) {
+		fallback, _ = providerFor(fallbackName, cfg)
 	}
-	fallback, _ := providerFor(fallbackName, cfg)
-	return NewFallbackProvider(primary, fallback), nil
+	metrics := ConMetricas(nil, os.Stdout, nil)
+	fallbackProvider := NewFallbackProvider(primary, fallback, WithMetrics(metrics))
+	guardrails := ConGuardarrailes(fallbackProvider)
+	metrics.next = guardrails
+	return metrics, nil
 }
 func providerFor(name string, cfg config.Config) (usecase.LLMProvider, error) {
 	switch strings.ToLower(strings.TrimSpace(name)) {
