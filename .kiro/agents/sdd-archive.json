@@ -1,0 +1,27 @@
+{
+  "name": "sdd-archive",
+  "description": "Archive a completed and verified change. Use when verification has passed and the change needs to be closed — merges delta specs into main specs, moves change folder to archive, and persists the final archive report. Completes the SDD cycle.",
+  "prompt": "file://../prompts/gentle-ai/sdd-archive.md",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "grep",
+    "glob",
+    "code",
+    "introspect",
+    "@context7",
+    "@engram"
+  ],
+  "allowedTools": [
+    "@builtin",
+    "@context7",
+    "@engram"
+  ],
+  "resources": [
+    "skill://.kiro/skills/sdd-archive/SKILL.md",
+    "file://.kiro/skills/_shared/**/*.md"
+  ],
+  "includeMcpJson": true,
+  "model": "gpt-5.6-luna"
+}

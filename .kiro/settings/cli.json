@@ -1,0 +1,14 @@
+{
+  "chat.modelDefaults": {
+    "gpt-5.6-terra": {
+      "reasoning": {
+        "effort": "high"
+      }
+    },
+    "gpt-5.6-sol": {
+      "reasoning": {
+        "effort": "xhigh"
+      }
+    }
+  }
+}
