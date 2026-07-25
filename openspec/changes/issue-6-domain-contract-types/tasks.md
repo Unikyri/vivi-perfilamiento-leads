@@ -31,13 +31,13 @@ Chain strategy: stacked-to-main
 
 ## Phase 1: Contract Tests
 
-- [ ] 1.1 Create `internal/domain/perfil_test.go` table tests for issue cases: `int64`, `int`, JSON `float64`, bool, string, absent, and incompatible accessors; verify only `VERIFICADO_BASE` and exact 18/4 key sets.
+- [x] 1.1 Create `internal/domain/perfil_test.go` table tests for issue cases: `int64`, `int`, JSON `float64`, bool, string, absent, and incompatible accessors; verify only `VERIFICADO_BASE` and exact 18/4 key sets.
 - [ ] 1.2 Add enum JSON-wire assertions and reflection/JSON cases for every specified field type, tag, omitted `-`, pointer nullability, and exported schema.
 
 ## Phase 2: Domain Declarations
 
-- [ ] 2.1 Create `internal/domain/enums.go` with the exact 11 typed-string enum groups and literals.
-- [ ] 2.2 Create `internal/domain/perfil.go` with `CampoPerfil`, `Perfil`, the two exact sets, and only the four specified accessors.
+- [x] 2.1 Create `internal/domain/enums.go` with the exact 11 typed-string enum groups and literals.
+- [x] 2.2 Create `internal/domain/perfil.go` with `CampoPerfil`, `Perfil`, the two exact sets, and only the four specified accessors.
 - [ ] 2.3 Create `internal/domain/capacidad.go` with capacity/recommendation types and field-identical `Comprador`/`Proyecto`; delete `comprador.go` and `proyecto.go` after consumer search.
 - [ ] 2.4 Create `internal/domain/lead.go`, `plan.go`, and `ficha.go` with only the Contract layouts/tags and stdlib (`time`) dependency.
 
