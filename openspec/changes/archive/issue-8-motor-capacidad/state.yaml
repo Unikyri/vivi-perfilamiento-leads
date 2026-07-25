@@ -8,9 +8,9 @@ artifact_store:
   mode: hybrid
   primary: engram
   repository: openspec
-status: active
-current_phase: archive
-next_recommended: archive
+status: archived
+current_phase: archived
+next_recommended: none
 delivery:
   strategy: feature-branch-pr-to-main
   branch: feat/issue-8-motor-capacidad
@@ -43,4 +43,4 @@ phases:
   tasks: complete
   apply: complete
   verify: complete
-  archive: pending
+  archive: complete
