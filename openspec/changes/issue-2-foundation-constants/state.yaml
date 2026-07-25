@@ -1,0 +1,44 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-2-foundation-constants
+issue:
+  number: 2
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/2
+  title: "[F2] Shared normative constants"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: verify
+next_recommended: verify
+delivery:
+  strategy: feature-branch-pr-to-main
+  branch: feat/foundation-constants
+  target: main
+  review_budget_changed_lines: 400
+scope:
+  include:
+    - references normative JSON files
+    - typed constants and tests
+    - an embed design legal under Go constraints
+  exclude:
+    - Docs/
+    - README.md
+    - duplicate normative values
+constraints:
+  contract_authority: "Wiki document 10 section 4.5"
+  engine_authority: "Wiki document 13 section 1"
+  strict_tdd: false
+  prohibited_paths:
+    - Docs/
+    - README.md
+phases:
+  explore: done
+  propose: done
+  spec: done
+  design: done
+  tasks: done
+  apply: done
+  verify: pending
+  archive: pending
+last_updated: 2026-07-25T02:13:07-05:00
