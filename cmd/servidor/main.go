@@ -11,7 +11,9 @@ import (
 
 	adapterhttp "github.com/Unikyri/vivi-perfilamiento-leads/internal/adapters/http"
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/infrastructure/config"
+	"github.com/Unikyri/vivi-perfilamiento-leads/internal/infrastructure/llm"
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/infrastructure/postgres"
+	"github.com/Unikyri/vivi-perfilamiento-leads/internal/usecase"
 )
 
 // version la inyecta el build: -ldflags "-X main.version=$(git rev-parse --short HEAD)"
@@ -20,6 +22,7 @@ var version = "dev"
 // salud implementa adapterhttp.ProveedorSalud.
 type salud struct {
 	proveedorLLM string
+	llmProvider  usecase.LLMProvider
 	bd           string
 }
 
@@ -28,7 +31,7 @@ func (s salud) Estado() adapterhttp.EstadoSalud {
 		Estado:             "OK",
 		Version:            version,
 		LLMProveedorActivo: s.proveedorLLM,
-		CircuitBreaker:     "CERRADO",
+		CircuitBreaker:     llm.CircuitBreakerHealth(s.llmProvider),
 		BD:                 s.bd,
 		FechaSimulada:      time.Now().Format("2006-01-02"),
 	}
@@ -40,6 +43,11 @@ func main() {
 	cfg, err := config.Cargar()
 	if err != nil {
 		log.Fatalf("config: %v", err)
+	}
+
+	provider, providerErr := llm.NewFromConfig(cfg)
+	if providerErr != nil {
+		log.Printf("llm: %v", providerErr)
 	}
 
 	pool, err := postgres.Conectar(ctx, cfg.DatabaseURL)
@@ -54,8 +62,13 @@ func main() {
 	log.Println("migraciones aplicadas")
 
 	mux := http.NewServeMux()
+	providerName := "unconfigured"
+	if provider != nil {
+		providerName = provider.Nombre()
+	}
 	mux.HandleFunc("GET /salud", adapterhttp.HandlerSalud(salud{
-		proveedorLLM: cfg.LLMProvider,
+		proveedorLLM: providerName,
+		llmProvider:  provider,
 		bd:           "OK",
 	}))
 
