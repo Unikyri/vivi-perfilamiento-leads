@@ -74,7 +74,12 @@ function renderTabActiva(contenedor: HTMLElement): void {
   switch (st.tabActiva) {
     case 'cola':
       if (st.cola) {
-        renderCola(contenedor, st.cola, leadId => seleccionarLead(leadId));
+        renderCola(
+          contenedor,
+          st.cola,
+          leadId => seleccionarLead(leadId),
+          leadId => seleccionarChat(leadId),
+        );
       } else {
         contenedor.innerHTML = '<div style="padding:1rem; color:#6B7280">Cargando cola de leads…</div>';
       }
@@ -94,7 +99,7 @@ function renderTabActiva(contenedor: HTMLElement): void {
   }
 }
 
-async function seleccionarLead(leadId: string): Promise<void> {
+function seleccionarLead(leadId: string): void {
   actualizar({ leadActivo: leadId, tabActiva: 'ficha' });
 
   // Actualizar el estado visual de la tab en el DOM
@@ -105,8 +110,15 @@ async function seleccionarLead(leadId: string): Promise<void> {
   }
 }
 
+function seleccionarChat(leadId: string): void {
+  actualizar({ leadActivo: leadId });
+  const panelChat = document.getElementById('panel-chat');
+  if (panelChat) {
+    panelChat.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
 async function cargarYRenderizarFicha(contenedor: HTMLElement, leadId: string): Promise<void> {
-  // Buscar nombre en la cola si existe para fallback
   const st = obtener();
   const leadEnCola = st.cola?.leads.find(l => l.lead_id === leadId);
   const nombreFallback = leadEnCola?.nombre ?? 'Lead';
@@ -116,7 +128,6 @@ async function cargarYRenderizarFicha(contenedor: HTMLElement, leadId: string): 
     renderFicha(contenedor, ficha, nombreFallback);
   } catch (err) {
     if (err instanceof ErrorAPI && err.estadoHTTP === 404) {
-      // 404 FICHA_NO_DISPONIBLE: estado vacío amable (sin error rojo)
       renderFicha(contenedor, null, nombreFallback);
     } else {
       contenedor.innerHTML = `<div class="banda-advertencia">⚠️ Error cargando la ficha comercial: ${(err as Error).message}</div>`;
@@ -132,7 +143,6 @@ async function cargarYRenderizarGerencia(contenedor: HTMLElement, proyectoId: st
       cargarYRenderizarGerencia(contenedor, id);
     });
   } catch {
-    // Si falla el endpoint, mostrar gerencia con datos por defecto
     renderGerencia(contenedor, null, proyectoId, id => {
       proyectoGerenciaSeleccionado = id;
       cargarYRenderizarGerencia(contenedor, id);
@@ -141,37 +151,29 @@ async function cargarYRenderizarGerencia(contenedor: HTMLElement, proyectoId: st
 }
 
 function montarBotoneraDemo(contenedor: HTMLElement): void {
-  const render = () => {
-    const st = obtener();
-    renderBotoneraDemo(
-      contenedor,
-      st.leadActivo,
-      leadId => seleccionarLead(leadId),
-      async () => {
-        const hasta = prompt('Avanzar fecha/tiempo simulado (formato ISO, ej: 2026-08-01):', '2026-08-01');
-        if (hasta) {
-          try {
-            await api.avanzarTiempo(hasta);
-            alert(`Tiempo avanzado exitosamente a ${hasta}.`);
-            cargarCola();
-          } catch (e) {
-            alert(`Error al avanzar tiempo: ${(e as Error).message}`);
-          }
-        }
-      },
-      async () => {
+  renderBotoneraDemo(
+    contenedor,
+    async () => {
+      const hasta = prompt('Avanzar fecha/tiempo simulado (formato ISO, ej: 2026-08-01):', '2026-08-01');
+      if (hasta) {
         try {
-          await api.reiniciar();
-          actualizar({ leadActivo: 'mock-1', tabActiva: 'cola' });
+          await api.avanzarTiempo(hasta);
+          alert(`Tiempo avanzado exitosamente a ${hasta}.`);
           cargarCola();
-          alert('Demo reiniciado al estado inicial.');
         } catch (e) {
-          alert(`Error al reiniciar demo: ${(e as Error).message}`);
+          alert(`Error al avanzar tiempo: ${(e as Error).message}`);
         }
-      },
-    );
-  };
-
-  suscribir(render);
-  render();
+      }
+    },
+    async () => {
+      try {
+        await api.reiniciar();
+        actualizar({ leadActivo: 'mock-1', tabActiva: 'cola' });
+        cargarCola();
+        alert('Demo reiniciado al estado inicial.');
+      } catch (e) {
+        alert(`Error al reiniciar demo: ${(e as Error).message}`);
+      }
+    },
+  );
 }

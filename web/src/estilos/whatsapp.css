@@ -7,6 +7,10 @@
   flex-direction: column;
   padding: 0;
   position: relative;
+  flex: 0 0 380px;
+  max-width: 400px;
+  border-right: 2px solid #E5E7EB;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
 }
 
 /* ── Header verde oscuro ───────────────────────────────────── */

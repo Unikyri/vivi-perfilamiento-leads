@@ -7,7 +7,12 @@ const COLOR_SEMAFORO = { VERDE: '🟢', AMBAR: '🟡', GRIS: '⚪' } as const;
  * IMPORTANTE: El backend YA envía la lista ordenada por prioridad (US-14).
  * El frontend NO reordena la lista.
  */
-export function renderCola(contenedor: HTMLElement, cola: ColaLeads, onClick: (id: string) => void): void {
+export function renderCola(
+  contenedor: HTMLElement,
+  cola: ColaLeads,
+  onVerFicha: (id: string) => void,
+  onVerChat: (id: string) => void,
+): void {
   const usados = cola.cupo_10.usados;
   const ventana = cola.cupo_10.porcentaje_ventana;
   const pct = (usados / (ventana || 1)) * 100;
@@ -30,14 +35,23 @@ export function renderCola(contenedor: HTMLElement, cola: ColaLeads, onClick: (i
     </div>
   `;
 
-  // Listener para clic o teclado en cada fila
+  // Listeners para clic y botones dentro de cada fila
   contenedor.querySelectorAll<HTMLLIElement>('[data-lead-id]').forEach(el => {
-    const handler = () => onClick(el.dataset.leadId!);
-    el.addEventListener('click', handler);
+    const leadId = el.dataset.leadId!;
+    const btnChat = el.querySelector<HTMLButtonElement>('[data-btn-chat]');
+
+    if (btnChat) {
+      btnChat.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evitar que dispare la apertura de la ficha
+        onVerChat(leadId);
+      });
+    }
+
+    el.addEventListener('click', () => onVerFicha(leadId));
     el.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        handler();
+        onVerFicha(leadId);
       }
     });
   });
@@ -51,6 +65,9 @@ function renderFilaLead(l: LeadEnCola): string {
       <span class="lead-nombre">${escapar(l.nombre)}</span>
       <span class="lead-ruta">${escapar(l.ruta)}</span>
       <span class="lead-prio-badge" title="Prioridad calculada">Prio ${l.prioridad.toFixed(2)}</span>
+      <button class="btn-ver-chat" data-btn-chat="true" title="Ver chat en vivo con ${escapar(l.nombre)}" type="button">
+        💬 Chat
+      </button>
       <p class="lead-resumen">${escapar(l.resumen)}</p>
     </li>
   `;

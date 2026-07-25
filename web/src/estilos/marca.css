@@ -256,10 +256,10 @@
 
 .fila-lead {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   grid-template-areas:
-    "semaforo nombre ruta prioridad"
-    "semaforo resumen resumen resumen";
+    "semaforo nombre ruta prioridad acciones"
+    "semaforo resumen resumen resumen acciones";
   align-items: center;
   gap: 0.4rem 0.75rem;
   background: var(--blanco);
@@ -317,6 +317,28 @@
   color: var(--colsubsidio-azul-oscuro);
   padding: 0.2rem 0.55rem;
   border-radius: 12px;
+}
+
+.btn-ver-chat {
+  grid-area: acciones;
+  background: #25D366;
+  color: #FFFFFF;
+  border: none;
+  padding: 0.35rem 0.7rem;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-ver-chat:hover {
+  background: #128C7E;
+  transform: scale(1.04);
 }
 
 .lead-resumen {
