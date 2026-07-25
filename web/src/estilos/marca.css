@@ -38,10 +38,9 @@
 }
 
 .logo-colsubsidio-img {
-  height: 56px;
+  height: 38px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
 }
 
 .brand-divider {
