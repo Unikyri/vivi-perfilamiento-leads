@@ -37,7 +37,7 @@ The package MUST expose `ErrNoEncontrado` and `ErrOptimisticLock`, matchable wit
 
 ### Requirement: Lead Fake CAS and Isolation
 
-`FakeLeadRepository.Guardar` MUST compare incoming and stored `Version`. A mismatch SHALL return `ErrOptimisticLock` without mutation. A success MUST return and store a committed defensive copy incremented exactly once; stale writes MUST NOT increment. Every fake store/return boundary MUST recursively clone mutable profiles (including nested maps/slices), capacity, intention, and pointers while preserving concrete values.
+`LeadRepoFake.Guardar` MUST compare incoming and stored `Version`. A mismatch SHALL return `ErrOptimisticLock` without mutation. A success MUST return and store a committed defensive copy incremented exactly once; stale writes MUST NOT increment. Every fake store/return boundary MUST recursively clone mutable profiles (including nested maps/slices), capacity, intention, and pointers while preserving concrete values.
 
 #### Scenario: Stale save
 - GIVEN stored version 2 and incoming version 1

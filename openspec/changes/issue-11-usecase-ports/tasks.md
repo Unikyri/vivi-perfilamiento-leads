@@ -32,11 +32,11 @@ Chain strategy: sequential-to-main
 
 ## Phase 2: Slice 2 — Fake and Behavioral Tests
 
-- [ ] 2.1 Create `internal/usecase/fakes_test.go`: mutex-protected `FakeLeadRepository`, real CAS, duplicate/absence errors, recursive defensive clones, chronological message handling, and minimal deterministic Lead/LLM/clock/ID doubles.
-- [ ] 2.2 Create `internal/usecase/fakes_behavior_test.go` table tests for stale/committed versions, unchanged stale storage, nested-map/slice isolation, conjunctive filters, priority/ID ordering, non-nil empty lists, and cloned conversations.
-- [ ] 2.3 Run `go test -race ./internal/usecase/...`; retain only the approved fake set, with no outer-layer imports or plan/ficha/catalog fake.
-- [ ] 2.4 Run `go test ./... && go build ./... && go vet ./...`; audit the complete chained diff and each slice’s authored additions/deletions (<400) before review.
+- [x] 2.1 Create `internal/usecase/fakes_test.go`: mutex-protected `LeadRepoFake`, real CAS, duplicate/absence errors, recursive defensive clones, chronological message handling, and minimal deterministic Lead/LLM/clock/ID doubles.
+- [x] 2.2 Create `internal/usecase/fakes_behavior_test.go` table tests for stale/committed versions, unchanged stale storage, nested-map/slice isolation, conjunctive filters, priority/ID ordering, non-nil empty lists, and cloned conversations.
+- [x] 2.3 Run `go test -race ./internal/usecase/...`; retain only the approved fake set, with no outer-layer imports or plan/ficha/catalog fake.
+- [x] 2.4 Run `go test ./... && go build ./... && go vet ./...`; audit the complete chained diff and each slice’s authored additions/deletions (<400) before review.
 
 ## Phase 3: Review Handoff
 
-- [ ] 3.1 Commit each verified slice as one work unit with its tests, Issue #11 linkage, a conventional message, and the stated rollback boundary; merge PR 1 to `main` before creating PR 2 from that updated `main`.
+- [x] 3.1 Commit each verified slice as one work unit with its tests, Issue #11 linkage, a conventional message, and the stated rollback boundary; merge PR 1 to `main` before creating PR 2 from that updated `main`.
