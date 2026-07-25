@@ -1,0 +1,47 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-11-usecase-ports
+issue:
+  number: 11
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/11
+  title: "[A6] Usecase ports and in-memory fakes"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply
+next_recommended: publish-planning-slices
+dependencies:
+  issue_6:
+    status: satisfied
+    evidence: "Issue closed; domain contract commit a3654ce is reachable from origin/main."
+  issue_7:
+    status: satisfied
+    merge_sha: "e78f9bebdb7a1fd2844e6fae2e5b0b529dd7de4e"
+    evidence: "Issue closed; git merge-base --is-ancestor merge SHA origin/main succeeded."
+scope:
+  include:
+    - internal/usecase/puertos.go
+    - internal/usecase/fakes_test.go
+    - focused usecase tests
+  exclude:
+    - internal/domain/
+    - internal/adapters/
+    - internal/infrastructure/
+    - data/
+    - Docs/
+authority_reconciliation:
+  sketch_role: supplementary
+  governing_sources:
+    - "Contract v1.1 §§0, 4.3, 6, 7"
+    - "NFR-M-01 and NFR-M-04"
+    - "Software Architecture §3"
+phases:
+  explore: success
+  propose: success
+  spec: success
+  design: success
+  tasks: success
+  apply: ready
+  verify: pending
+  archive: pending
