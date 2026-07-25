@@ -3,25 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Vivi — Asesora digital de vivienda Colsubsidio. Sistema inteligente de perfilamiento y calificación de leads." />
     <title>Vivi — Asesora digital de vivienda</title>
   </head>
   <body>
     <header class="barra-superior">
-      <span class="logo">Vivi</span>
-      <span class="subtitulo">asesora digital</span>
-      <div id="botonera-demo" class="botonera-demo"><!-- issue #26 --></div>
+      <div class="brand-container">
+        <span class="logo-colsubsidio-icon" aria-hidden="true">C</span>
+        <span class="brand-title">Colsubsidio</span>
+        <span class="brand-divider">|</span>
+        <span class="brand-subtitle">Vivi - Asesora Digital</span>
+      </div>
+
+      <div id="botonera-demo" class="botonera-demo"></div>
       <span class="badge-demo">DEMO</span>
     </header>
 
     <main class="split">
-      <section id="panel-chat" class="panel panel-chat"><!-- issue #25 --></section>
-      <section id="panel-asesor" class="panel panel-asesor">
-        <nav class="tabs" role="tablist">
-          <button role="tab" data-tab="cola" aria-selected="true">Cola</button>
-          <button role="tab" data-tab="ficha" aria-selected="false">Ficha</button>
-          <button role="tab" data-tab="gerencia" aria-selected="false">Gerencia</button>
+      <!-- Panel Izquierdo: Vista Chat (Issue #25) -->
+      <section id="panel-chat" class="panel panel-chat" aria-label="Vista del cliente en WhatsApp"></section>
+
+      <!-- Panel Derecho: Vista Asesor / Dashboard (Issue #26) -->
+      <section id="panel-asesor" class="panel panel-asesor" aria-label="Panel del Asesor Comercial">
+        <nav class="tabs" role="tablist" aria-label="Navegación del Asesor">
+          <button role="tab" id="tab-cola" data-tab="cola" aria-selected="true" aria-controls="contenido-tab">Cola</button>
+          <button role="tab" id="tab-ficha" data-tab="ficha" aria-selected="false" aria-controls="contenido-tab">Ficha</button>
+          <button role="tab" id="tab-gerencia" data-tab="gerencia" aria-selected="false" aria-controls="contenido-tab">Gerencia</button>
         </nav>
-        <div id="contenido-tab"><!-- issue #26 --></div>
+        <div id="contenido-tab" role="tabpanel" aria-labelledby="tab-cola"></div>
       </section>
     </main>
 
