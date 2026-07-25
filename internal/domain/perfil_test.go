@@ -182,3 +182,9 @@ func TestLeadAndPlanContractTypes(t *testing.T) {
 	assertJSONFields(t, Hito{}, []string{"HitoID", "Tipo", "Fecha", "Monto", "Descripcion", "Estado"})
 	assertJSONFields(t, PlanNutricion{}, []string{"PlanID", "LeadID", "Estado", "ConsentimientoEn", "Frecuencia", "MetaMonto", "MetaDescripcion", "Hitos"})
 }
+
+func TestFichaContractTypes(t *testing.T) {
+	assertJSONFields(t, AlertaDesistimiento{}, []string{"Activa", "TasaVecinos", "Detalle"})
+	assertJSONFields(t, Identificacion{}, []string{"Nombre", "Afiliada", "Categoria", "Telefono"})
+	assertJSONFields(t, Ficha{}, []string{"FichaID", "LeadID", "GeneradaEn", "ConfianzaPerfil", "BandaAdvertencia", "Identificacion", "Capacidad", "Perfil", "Intencion", "Recomendaciones", "Beneficios", "ArgumentosVenta", "AlertaDesistimiento", "ConsumeCupo10"})
+}
