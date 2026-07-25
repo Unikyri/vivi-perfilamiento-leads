@@ -100,7 +100,9 @@ func mapear(m map[string]string, v string) string {
 
 // valorVivienda aplica la regla VLR_VIVIENDA / 10000 (instructivo oficial).
 func valorVivienda(v string) int64 {
-	n, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+	clean := strings.ReplaceAll(strings.TrimSpace(v), ",", "")
+	clean = strings.ReplaceAll(clean, ".", "")
+	n, err := strconv.ParseInt(clean, 10, 64)
 	if err != nil {
 		return 0
 	}

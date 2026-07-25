@@ -1,0 +1,162 @@
+[
+  {
+    "proyecto_id": "versalles",
+    "nombre": "Versalles",
+    "zona": "Ciudadela Maiporé - Soacha",
+    "precio_desde": 195200000,
+    "precio_hasta": 234700000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/be784b0d5c.html",
+    "recorrido_360_url": "https://shape.com.co/360/COLSUBSIDIO-Versalles_APTOA"
+  },
+  {
+    "proyecto_id": "pamplona",
+    "nombre": "Pamplona",
+    "zona": "Ciudadela Maiporé - Soacha",
+    "precio_desde": 157000000,
+    "precio_hasta": 251500000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/c159d5d733.html",
+    "recorrido_360_url": "https://storage.net-fs.com/hosting/7532170/18/"
+  },
+  {
+    "proyecto_id": "zarzal",
+    "nombre": "Zarzal",
+    "zona": "Ciudadela Maiporé - Soacha",
+    "precio_desde": 219400000,
+    "precio_hasta": 226700000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/56764c1e33.html",
+    "recorrido_360_url": "https://zarzal.shape.com.co"
+  },
+  {
+    "proyecto_id": "macarena",
+    "nombre": "La Macarena",
+    "zona": "Ciudadela Maiporé - Soacha",
+    "precio_desde": 128340000,
+    "precio_hasta": 177300000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/b168b2f5ba.html",
+    "recorrido_360_url": ""
+  },
+  {
+    "proyecto_id": "mongui",
+    "nombre": "Monguí",
+    "zona": "Ciudadela Maiporé - Soacha",
+    "precio_desde": 156470000,
+    "precio_hasta": 204194000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/866af8f6a6.html",
+    "recorrido_360_url": "https://storage.net-fs.com/hosting/7532170/19/"
+  },
+  {
+    "proyecto_id": "arrayan",
+    "nombre": "Bosque de Arrayán",
+    "zona": "Tocancipá",
+    "precio_desde": 168325395,
+    "precio_hasta": 224000000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/7f3c85cf46.html",
+    "recorrido_360_url": "https://storage.net-fs.com/hosting/8270899/1/"
+  },
+  {
+    "proyecto_id": "turpial",
+    "nombre": "Bosque de Turpial",
+    "zona": "Tocancipá",
+    "precio_desde": 200100000,
+    "precio_hasta": 280700000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/5eec0a2afc.html",
+    "recorrido_360_url": "https://salasdeventas.com/Turpial_Apto_B/"
+  },
+  {
+    "proyecto_id": "inari",
+    "nombre": "Inari",
+    "zona": "Chía",
+    "precio_desde": 204900000,
+    "precio_hasta": 291600000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/8b6615372f.html",
+    "recorrido_360_url": "https://umbra3d.studio/recorridos/colsubsidio/inari/41.60mt/"
+  },
+  {
+    "proyecto_id": "guayacan",
+    "nombre": "Reserva de Guayacán",
+    "zona": "Girardot",
+    "precio_desde": 175400000,
+    "precio_hasta": 239500000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/aa430852c2.html",
+    "recorrido_360_url": "https://storage.net-fs.com/hosting/8270899/0/"
+  },
+  {
+    "proyecto_id": "saman",
+    "nombre": "Samán",
+    "zona": "Ricaurte",
+    "precio_desde": 234000000,
+    "precio_hasta": 258500000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/1daa8c80c5.html",
+    "recorrido_360_url": "https://storage.net-fs.com/hosting/8321237/0/"
+  },
+  {
+    "proyecto_id": "payande",
+    "nombre": "Payandé",
+    "zona": "Ricaurte",
+    "precio_desde": 159471000,
+    "precio_hasta": 205206000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/34ac4d8a9e.html",
+    "recorrido_360_url": "https://storage.net-fs.com/hosting/6021405/17/"
+  },
+  {
+    "proyecto_id": "vibo_once",
+    "nombre": "Vibo Once",
+    "zona": "Bogotá",
+    "precio_desde": 281300000,
+    "precio_hasta": 328200000,
+    "es_vis": false,
+    "brochure_url": "https://heyzine.com/flip-book/d3d1f61d6b.html",
+    "recorrido_360_url": "https://umbra3d.studio/recorridos/colsubsidio/vibo/tipo-a/"
+  },
+  {
+    "proyecto_id": "karakali",
+    "nombre": "Karakalí",
+    "zona": "Ricaurte",
+    "precio_desde": 184720477,
+    "precio_hasta": 286054600,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/5083a3d46c.html",
+    "recorrido_360_url": "https://umbra3d.studio/masterplans/colsubsidio/karakali/"
+  },
+  {
+    "proyecto_id": "araucaria",
+    "nombre": "Araucaria",
+    "zona": "Ciudadela Calle 80 - Bogotá",
+    "precio_desde": 562400000,
+    "precio_hasta": 1025400000,
+    "es_vis": false,
+    "brochure_url": "https://heyzine.com/flip-book/26d2b013cf.html",
+    "recorrido_360_url": "https://shape.com.co/360/COLSUBSIDIO-AMARILO_ARAUCARIA/"
+  },
+  {
+    "proyecto_id": "los_nogales",
+    "nombre": "Los Nogales",
+    "zona": "Ciudadela Calle 80 - Bogotá",
+    "precio_desde": 511500000,
+    "precio_hasta": 803480000,
+    "es_vis": false,
+    "brochure_url": "https://heyzine.com/flip-book/9dd9bf814e.html",
+    "recorrido_360_url": "https://shape.com.co/360/COLSUBSIDIO-AMARILO_LOSNOGALES/"
+  },
+  {
+    "proyecto_id": "verde_esperanza",
+    "nombre": "Verde Esperanza",
+    "zona": "Ubaté",
+    "precio_desde": 149400000,
+    "precio_hasta": 179300000,
+    "es_vis": true,
+    "brochure_url": "https://heyzine.com/flip-book/ea1997d7ae.html",
+    "recorrido_360_url": ""
+  }
+]
