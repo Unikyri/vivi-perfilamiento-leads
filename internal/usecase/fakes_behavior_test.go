@@ -70,24 +70,51 @@ func TestLeadRepoFake_LifecycleCASAndDeepIsolation(t *testing.T) {
 }
 func TestLeadRepoFake_ListarFiltersOrderAndEmpty(t *testing.T) {
 	repo, ctx := NuevoLeadRepoFake(), context.Background()
-	for _, lead := range []*domain.Lead{testLead("b", 5, true, domain.RutaAsesor), testLead("a", 5, true, domain.RutaAsesor), testLead("c", 9, false, domain.RutaNutricion)} {
+	leads := []*domain.Lead{
+		testLead("b", 5, true, domain.RutaAsesor),
+		testLead("a", 5, true, domain.RutaAsesor),
+		testLead("d", 7, true, domain.RutaAsesor),
+		testLead("affiliate-only", 10, true, domain.RutaNutricion),
+		testLead("route-only", 11, false, domain.RutaAsesor),
+		testLead("c", 9, false, domain.RutaNutricion),
+	}
+	for _, lead := range leads {
 		if err := repo.Crear(ctx, lead); err != nil || lead.Version != 1 {
 			t.Fatalf("Crear() error/version = %v/%d", err, lead.Version)
 		}
 	}
 	yes, route := true, domain.RutaAsesor
 	got, _ := repo.Listar(ctx, FiltroLeads{Afiliado: &yes, Ruta: &route})
-	if len(got) != 2 || got[0].LeadID != "a" || got[1].LeadID != "b" {
-		t.Fatalf("filter/order = %#v", got)
+	want := []struct {
+		id       string
+		priority float64
+	}{
+		{id: "d", priority: 7},
+		{id: "a", priority: 5},
+		{id: "b", priority: 5},
+	}
+	if len(got) != len(want) {
+		t.Fatalf("conjunctive filter length = %d, want %d: %#v", len(got), len(want), got)
+	}
+	for i, want := range want {
+		if got[i].LeadID != want.id || got[i].Prioridad != want.priority {
+			t.Errorf("filter/order[%d] = %s/%v, want %s/%v", i, got[i].LeadID, got[i].Prioridad, want.id, want.priority)
+		}
 	}
 	no := false
-	empty, _ := repo.Listar(ctx, FiltroLeads{Afiliado: &no, Ruta: &route})
+	unmatchedRoute := domain.Ruta("sin-ruta")
+	empty, _ := repo.Listar(ctx, FiltroLeads{Afiliado: &no, Ruta: &unmatchedRoute})
 	if empty == nil || len(empty) != 0 {
-		t.Fatalf("empty = %#v", empty)
+		t.Fatalf("conjunctive empty = %#v", empty)
 	}
 }
+
 func TestLeadRepoFake_ConversationAndMinimalFakes(t *testing.T) {
 	ctx, repo := context.Background(), NuevoLeadRepoFake()
+	llm := LLMFake{NombreValue: "test-llm"}
+	if got := llm.Nombre(); got != "test-llm" {
+		t.Fatalf("LLMFake.Nombre() = %q, want %q", got, "test-llm")
+	}
 	if err := repo.Crear(ctx, testLead("a", 0, false, domain.RutaAsesor)); err != nil {
 		t.Fatal(err)
 	}

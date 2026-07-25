@@ -10,10 +10,8 @@ import (
 )
 
 var (
-	ErrNoEncontrado      = errors.New("recurso no encontrado")
-	ErrNotFound          = ErrNoEncontrado
-	ErrOptimisticLock    = errors.New("conflicto de version")
-	ErrFichaNoDisponible = errors.New("ficha no disponible")
+	ErrNoEncontrado   = errors.New("recurso no encontrado")
+	ErrOptimisticLock = errors.New("conflicto de version")
 )
 
 // NotFoundError adds the resource identity while preserving errors.Is matching.

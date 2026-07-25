@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -175,5 +176,18 @@ func TestEventoConstants_ContractNames(t *testing.T) {
 		if got != want {
 			t.Errorf("event constant = %q, want %q", got, want)
 		}
+	}
+}
+
+func TestNotFoundError_FichaIdentity(t *testing.T) {
+	err := &NotFoundError{Resource: "ficha", ID: "lead-1"}
+	if !errors.Is(err, ErrNoEncontrado) {
+		t.Fatalf("errors.Is(%v, ErrNoEncontrado) = false", err)
+	}
+	if err.Resource != "ficha" {
+		t.Fatalf("NotFoundError.Resource = %q, want %q", err.Resource, "ficha")
+	}
+	if !strings.Contains(err.Error(), "ficha") {
+		t.Fatalf("NotFoundError.Error() = %q, want ficha identifier", err.Error())
 	}
 }
