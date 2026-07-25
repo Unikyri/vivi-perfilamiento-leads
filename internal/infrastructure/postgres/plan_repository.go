@@ -7,12 +7,11 @@ import (
 
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/usecase"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PlanRepository struct{ pool *pgxpool.Pool }
+type PlanRepository struct{ pool pgxPool }
 
-func NuevoPlanRepository(pool *pgxpool.Pool) *PlanRepository { return &PlanRepository{pool: pool} }
+func NuevoPlanRepository(pool pgxPool) *PlanRepository { return &PlanRepository{pool: pool} }
 
 var _ usecase.PlanRepository = (*PlanRepository)(nil)
 
