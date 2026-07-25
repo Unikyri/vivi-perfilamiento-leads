@@ -10,7 +10,7 @@ artifact_store:
   repository: openspec
 status: active
 current_phase: apply
-next_recommended: apply-matrix-slice-after-recommendations-merge
+next_recommended: publish-matrix-slice
 dependency_gate:
   issue_8: required-before-apply
   status: satisfied
@@ -37,6 +37,6 @@ phases:
   spec: success
   design: success
   tasks: success
-  apply: ready
+  apply: success
   verify: pending
   archive: pending

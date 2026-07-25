@@ -42,12 +42,14 @@ The first slice targets `main`. The second slice starts only after the first one
 
 ## Phase 3: Matrix (PR 2 after gate)
 
-- [ ] 3.1 Add RED table tests in `internal/domain/motor/matriz_test.go` for MAT-1..7: all affiliate quadrants, exact 0.95/1.05 edges, non-affiliate conversion precedence, `MEDIA` as low, and empty/unknown intention.
-- [ ] 3.2 Extend matrix tests for NaN, infinities, and negative ratios never reaching `ASESOR`, plus route-only purity with no lead/ficha/cupo/milestone side effect.
-- [ ] 3.3 Create `internal/domain/motor/matriz.go` with `EntradaMatriz` and pure `Matriz2x2`: finite-ratio guard, conversion-first precedence, and the frozen route thresholds.
+- [x] 3.1 Add RED table tests in `internal/domain/motor/matriz_test.go` for MAT-1..7: all affiliate quadrants, exact 0.95/1.05 edges, non-affiliate conversion precedence, `MEDIA` as low, and empty/unknown intention.
+- [x] 3.2 Extend matrix tests for NaN, infinities, and negative ratios never reaching `ASESOR`, plus route-only purity with no lead/ficha/cupo/milestone side effect.
+- [x] 3.3 Create `internal/domain/motor/matriz.go` with `EntradaMatriz` and pure `Matriz2x2`: finite-ratio guard, conversion-first precedence, and the frozen route thresholds.
 
 ## Phase 4: Post-Gate Validation
 
-- [ ] 4.1 Run each focused slice test, then `go test ./internal/domain/motor/...` and `go test ./internal/domain/motor/... -cover` (target at least 90%).
-- [ ] 4.2 Run `go build ./...`; inspect the final diff for only the four planned motor files and no capacity-file change.
+- [x] 4.1 Run each focused slice test, then `go test ./internal/domain/motor/...` and `go test ./internal/domain/motor/... -cover` (target at least 90%).
+- [x] 4.2 Run `go build ./...`; inspect the final diff for only the four planned motor files and no capacity-file change.
 - [ ] 4.3 Perform SDD verification only after 1.1 and all implementation tasks pass; attach command output to verification evidence.
+
+Pre-commit verification ran on 2026-07-25: `sdd/issue-10-recommendations-routing/verify-report` (Engram `#499`, `openspec/changes/issue-10-recommendations-routing/verify-report.md`) — PASS WITH WARNINGS, 6/6 requirements, 8/8 scenarios, `go test ./...` / `go build ./...` / `go vet ./...` exit 0, motor coverage 97.4%. Final verification will be regenerated after the matrix implementation is merged.
