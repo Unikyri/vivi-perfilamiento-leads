@@ -30,6 +30,17 @@ type fakeClock struct{ now time.Time }
 
 func (c *fakeClock) Now() time.Time      { return c.now }
 func (c *fakeClock) add(d time.Duration) { c.now = c.now.Add(d) }
+func fallbackFromDecorated(provider usecase.LLMProvider) *FallbackProvider {
+	if metrics, ok := provider.(*Metricas); ok {
+		provider = metrics.next
+	}
+	if guardrails, ok := provider.(*Guardarrailes); ok {
+		provider = guardrails.next
+	}
+	composition, _ := provider.(*FallbackProvider)
+	return composition
+}
+
 func TestFactorySelectionAndSafeIdentity(t *testing.T) {
 	cfg := config.Config{LLMProvider: "qwen", QwenAPIKey: "qwen-secret"}
 	p, err := NewFromConfig(cfg)
@@ -179,9 +190,16 @@ func TestFactoryNoFallbackRetainsBreakerAndLiveHealth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	composition, ok := provider.(*FallbackProvider)
+	metrics, ok := provider.(*Metricas)
 	if !ok {
-		t.Fatalf("provider=%T; expected single-provider composition", provider)
+		t.Fatalf("provider=%T; expected metrics decorator", provider)
+	}
+	if _, ok := metrics.next.(*Guardarrailes); !ok {
+		t.Fatalf("inner=%T; expected guardrails decorator", metrics.next)
+	}
+	composition := fallbackFromDecorated(provider)
+	if composition == nil {
+		t.Fatalf("decorated provider did not preserve fallback composite")
 	}
 	if composition.fallback != nil {
 		t.Fatalf("fallback=%v; expected no fallback", composition.fallback)
@@ -203,7 +221,10 @@ func TestFactoryNoFallbackRetainsRateLimiter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	composition := provider.(*FallbackProvider)
+	composition := fallbackFromDecorated(provider)
+	if composition == nil {
+		t.Fatalf("decorated provider did not preserve fallback composite")
+	}
 	primary := &fakeLLM{name: "gemini"}
 	composition.primary = primary
 	composition.primaryLimiter = NewTokenBucket(&fakeClock{now: time.Unix(0, 0)}, 1, 0)

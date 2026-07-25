@@ -9,7 +9,7 @@ func CircuitBreakerHealth(provider usecase.LLMProvider) string {
 		return "CERRADO"
 	}
 	state := BreakerClosed
-	if composite, ok := provider.(*FallbackProvider); ok {
+	if composite, ok := provider.(breakerStateOwner); ok {
 		state = composite.CircuitBreakerState()
 	}
 	switch state {
