@@ -25,10 +25,10 @@ Chain strategy: sequential-to-main
 
 ## Phase 1: Slice 1 — Ports and Shape Tests
 
-- [ ] 1.1 Create `internal/usecase/puertos.go` with Spanish pointer ports (`Crear`/`PorID`/`Guardar`/`Listar`), Contract §§0/4.3/6/7 DTOs, `FiltroLeads`, errors, and event constants; allow only stdlib and `internal/domain` imports.
-- [ ] 1.2 Declare `LeadRepository`, `PlanRepository`, `FichaRepository`, `CatalogoRepository`, `LLMProvider.Nombre`, `MensajeriaGateway`, `Reloj`, `BusEventos`, and `GeneradorID`; defer Plan/Ficha/Catalog fakes and plan CAS.
-- [ ] 1.3 Create `internal/usecase/puertos_test.go` with compile-time method-shape, pointer-result, DTO JSON, and `errors.Is(ErrNoEncontrado/ErrOptimisticLock)` tests.
-- [ ] 1.4 Prove Slice 1 with its focused `go test`, `go list -deps ./internal/usecase/...` import audit, and a path audit limited to `internal/usecase` plus Issue #11 artifacts; keep authored diff below 400 lines.
+- [x] 1.1 Create `internal/usecase/puertos.go` with Spanish pointer ports (`Crear`/`PorID`/`Guardar`/`Listar`), Contract §§0/4.3/6/7 DTOs, `FiltroLeads`, errors, and event constants; allow only stdlib and `internal/domain` imports.
+- [x] 1.2 Declare `LeadRepository`, `PlanRepository`, `FichaRepository`, `CatalogoRepository`, `LLMProvider.Nombre`, `MensajeriaGateway`, `Reloj`, `BusEventos`, and `GeneradorID`; defer Plan/Ficha/Catalog fakes and plan CAS.
+- [x] 1.3 Create `internal/usecase/puertos_test.go` with compile-time method-shape, pointer-result, DTO JSON, and `errors.Is(ErrNoEncontrado/ErrOptimisticLock)` tests.
+- [x] 1.4 Prove Slice 1 with its focused `go test`, `go list -deps ./internal/usecase/...` import audit, and a path audit limited to `internal/usecase` plus Issue #11 artifacts; keep authored diff below 400 lines.
 
 ## Phase 2: Slice 2 — Fake and Behavioral Tests
 
