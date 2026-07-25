@@ -1,6 +1,7 @@
 package motor
 
 import (
+	"math"
 	"reflect"
 	"testing"
 
@@ -192,4 +193,111 @@ func TestGemeloKNNProjection(t *testing.T) {
 			t.Fatalf("projection mutated input: before=%#v after=%#v", before, input)
 		}
 	})
+}
+
+func TestGemeloKNNImputation(t *testing.T) {
+	buyers := []domain.Comprador{
+		{ProyectoID: "P-1", Afiliado: true, Categoria: "A", RangoEdad: "20-35"},
+		{ProyectoID: "P-1", Afiliado: true, Categoria: "B", RangoEdad: "36-45"},
+		{ProyectoID: "P-1", Afiliado: true, Categoria: "A", RangoEdad: "46-55"},
+		{ProyectoID: "P-1", Afiliado: true, Categoria: "B", RangoEdad: "55+"},
+		{ProyectoID: "P-1", Afiliado: true, Categoria: "C", RangoEdad: "20-35"},
+		{ProyectoID: "P-2", Afiliado: true, Categoria: "C", RangoEdad: "20-35"},
+		{ProyectoID: "P-2", Afiliado: true, Categoria: "C", RangoEdad: "20-35"},
+		{ProyectoID: "P-2", Afiliado: true, Categoria: "A", RangoEdad: "36-45"},
+		{ProyectoID: "P-2", Afiliado: true, Categoria: "B", RangoEdad: "46-55"},
+		{ProyectoID: "P-2", Afiliado: true, Categoria: "B", RangoEdad: "55+"},
+		{ProyectoID: "P-2", Afiliado: true, Categoria: "A", RangoEdad: "55+"},
+	}
+	for i := 0; i < 4; i++ {
+		buyers = append(buyers, domain.Comprador{
+			ProyectoID: "P-3", Afiliado: true, Categoria: "C", RangoEdad: "55+",
+		})
+	}
+	for i := 0; i < 5; i++ {
+		buyers = append(buyers, domain.Comprador{
+			ProyectoID: "P-4", Afiliado: true, Categoria: "B", RangoEdad: "SIN_DATO",
+		})
+		buyers = append(buyers, domain.Comprador{
+			ProyectoID: "P-5", Afiliado: true, Categoria: "SIN_DATO", RangoEdad: "46-55",
+		})
+	}
+
+	stats := buildProjectAffiliateStats(buyers)
+	if got := stats["P-1"]; !got.hasCategory || got.categoryMode != "A" || !got.hasAge || got.ageMedian != 40.5 {
+		t.Fatalf("P-1 statistics = %#v, want deterministic mode A and odd median 40.5", got)
+	}
+	if got := stats["P-2"]; !got.hasAge || got.ageMedian != 45.5 {
+		t.Fatalf("P-2 statistics = %#v, want even median 45.5", got)
+	}
+	if got := stats["P-3"]; got.affiliateCount != 4 || got.hasCategory || got.hasAge {
+		t.Fatalf("below-threshold statistics = %#v, want omission", got)
+	}
+
+	imputed := projectBuyerWithStats(domain.Comprador{ProyectoID: "P-1"}, nil, stats)
+	if !imputed.tieneCategoria || imputed.categoria != "A" || !imputed.tieneEdad || imputed.edad != 40.5 {
+		t.Fatalf("eligible project fallback = %#v, want category A and age 40.5", imputed)
+	}
+	belowThreshold := projectBuyerWithStats(domain.Comprador{ProyectoID: "P-3"}, nil, stats)
+	if belowThreshold.tieneCategoria || belowThreshold.tieneEdad {
+		t.Fatalf("below-threshold fallback = %#v, want both dimensions omitted", belowThreshold)
+	}
+	categoryOnly := projectBuyerWithStats(domain.Comprador{ProyectoID: "P-4"}, nil, stats)
+	if !categoryOnly.tieneCategoria || categoryOnly.categoria != "B" || categoryOnly.tieneEdad {
+		t.Fatalf("independent category fallback = %#v, want age omitted", categoryOnly)
+	}
+	ageOnly := projectBuyerWithStats(domain.Comprador{ProyectoID: "P-5"}, nil, stats)
+	if ageOnly.tieneCategoria || !ageOnly.tieneEdad || ageOnly.edad != 50.5 {
+		t.Fatalf("independent age fallback = %#v, want category omitted", ageOnly)
+	}
+	crossProject := projectBuyerWithStats(domain.Comprador{ProyectoID: "P-6"}, nil, stats)
+	if crossProject.tieneCategoria || crossProject.tieneEdad {
+		t.Fatalf("cross-project fallback = %#v, must not use P-1/P-2 statistics", crossProject)
+	}
+}
+
+func TestGemeloKNNGower(t *testing.T) {
+	allDifferent := featureVector{
+		categoria: "A", tieneCategoria: true,
+		zona: "N", tieneZona: true,
+		edad: 27.5, tieneEdad: true,
+		afiliado: false, tieneAfiliado: true,
+		personasACargo: 0, tienePersonasACargo: true,
+	}
+	other := featureVector{
+		categoria: "B", tieneCategoria: true,
+		zona: "S", tieneZona: true,
+		edad: 60, tieneEdad: true,
+		afiliado: true, tieneAfiliado: true,
+		personasACargo: 10, tienePersonasACargo: true,
+	}
+	if got := gowerDistance(allDifferent, other); got != 1 {
+		t.Fatalf("maximum Gower distance = %.12f, want 1", got)
+	}
+	if got := gowerDistance(allDifferent, allDifferent); got != 0 {
+		t.Fatalf("identity Gower distance = %.12f, want 0", got)
+	}
+	if got, reverse := gowerDistance(allDifferent, other), gowerDistance(other, allDifferent); got != reverse {
+		t.Fatalf("Gower is not symmetric: forward=%.12f reverse=%.12f", got, reverse)
+	}
+
+	missingCategory := allDifferent
+	missingCategory.tieneCategoria = false
+	missingCategory.zona = other.zona
+	wantRenormalized := (gowerAgeWeight + gowerAffiliationWeight + gowerDependentsWeight) /
+		(gowerZoneWeight + gowerAgeWeight + gowerAffiliationWeight + gowerDependentsWeight)
+	if got := gowerDistance(missingCategory, other); math.Abs(got-wantRenormalized) > 1e-12 {
+		t.Fatalf("renormalized Gower = %.12f, want %.12f", got, wantRenormalized)
+	}
+
+	zeroDependents := other
+	zeroDependents.personasACargo = 0
+	if got := gowerDistance(zeroDependents, zeroDependents); got != 0 {
+		t.Fatalf("equal zero dependents were not treated as present: %.12f", got)
+	}
+	changedDependents := zeroDependents
+	changedDependents.personasACargo = 10
+	if got := gowerDistance(zeroDependents, changedDependents); got != gowerDependentsWeight {
+		t.Fatalf("dependent distance with 0 versus 10 = %.12f, want %.12f", got, gowerDependentsWeight)
+	}
 }

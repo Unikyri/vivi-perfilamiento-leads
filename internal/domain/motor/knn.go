@@ -1,6 +1,8 @@
 package motor
 
 import (
+	"math"
+	"sort"
 	"strings"
 
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
@@ -153,4 +155,170 @@ func normalizeOptionalText(value string) string {
 		return ""
 	}
 	return normalized
+}
+
+const (
+	gowerCategoryWeight    = 0.35
+	gowerZoneWeight        = 0.20
+	gowerAgeWeight         = 0.15
+	gowerAffiliationWeight = 0.15
+	gowerDependentsWeight  = 0.15
+	gowerAgeRange          = 32.5
+	gowerDependentsRange   = 10.0
+)
+
+type projectAffiliateStats struct {
+	affiliateCount int
+	categoryMode   string
+	hasCategory    bool
+	ageMedian      float64
+	hasAge         bool
+}
+
+type projectAffiliateStatsAccumulator struct {
+	affiliateCount int
+	categoryCounts map[string]int
+	ages           []float64
+}
+
+// buildProjectAffiliateStats creates a value-only index from affiliated
+// historical buyers. Statistics are keyed by exact project ID and are not
+// mutated after this function returns.
+func buildProjectAffiliateStats(buyers []domain.Comprador) map[string]projectAffiliateStats {
+	accumulators := make(map[string]*projectAffiliateStatsAccumulator)
+	for _, buyer := range buyers {
+		if !buyer.Afiliado || buyer.ProyectoID == "" {
+			continue
+		}
+
+		stats := accumulators[buyer.ProyectoID]
+		if stats == nil {
+			stats = &projectAffiliateStatsAccumulator{categoryCounts: make(map[string]int)}
+			accumulators[buyer.ProyectoID] = stats
+		}
+		stats.affiliateCount++
+		if category := normalizeCategory(buyer.Categoria); category != "" {
+			stats.categoryCounts[category]++
+		}
+		if age, ok := ageRepresentative(buyer.RangoEdad); ok {
+			stats.ages = append(stats.ages, age)
+		}
+	}
+
+	result := make(map[string]projectAffiliateStats, len(accumulators))
+	for projectID, accumulated := range accumulators {
+		stats := projectAffiliateStats{affiliateCount: accumulated.affiliateCount}
+		if accumulated.affiliateCount >= 5 {
+			stats.categoryMode, stats.hasCategory = categoryMode(accumulated.categoryCounts)
+			stats.ageMedian, stats.hasAge = numericMedian(accumulated.ages)
+		}
+		result[projectID] = stats
+	}
+	return result
+}
+
+func categoryMode(counts map[string]int) (string, bool) {
+	best := ""
+	bestCount := 0
+	for _, category := range []string{"A", "B", "C"} {
+		if counts[category] > bestCount {
+			best = category
+			bestCount = counts[category]
+		}
+	}
+	return best, bestCount > 0
+}
+
+func numericMedian(values []float64) (float64, bool) {
+	if len(values) == 0 {
+		return 0, false
+	}
+	ordered := append([]float64(nil), values...)
+	sort.Float64s(ordered)
+	middle := len(ordered) / 2
+	if len(ordered)%2 == 1 {
+		return ordered[middle], true
+	}
+	return (ordered[middle-1] + ordered[middle]) / 2, true
+}
+
+// projectBuyerWithStats applies category and age fallback independently. Only
+// non-affiliates are imputed; affiliates are the provenance source.
+func projectBuyerWithStats(buyer domain.Comprador, catalogZones map[string]string, projectStats map[string]projectAffiliateStats) featureVector {
+	features := projectBuyer(buyer, catalogZones)
+	if buyer.Afiliado {
+		return features
+	}
+
+	stats, ok := projectStats[buyer.ProyectoID]
+	if !ok || stats.affiliateCount < 5 {
+		return features
+	}
+	if !features.tieneCategoria && stats.hasCategory {
+		features.categoria = stats.categoryMode
+		features.tieneCategoria = true
+	}
+	if !features.tieneEdad && stats.hasAge {
+		features.edad = stats.ageMedian
+		features.tieneEdad = true
+	}
+	return features
+}
+
+// gowerDistance returns the weighted distance over mutually present
+// dimensions. Missing dimensions do not contribute weight, so the remaining
+// dimensions are renormalized by the participating weight total.
+func gowerDistance(left, right featureVector) float64 {
+	weightedDistance := 0.0
+	participatingWeight := 0.0
+	add := func(weight, distance float64) {
+		weightedDistance += weight * distance
+		participatingWeight += weight
+	}
+
+	if left.tieneCategoria && right.tieneCategoria {
+		if left.categoria == right.categoria {
+			add(gowerCategoryWeight, 0)
+		} else {
+			add(gowerCategoryWeight, 1)
+		}
+	}
+	if left.tieneZona && right.tieneZona {
+		if left.zona == right.zona {
+			add(gowerZoneWeight, 0)
+		} else {
+			add(gowerZoneWeight, 1)
+		}
+	}
+	if left.tieneEdad && right.tieneEdad {
+		add(gowerAgeWeight, cappedNumericDistance(left.edad, right.edad, gowerAgeRange))
+	}
+	if left.tieneAfiliado && right.tieneAfiliado {
+		if left.afiliado == right.afiliado {
+			add(gowerAffiliationWeight, 0)
+		} else {
+			add(gowerAffiliationWeight, 1)
+		}
+	}
+	if left.tienePersonasACargo && right.tienePersonasACargo {
+		add(gowerDependentsWeight, cappedNumericDistance(
+			float64(left.personasACargo), float64(right.personasACargo), gowerDependentsRange,
+		))
+	}
+
+	if participatingWeight == 0 {
+		return 0
+	}
+	return weightedDistance / participatingWeight
+}
+
+func cappedNumericDistance(left, right, valueRange float64) float64 {
+	if valueRange <= 0 {
+		return 0
+	}
+	distance := math.Abs(left-right) / valueRange
+	if distance > 1 {
+		return 1
+	}
+	return distance
 }

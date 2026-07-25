@@ -40,8 +40,8 @@ Each PR targets `main`, merges before the next begins, and contains only its nam
 
 ## Phase 3: Local Statistics and Gower (PR 4)
 
-- [ ] 3.1 RED: test weighted renormalization, symmetry/identity, `[0,1]`, zero dependents, five-affiliate mode/odd-even median, below-threshold omission, and cross-project rejection.
-- [ ] 3.2 GREEN: add immutable per-`ProyectoID` affiliate statistics, independent category/age imputation, and capped Gower weights `.35/.20/.15/.15/.15`.
+- [x] 3.1 RED: test weighted renormalization, symmetry/identity, `[0,1]`, zero dependents, five-affiliate mode/odd-even median, below-threshold omission, and cross-project rejection.
+- [x] 3.2 GREEN: add immutable per-`ProyectoID` affiliate statistics, independent category/age imputation, and capped Gower weights `.35/.20/.15/.15/.15`.
 
 ## Phase 4: Neighbors, Safety, and Evidence (PR 5)
 
