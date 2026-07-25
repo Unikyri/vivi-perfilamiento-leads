@@ -9,8 +9,8 @@ artifact_store:
   primary: engram
   repository: openspec
 status: active
-current_phase: verify
-next_recommended: verify
+current_phase: archive
+next_recommended: archive
 delivery:
   strategy: stacked-to-main
   branch: feat/domain-contract-types
@@ -39,5 +39,5 @@ phases:
   design: success
   tasks: success
   apply: success
-  verify: pending
+  verify: success
   archive: pending
