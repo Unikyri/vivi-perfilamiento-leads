@@ -1,0 +1,698 @@
+/* Vivi — marca.css — Sistema de diseño Colsubsidio para el panel del asesor */
+
+:root {
+  --colsubsidio-azul: #003DA6;
+  --colsubsidio-azul-oscuro: #002D7A;
+  --colsubsidio-azul-claro: #0056B3;
+  --colsubsidio-amarillo: #FFC700;
+  --colsubsidio-amarillo-suave: #FFF3C4;
+
+  --ok: #2E8540;      /* Semáforo VERDE */
+  --alerta: #E8A200;  /* ÁMBAR */
+  --neutro: #9E9E9E;  /* GRIS */
+  --error: #C0392B;   /* Solo errores de sistema */
+  --fondo: #FAFAF8;
+  --texto-principal: #1F2937;
+  --texto-secundario: #4B5563;
+  --borde-suave: #E5E7EB;
+  --blanco: #FFFFFF;
+}
+
+/* ── Estructura de Encabezado Principal Colsubsidio ───────── */
+.barra-superior {
+  background: var(--colsubsidio-azul);
+  color: var(--blanco);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.2rem;
+  min-height: 58px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.brand-container {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.logo-colsubsidio-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand-divider {
+  opacity: 0.4;
+  font-weight: 300;
+  margin: 0 4px;
+}
+
+.brand-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* ── Botonera Demo (Control Room Style) ────────────────────── */
+.botonera-demo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #111827;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.select-lead-demo {
+  background: #1F2937;
+  color: #F9FAFB;
+  border: 1px solid #374151;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-demo-action {
+  background: #374151;
+  color: #F9FAFB;
+  border: none;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: background 0.15s;
+}
+
+.btn-demo-action:hover {
+  background: #4B5563;
+}
+
+.badge-demo {
+  background: var(--colsubsidio-amarillo);
+  color: var(--colsubsidio-azul-oscuro);
+  font-weight: 800;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  margin-left: 0.25rem;
+}
+
+/* ── Panel Asesor & Tabs ──────────────────────────────────── */
+.panel-asesor {
+  background: var(--fondo);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+
+.tabs {
+  display: flex;
+  background: var(--blanco);
+  border-bottom: 2px solid var(--borde-suave);
+  padding: 0 1rem;
+}
+
+.tabs button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--texto-secundario);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+}
+
+.tabs button:hover {
+  color: var(--colsubsidio-azul);
+}
+
+.tabs button[aria-selected="true"] {
+  color: var(--colsubsidio-azul);
+  border-bottom-color: var(--colsubsidio-azul);
+  background: rgba(0, 61, 166, 0.03);
+}
+
+#contenido-tab {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+/* ── Badges de Fuente de Datos (RF-M7-05) ────────────────── */
+.badge-fuente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+}
+
+.badge-verificado {
+  background: #E6F4EA;
+  color: var(--ok);
+  border: 1px solid #CEEAD6;
+}
+
+.badge-declarado {
+  background: #E8F0FE;
+  color: var(--colsubsidio-azul);
+  border: 1px solid #D2E3FC;
+}
+
+.badge-inferido {
+  background: #FEF7E0;
+  color: #B45309;
+  border: 1px solid #FDE293;
+}
+
+/* ── Vista 1: COLA DE LEADS ───────────────────────────────── */
+.cola-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cola-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--blanco);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid var(--borde-suave);
+}
+
+.cola-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--texto-principal);
+}
+
+.cupo-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--texto-secundario);
+}
+
+.cupo-bar progress {
+  width: 120px;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.cupo-bar.alerta {
+  color: var(--alerta);
+}
+
+.cupo-bar.alerta progress::-webkit-progress-value {
+  background: var(--alerta);
+}
+
+.lista-leads {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fila-lead {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-areas:
+    "semaforo nombre ruta prioridad acciones"
+    "semaforo resumen resumen resumen acciones";
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  background: var(--blanco);
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--borde-suave);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background-color 0.2s;
+}
+
+.fila-lead:hover, .fila-lead:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+  border-color: var(--colsubsidio-azul);
+  outline: none;
+}
+
+.fila-lead.destacado-nuevo {
+  background-color: var(--colsubsidio-amarillo-suave);
+  animation: desvanecer-highlight 2s forwards;
+}
+
+@keyframes desvanecer-highlight {
+  to { background-color: var(--blanco); }
+}
+
+.semaforo-dot {
+  grid-area: semaforo;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.lead-nombre {
+  grid-area: nombre;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--texto-principal);
+}
+
+.lead-ruta {
+  grid-area: ruta;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: #F3F4F6;
+  color: var(--texto-secundario);
+}
+
+.lead-prio-badge {
+  grid-area: prioridad;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: var(--colsubsidio-amarillo);
+  color: var(--colsubsidio-azul-oscuro);
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+}
+
+.btn-ver-chat {
+  grid-area: acciones;
+  background: #075E54;
+  color: #FFFFFF;
+  border: 1px solid #128C7E;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  box-shadow: 0 2px 5px rgba(7, 94, 84, 0.25);
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.btn-ver-chat:hover {
+  background: #128C7E;
+  box-shadow: 0 4px 8px rgba(7, 94, 84, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-ver-chat:active {
+  transform: translateY(0);
+}
+
+.lead-resumen {
+  grid-area: resumen;
+  font-size: 0.82rem;
+  color: var(--texto-secundario);
+}
+
+/* ── Vista 2: FICHA DEL LEAD ──────────────────────────────── */
+.ficha-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.banda-advertencia {
+  background: #FEF3C7;
+  border-left: 4px solid var(--alerta);
+  color: #92400E;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ficha-header-card {
+  background: var(--blanco);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  padding: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ficha-id-info h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--colsubsidio-azul);
+  margin-bottom: 0.3rem;
+}
+
+.ficha-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.ficha-meta-item strong {
+  color: var(--texto-secundario);
+  font-weight: 600;
+}
+
+.confianza-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+}
+
+.confianza-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--colsubsidio-azul);
+}
+
+.confianza-progress {
+  width: 140px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.grid-tres-columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.card-seccion {
+  background: var(--blanco);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.card-seccion h4 {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--colsubsidio-azul);
+  border-bottom: 1px solid var(--borde-suave);
+  padding-bottom: 0.4rem;
+}
+
+.nivel-destacado {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.nivel-ALTA { color: var(--ok); }
+.nivel-MEDIA { color: var(--alerta); }
+.nivel-BAJA { color: var(--neutro); }
+
+.lista-puntos {
+  list-style-type: disc;
+  padding-left: 1.2rem;
+  font-size: 0.83rem;
+  color: var(--texto-principal);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.desglose-monto-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px dashed var(--borde-suave);
+}
+
+.monto-num {
+  font-weight: 700;
+  color: var(--texto-principal);
+}
+
+.banner-siguiente-paso {
+  background: var(--colsubsidio-azul);
+  color: var(--blanco);
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 10px rgba(0, 61, 166, 0.2);
+}
+
+.btn-copiar-resumen {
+  background: var(--colsubsidio-amarillo);
+  color: var(--colsubsidio-azul-oscuro);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  align-self: flex-end;
+  transition: transform 0.1s, background 0.15s;
+}
+
+.btn-copiar-resumen:hover {
+  background: #E6B200;
+  transform: scale(1.02);
+}
+
+.timeline-plegable {
+  background: var(--blanco);
+  border: 1px solid var(--borde-suave);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.timeline-plegable summary {
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: var(--colsubsidio-azul);
+}
+
+.estado-vacio-amable {
+  background: var(--blanco);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--texto-secundario);
+}
+
+.estado-vacio-amable h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--colsubsidio-azul);
+  margin-bottom: 0.5rem;
+}
+
+/* ── Vista 3: GERENCIA (BUYER PERSONA VIVO) ───────────────── */
+.gerencia-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.gerencia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--blanco);
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--borde-suave);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.selector-proyecto-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 2px solid var(--colsubsidio-amarillo);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  background: #FFFDF5;
+}
+
+.selector-proyecto-wrap label {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--texto-principal);
+}
+
+.select-proyecto {
+  border: none;
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--colsubsidio-azul);
+  outline: none;
+  cursor: pointer;
+}
+
+.metricas-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.card-metrica {
+  background: var(--blanco);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.metrica-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--texto-secundario);
+  text-transform: uppercase;
+}
+
+.metrica-valor {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--colsubsidio-azul);
+  margin-top: 0.25rem;
+}
+
+.grafico-barras-card {
+  background: var(--blanco);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.grafico-barras-card h4 {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--texto-principal);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.barras-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.barra-item {
+  display: grid;
+  grid-template-columns: 120px 1fr 45px;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.83rem;
+}
+
+.barra-label {
+  font-weight: 600;
+  color: var(--texto-secundario);
+  text-align: right;
+}
+
+.barra-track {
+  background: #F3F4F6;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barra-fill {
+  background: var(--colsubsidio-azul);
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease-out;
+}
+
+.barra-val {
+  font-weight: 700;
+  color: var(--texto-principal);
+}
+
+.nota-actualizacion {
+  font-size: 0.78rem;
+  color: var(--texto-secundario);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* ── Adaptabilidad Móvil (<768px) ──────────────────────────── */
+@media (max-width: 768px) {
+  .split {
+    flex-direction: column;
+  }
+  .panel-chat, .panel-asesor {
+    flex: 1;
+    width: 100%;
+  }
+  .fila-lead {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "semaforo nombre prioridad"
+      "semaforo resumen resumen";
+  }
+  .lead-ruta { display: none; }
+}
+
+/* ── Foco Visible de Accesibilidad (Doc 12 §5) ─────────────── */
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, li:focus-visible {
+  outline: 2px solid var(--colsubsidio-azul) !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
