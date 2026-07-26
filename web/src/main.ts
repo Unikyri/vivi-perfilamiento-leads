@@ -1,90 +1,98 @@
-import './estilos/prototipo.css';
+import './estilos/consola.css';
+import { api, ErrorAPI } from './models/api';
+import { actualizar } from './models/estado';
+import { iniciarChat } from './controllers/chat';
+import { iniciarDashboard } from './controllers/dashboard';
 
-type Lead = { name: string; affiliation: string; last: string; priority: 'Alta' | 'Media'; avatar: 'female' | 'male'; active?: boolean };
+const params = new URLSearchParams(location.search);
 
-const leads: Lead[] = [
-  { name: 'Ana María Rodríguez', affiliation: 'Afiliada · Básico', last: 'Último mensaje: ahora', priority: 'Alta', avatar: 'female', active: true },
-  { name: 'Carlos Andrés Mejía', affiliation: 'No afiliado', last: 'Último mensaje: 5 min', priority: 'Media', avatar: 'male' },
-  { name: 'Laura Sofía Herrera', affiliation: 'Afiliada · Joven', last: 'Último mensaje: 15 min', priority: 'Alta', avatar: 'female' },
-  { name: 'Diego Fernando Ruiz', affiliation: 'No afiliado', last: 'Último mensaje: 27 min', priority: 'Media', avatar: 'male' },
-  { name: 'María Camila López', affiliation: 'Afiliada · Básico', last: 'Último mensaje: 1 hora', priority: 'Alta', avatar: 'female' },
-  { name: 'Juan Sebastián Díaz', affiliation: 'Afiliado · Medio', last: 'Último mensaje: 2 horas', priority: 'Media', avatar: 'male' },
-];
+/** Precargado del Contrato §3.1: "ana" | "carlos" | "luisa". */
+const PRECARGADOS = ['ana', 'carlos', 'luisa'] as const;
+type Precargado = (typeof PRECARGADOS)[number];
 
-const avatar = (kind: Lead['avatar'], className: string, name: string) =>
-  `<span class="${className}${kind === 'male' ? ' male' : ''}" aria-hidden="true">${name.split(' ').map(part => part[0]).slice(0, 2).join('')}</span>`;
-
-function leadRows(items: Lead[]): string {
-  return items.map(lead => `<button class="lead-row ${lead.active ? 'selected' : lead.priority === 'Alta' ? 'hot' : 'medium'}" data-lead="${leads.indexOf(lead)}" aria-label="Abrir conversación con ${lead.name}">
-    ${avatar(lead.avatar, 'lead-avatar', lead.name)}<span class="avatar-dot"></span>
-    <span class="lead-info"><span class="lead-name">${lead.name}</span><span class="lead-meta">${lead.affiliation}</span><span class="lead-last">${lead.last}</span></span>
-    <span class="priority ${lead.priority === 'Media' ? 'medium' : ''}">${lead.priority}</span>
-  </button>`).join('');
+function precargadoPedido(): Precargado {
+  const p = params.get('precargado');
+  return (PRECARGADOS as readonly string[]).includes(p ?? '') ? (p as Precargado) : 'ana';
 }
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('No se encontró el contenedor de Vivi');
 
-app.innerHTML = `<div class="shell">
-  <header class="topbar">
-    <div class="brand"><img src="/logo-colsubsidio-blanco.png" alt="Colsubsidio"><span class="v-divider"></span><span class="vivi-title"><strong>Vivi <span class="sun">☀</span></strong>Asesora de vivienda</span></div>
-    <div class="demo-actions"><button class="top-action primary" data-toast="Tiempo de demo avanzado"><span class="play">▶</span> Avanzar tiempo</button><button class="top-action" data-toast="Demo reiniciada"><span>⟳</span> Reiniciar</button></div>
-    <div class="account"><span class="bell">♟<span class="notification">3</span></span>${avatar('female', 'account-avatar', 'Ana Gómez')}<span>Ana Gómez</span><span class="chevron">⌄</span></div>
-  </header>
-  <main class="workspace">
-    <aside class="sidebar" aria-label="Navegación principal">
-      <nav class="nav-main"><button class="nav-item active"><span class="nav-icon">♟</span>Leads</button><button class="nav-item"><span class="nav-icon">☏</span>Conversaciones</button><button class="nav-item"><span class="nav-icon">♧</span>Nutrición</button><button class="nav-item"><span class="nav-icon">♜</span>Proyectos</button></nav>
-      <div class="side-promo"><h2>Convertimos<br>leads en<br>vecinos</h2><div class="agent-illustration"><span class="agent-arm"></span><span class="agent-hand">♨</span><span class="agent-body"></span><span class="agent-logo"></span><span class="agent-hair"></span><span class="agent-head"></span><span class="agent-face">•ᴗ•</span></div><p class="promo-copy">Estamos para ayudarte<br>a crear hogares felices.</p><hr class="side-rule"><img class="side-logo" src="/logo-colsubsidio.webp" alt="Colsubsidio"></div>
-    </aside>
-    <section class="leads-panel" aria-label="Lista de leads">
-      <div class="leads-heading"><span>Todos los leads⌄</span><button aria-label="Configurar leads">⚙</button></div>
-      <label class="search-wrap"><span>⌕</span><input id="lead-search" type="search" placeholder="Buscar lead..."></label>
-      <nav class="filter-tabs" aria-label="Filtrar leads"><button class="filter active" data-filter="Todos">Todos <strong>32</strong></button><button class="filter" data-filter="Alta">Alta <strong>8</strong></button><button class="filter" data-filter="Media">Media <strong>16</strong></button><button class="filter" data-filter="Baja">Baja <strong>8</strong></button></nav>
-      <div id="lead-list" class="lead-list">${leadRows(leads)}</div>
-      <div class="list-pager"><button class="pager-button" aria-label="Anterior">‹</button><span>Mostrando 6 de 32 leads</span><button class="pager-button" aria-label="Siguiente">›</button></div>
-    </section>
-    <section class="chat-panel" aria-label="Conversación de WhatsApp">
-      <header class="chat-top"><button class="back" aria-label="Volver">‹</button>${avatar('female', 'chat-avatar', 'Ana María')}<div class="chat-name"><span id="chat-title">Ana María Rodríguez</span><small>en línea <span class="online">●</span></small></div><div class="chat-tools"><button aria-label="Llamar">●</button><button aria-label="Videollamar">▣</button><button aria-label="Más acciones">⋮</button></div></header>
-      <div class="messages"><div class="today">Hoy</div><article class="bubble in">¡Hola Ana! 👋 Vi que te interesa tener casa propia. Buena noticia: como afiliada tienes un subsidio de hasta $52.5M que quizás no conocías. ¿Sueñas con comprar este año?<span class="stamp">10:30 a. m.</span></article><article class="bubble out">¡Hola Vivi! Sí, quiero comprar este año 🙌<span class="stamp">10:31 a. m. <span class="ticks">✓✓</span></span></article><article class="bubble in">¡Qué emoción! 💛 Contame más o menos:<br><br>1. ¿Cuánto ganás al mes?<br>2. ¿Tenés ahorro para la cuota inicial?<br>3. ¿Cómo es tu grupo familiar?<span class="stamp">10:31 a. m.</span></article><article class="bubble out">Gano entre 1.5 y 2 millones, tengo 8 millones ahorrados y somos 3 en mi hogar.<span class="stamp">10:32 a. m. <span class="ticks">✓✓</span></span></article><article class="bubble in">¡Listo, Ana! Con esa información esto es lo que tenemos para ti 👇<span class="stamp">10:33 a. m.</span></article></div>
-      <form class="chat-input" id="chat-form"><button type="button" aria-label="Emojis">☺</button><button type="button" aria-label="Adjuntar">♧</button><label class="message-field"><input aria-label="Escribir mensaje" placeholder="Escribí un mensaje..."><button class="mic" type="button" aria-label="Grabar audio">♩</button></label><button class="send" aria-label="Enviar mensaje">➤</button></form>
-    </section>
-    <section class="details" aria-label="Ficha comercial del lead">
-      <header class="profile-head">${avatar('female', 'profile-avatar', 'Ana María')}<div><div id="profile-name" class="profile-name">Ana María Rodríguez</div><div class="profile-sub">Afiliada · Categoría Básico</div><div class="lead-id">ID Lead: L-2025-000124 <span class="copy">▣</span></div></div><span class="attention">Alta atención</span></header>
-      <div class="route-title"><span>Ruta asignada</span><span class="updated">Actualizado: ahora</span></div>
-      <div class="route-card"><span class="route-icon">♟</span><div><strong>ASESOR</strong><p>Lead listo para asesor comercial.<br>Prioridad alta en cola.</p></div></div>
-      <div class="finance-grid"><div><section class="finance-card"><div class="section-title"><span>Capacidad financiera</span><button class="link">Ver desglose ›</button></div><div class="stats"><div class="stat"><small>Capacidad estimada</small><strong>$166.8M</strong></div><div class="stat"><small>Cuota mensual estimada</small><strong>$1.12M</strong></div></div><div class="progress"><span></span></div><div class="rule">Regla cuota/ingreso 40%</div></section><section class="subsidies"><div class="section-title"><span>Subsidios aplicables</span><button class="link">Ver detalle ›</button></div><div class="subsidy-row"><span>Subsidio Distrital</span><strong>$21.0M</strong></div><div class="subsidy-row"><span>Subsidio Colsubsidio</span><strong>$52.5M</strong></div><div class="subsidy-total"><span>Total subsidios</span><span>$73.5M</span></div></section></div><div><section class="breakdown"><h3>Desglose:</h3><div class="detail-line"><span>Crédito máximo<br><small>regla: cuota40_tasa107EA_240m</small></span><b>$106.2M<br><span class="verified">◉ verificado</span></b></div><div class="detail-line"><span>Subsidio aplicable<br><small>regla: sfv_por_ingreso</small></span><b>$52.5M<br><span class="verified">◉ verificado</span></b></div><div class="detail-line"><span>Recursos propios<br><small>regla: declarado_lead</small></span><b>$8.00M<br><span class="declared-badge">ⓘ declarado</span></b></div></section><section class="declared"><h3>Perfil declarado</h3><div class="detail-line"><span>Ingreso hogar</span><b>$2.6M <span class="verified">◉ verificado</span></b></div><div class="detail-line"><span>Recursos propios</span><b>$8.0M <span class="declared-badge">ⓘ declarado</span></b></div><div class="detail-line"><span>Tiene vivienda</span><b>No <span class="verified">◉ verificado</span></b></div><div class="detail-line"><span>Edad</span><b>32 <span class="verified">◉ verificado</span></b></div><div class="detail-line"><span>Ratio: 1.07 · Confianza del perfil: 85% ⓘ</span></div></section></div></div>
-      <section class="project-card"><div class="section-title"><span>Proyecto recomendado</span><button class="link">Ver alternativas ›</button></div><div class="project-info"><div class="project-image" aria-label="Imagen del proyecto Parque Central Tintal"></div><div><h3 class="project-name">Parque Central Tintal</h3><div class="project-place">Bogotá</div><div class="project-meta">⌂ VIS　▧ Apartamento　▣ Estrato 2</div><div class="project-foot">28 vecinos compraron aquí · <strong>7% desistió</strong></div></div></div></section>
-    </section>
-  </main>
-</div><div id="toast" class="toast" role="status"></div>`;
+app.innerHTML = `
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="/logo-colsubsidio-blanco.png" alt="Colsubsidio">
+        <span class="v-divider"></span>
+        <span class="vivi-title"><strong>Vivi <span class="sun">☀</span></strong>Asesora de vivienda</span>
+      </div>
+      <div class="demo-actions" id="botonera-demo"></div>
+      <div class="account">
+        <span class="bell">🔔<span class="notification">3</span></span>
+        <span class="avatar account-avatar" aria-hidden="true">AG</span>
+        <span>Ana Gómez</span>
+        <span class="chevron">⌄</span>
+      </div>
+    </header>
+    <main class="workspace">
+      <aside class="sidebar" aria-label="Navegación principal">
+        <nav class="nav-main">
+          <button class="nav-item active" data-seccion="leads"><span class="nav-icon">👤</span><span class="nav-label">Leads</span></button>
+          <button class="nav-item" data-seccion="conversaciones"><span class="nav-icon">💬</span><span class="nav-label">Conversaciones</span></button>
+          <button class="nav-item" data-seccion="nutricion"><span class="nav-icon">🌱</span><span class="nav-label">Nutrición</span></button>
+          <button class="nav-item" data-seccion="proyectos"><span class="nav-icon">🏢</span><span class="nav-label">Proyectos</span></button>
+        </nav>
+        <div class="side-promo">
+          <span class="promo-icon">🏡</span>
+          <h2>Convertimos<br>leads en<br>vecinos</h2>
+          <p class="promo-copy">Estamos para ayudarte<br>a crear hogares felices.</p>
+        </div>
+      </aside>
+      <section class="leads-panel" id="leads-panel" aria-label="Lista de leads"></section>
+      <section class="chat-panel" id="panel-chat" aria-label="Conversación"></section>
+      <section class="details" id="details-panel" aria-label="Ficha comercial del lead"></section>
+    </main>
+  </div>
+`;
 
-const list = document.querySelector<HTMLDivElement>('#lead-list')!;
-const search = document.querySelector<HTMLInputElement>('#lead-search')!;
-const filters = document.querySelectorAll<HTMLButtonElement>('.filter');
-let currentFilter = 'Todos';
-
-function renderLeads(): void {
-  const needle = search.value.trim().toLocaleLowerCase('es');
-  const shown = leads.filter(lead => (currentFilter === 'Todos' || lead.priority === currentFilter) && lead.name.toLocaleLowerCase('es').includes(needle));
-  list.innerHTML = leadRows(shown);
-  bindLeadSelection();
+/** Crea el lead en el backend y devuelve su lead_id real. El saludo
+ * (RF-M4-01) llega después por el polling de la conversación. */
+async function crearLeadInicial(): Promise<string | null> {
+  try {
+    const r = await api.crearLead(precargadoPedido());
+    return r.lead_id;
+  } catch (err) {
+    const detalle = err instanceof ErrorAPI ? `${err.codigo}: ${err.message}` : String(err);
+    console.error('[main] no se pudo crear el lead inicial:', detalle);
+    mostrarFalloArranque(detalle);
+    return null;
+  }
 }
 
-function bindLeadSelection(): void {
-  document.querySelectorAll<HTMLButtonElement>('.lead-row').forEach(row => row.addEventListener('click', () => {
-    const lead = leads[Number(row.dataset.lead)];
-    leads.forEach(item => { item.active = item === lead; });
-    document.querySelector('#chat-title')!.textContent = lead.name;
-    document.querySelector('#profile-name')!.textContent = lead.name;
-    renderLeads();
-  }));
+function mostrarFalloArranque(detalle: string): void {
+  const panel = document.getElementById('panel-chat');
+  if (!panel) return;
+  const aviso = document.createElement('div');
+  aviso.setAttribute('role', 'alert');
+  aviso.style.cssText = 'margin:12px;padding:12px;border-radius:8px;background:#fff1c9;color:#7a4b00;font-size:13px;font-weight:600';
+  aviso.textContent = `No se pudo iniciar la conversación (${detalle}). Recargá la página o revisá que el backend esté arriba.`;
+  panel.prepend(aviso);
 }
 
-filters.forEach(filter => filter.addEventListener('click', () => { currentFilter = filter.dataset.filter ?? 'Todos'; filters.forEach(item => item.classList.toggle('active', item === filter)); renderLeads(); }));
-search.addEventListener('input', renderLeads);
-bindLeadSelection();
+async function arrancar(): Promise<void> {
+  const leadsPanel = document.getElementById('leads-panel')!;
+  const chatPanel = document.getElementById('panel-chat')!;
+  const detailsPanel = document.getElementById('details-panel')!;
+  const botoneraDemo = document.getElementById('botonera-demo');
+  const nav = document.querySelector<HTMLElement>('.nav-main');
 
-document.querySelectorAll<HTMLButtonElement>('.nav-item').forEach(item => item.addEventListener('click', () => { document.querySelectorAll('.nav-item').forEach(entry => entry.classList.toggle('active', entry === item)); }));
-const toast = document.querySelector<HTMLDivElement>('#toast')!;
-document.querySelectorAll<HTMLButtonElement>('[data-toast]').forEach(button => button.addEventListener('click', () => { toast.textContent = button.dataset.toast ?? ''; toast.classList.add('show'); window.setTimeout(() => toast.classList.remove('show'), 2400); }));
-document.querySelector<HTMLFormElement>('#chat-form')!.addEventListener('submit', event => { event.preventDefault(); const input = document.querySelector<HTMLInputElement>('.message-field input')!; if (!input.value.trim()) return; const article = document.createElement('article'); article.className = 'bubble out'; article.textContent = input.value.trim(); document.querySelector('.messages')!.append(article); input.value = ''; });
+  const leadId = await crearLeadInicial();
+  if (leadId) actualizar({ leadActivo: leadId });
+
+  iniciarChat(chatPanel);
+  iniciarDashboard(leadsPanel, detailsPanel, botoneraDemo, nav);
+
+  console.info('Vivi web iniciado (Leads + Chat + Ficha, conectados a la API real)');
+}
+
+void arrancar();

@@ -1,53 +1,62 @@
 import { api, ErrorAPI } from '../models/api';
 import { obtener, actualizar, suscribir } from '../models/estado';
+import type { ColaLeads } from '../models/tipos';
 import { renderCola } from '../views/cola';
 import { renderFicha } from '../views/ficha';
-import { renderGerencia } from '../views/gerencia';
-import { renderBotoneraDemo } from '../views/demo';
+import { renderBotoneraDemo, fechaAvanceDemo } from '../views/demo';
+import { actualizarCabeceraChat } from '../views/chat';
 
 const INTERVALO_POLL_COLA_MS = 5000;
 let pollColaTimer: ReturnType<typeof setInterval> | null = null;
-let proyectoGerenciaSeleccionado = 'mongui';
 
-// Evita refetchear Ficha/Gerencia en cada poll de la cola (cada 5 s) cuando
-// nada relevante cambió. Se invalidan explícitamente al salir de la pestaña
-// o al cambiar de lead/proyecto — nunca queda un dato congelado.
+// Evita refetchear la Ficha en cada poll de la cola (cada 5 s) cuando el
+// lead activo no cambió — la consulta más cara del sistema no debe
+// dispararse por datos que nadie pidió (regresión ya corregida en #89).
 let ultimaFichaCargada: string | null = null;
-let ultimaGerenciaCargada: string | null = null;
+
+// `suscribir` notifica en CADA actualizar(), incluido el poll del chat cada
+// 1.5s (que sólo cambia `conversacion`). Sin este guard, la lista de leads
+// se re-renderizaría 1.5s sí, 1.5s también — perdiendo el foco del buscador
+// y recalculando filtros por datos que nadie tocó. Mismo defecto de la #89,
+// esta vez en el panel de leads en vez de en Ficha/Gerencia.
+let ultimaColaRenderizada: ColaLeads | null = null;
+let ultimoLeadRenderizado: string | null = null;
+let ultimaSeccionRenderizada: SeccionNav | null = null;
+
+type SeccionNav = 'leads' | 'conversaciones' | 'nutricion' | 'proyectos';
+let seccionActiva: SeccionNav = 'leads';
 
 /**
- * Inicializa el Panel del Asesor y sus tres pestañas (Cola, Ficha, Gerencia) + Botonera Demo.
+ * Inicializa el panel de leads (izquierda) y la ficha (derecha). El chat
+ * (centro) lo monta e independiza `controllers/chat.ts` — este módulo sólo
+ * le avisa del cambio de lead activo vía `actualizarCabeceraChat`.
  */
 export function iniciarDashboard(
-  contenedorTab: HTMLElement,
+  leadsPanelEl: HTMLElement,
+  detailsEl: HTMLElement,
   botoneraDemoEl: HTMLElement | null,
-  navTabsEl: HTMLElement | null,
+  navEl: HTMLElement | null,
 ): void {
-  // Configurar cambio de pestañas en la navegación
-  if (navTabsEl) {
-    const btns = navTabsEl.querySelectorAll<HTMLButtonElement>('button[data-tab]');
-    btns.forEach(btn => {
+  if (navEl) {
+    navEl.querySelectorAll<HTMLButtonElement>('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab as 'cola' | 'ficha' | 'gerencia';
-        cambiarTab(tab, btns);
+        seccionActiva = (btn.dataset.seccion as SeccionNav) ?? 'leads';
+        navEl.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item === btn));
+        renderPanelLeads(leadsPanelEl);
       });
     });
   }
 
-  // Montar botonera demo si existe el contenedor
-  if (botoneraDemoEl) {
-    montarBotoneraDemo(botoneraDemoEl);
-  }
+  if (botoneraDemoEl) montarBotoneraDemo(botoneraDemoEl);
 
-  // Suscribirse a cambios de estado global para re-renderizar la pestaña activa
-  suscribir(() => renderTabActiva(contenedorTab));
+  suscribir(() => {
+    renderPanelLeads(leadsPanelEl);
+    renderPanelFicha(detailsEl);
+  });
 
-  // Polling periódico de la cola cada 5.000 ms (Contrato §0)
-  pollColaTimer = setInterval(() => cargarCola(), INTERVALO_POLL_COLA_MS);
-
-  // Carga inicial
+  pollColaTimer = setInterval(cargarCola, INTERVALO_POLL_COLA_MS);
   cargarCola();
-  renderTabActiva(contenedorTab);
+  renderPanelFicha(detailsEl);
 }
 
 export function detenerDashboard(): void {
@@ -66,110 +75,86 @@ async function cargarCola(): Promise<void> {
   }
 }
 
-function cambiarTab(nuevaTab: 'cola' | 'ficha' | 'gerencia', btns: NodeListOf<HTMLButtonElement>): void {
-  actualizar({ tabActiva: nuevaTab });
-  btns.forEach(b => {
-    const esActiva = b.dataset.tab === nuevaTab;
-    b.setAttribute('aria-selected', esActiva ? 'true' : 'false');
-  });
+function ordenarParaSeccion(cola: ColaLeads, seccion: SeccionNav): ColaLeads {
+  if (seccion !== 'conversaciones') return cola;
+  // "Conversaciones" reordena por actividad reciente en vez de prioridad —
+  // es la única diferenciación real posible con los campos que expone
+  // LeadEnCola hoy (no hay conteo de no-leídos en el contrato).
+  const leads = [...cola.leads].sort(
+    (a, b) => new Date(b.actualizado_en).getTime() - new Date(a.actualizado_en).getTime(),
+  );
+  return { ...cola, leads };
 }
 
-function renderTabActiva(contenedor: HTMLElement): void {
+function renderPanelLeads(contenedor: HTMLElement, forzar = false): void {
   const st = obtener();
 
-  switch (st.tabActiva) {
-    case 'cola':
-      // Al volver a Cola, invalidar: si el asesor vuelve a Ficha/Gerencia
-      // después, el dato debe refrescarse, no quedar congelado.
-      ultimaFichaCargada = null;
-      ultimaGerenciaCargada = null;
-      if (st.cola) {
-        renderCola(
-          contenedor,
-          st.cola,
-          leadId => seleccionarLead(leadId),
-          leadId => seleccionarChat(leadId),
-        );
-      } else {
-        contenedor.innerHTML = '<div style="padding:1rem; color:#6B7280">Cargando cola de leads…</div>';
-      }
-      break;
-
-    case 'ficha':
-      if (!st.leadActivo) {
-        ultimaFichaCargada = null;
-        contenedor.innerHTML = '<div style="padding:1.5rem; text-align:center; color:#6B7280">Selecciona un lead de la cola para ver su ficha comercial.</div>';
-        break;
-      }
-      if (st.leadActivo !== ultimaFichaCargada) {
-        ultimaFichaCargada = st.leadActivo;
-        cargarYRenderizarFicha(contenedor, st.leadActivo);
-      }
-      break;
-
-    case 'gerencia':
-      if (proyectoGerenciaSeleccionado !== ultimaGerenciaCargada) {
-        ultimaGerenciaCargada = proyectoGerenciaSeleccionado;
-        cargarYRenderizarGerencia(contenedor, proyectoGerenciaSeleccionado);
-      }
-      break;
+  if (seccionActiva === 'nutricion' || seccionActiva === 'proyectos') {
+    if (!forzar && seccionActiva === ultimaSeccionRenderizada) return;
+    ultimaSeccionRenderizada = seccionActiva;
+    contenedor.innerHTML = `
+      <div class="leads-heading"><span>${seccionActiva === 'nutricion' ? 'Nutrición' : 'Proyectos'}</span></div>
+      <div class="details-vacio">
+        <p>Próximamente.</p>
+      </div>
+    `;
+    return;
   }
+
+  if (!st.cola) {
+    if (ultimaSeccionRenderizada !== null) return; // ya se mostró "cargando"
+    ultimaSeccionRenderizada = null;
+    contenedor.innerHTML = '<div class="leads-heading"><span>Todos los leads</span></div><p style="padding:1rem;color:#647198">Cargando leads…</p>';
+    return;
+  }
+
+  // Sólo re-renderizar si de verdad cambió la cola, el lead activo o la
+  // sección — no en cada poll del chat, que no afecta a este panel.
+  if (!forzar && st.cola === ultimaColaRenderizada && st.leadActivo === ultimoLeadRenderizado && seccionActiva === ultimaSeccionRenderizada) {
+    return;
+  }
+  ultimaColaRenderizada = st.cola;
+  ultimoLeadRenderizado = st.leadActivo;
+  ultimaSeccionRenderizada = seccionActiva;
+
+  const cola = ordenarParaSeccion(st.cola, seccionActiva);
+  renderCola(contenedor, cola, st.leadActivo, leadId => seleccionarLead(leadId));
 }
 
 function seleccionarLead(leadId: string): void {
-  actualizar({ leadActivo: leadId, tabActiva: 'ficha' });
-
-  // Actualizar el estado visual de la tab en el DOM
-  const navTabs = document.querySelector('.tabs');
-  if (navTabs) {
-    const btns = navTabs.querySelectorAll<HTMLButtonElement>('button[data-tab]');
-    btns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === 'ficha' ? 'true' : 'false'));
-  }
-}
-
-function seleccionarChat(leadId: string): void {
-  actualizar({ leadActivo: leadId });
-  const panelChat = document.getElementById('panel-chat');
-  if (panelChat) {
-    panelChat.scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
-async function cargarYRenderizarFicha(contenedor: HTMLElement, leadId: string): Promise<void> {
   const st = obtener();
-  const leadEnCola = st.cola?.leads.find(l => l.lead_id === leadId);
+  const lead = st.cola?.leads.find(l => l.lead_id === leadId);
+  if (lead) actualizarCabeceraChat(lead.nombre);
+  actualizar({ leadActivo: leadId });
+}
+
+async function renderPanelFicha(contenedor: HTMLElement): Promise<void> {
+  const st = obtener();
+
+  if (!st.leadActivo) {
+    ultimaFichaCargada = null;
+    contenedor.innerHTML = '<div class="details-vacio">Seleccioná un lead de la lista para ver su ficha comercial.</div>';
+    return;
+  }
+  if (st.leadActivo === ultimaFichaCargada) return;
+  ultimaFichaCargada = st.leadActivo;
+
+  const leadEnCola = st.cola?.leads.find(l => l.lead_id === st.leadActivo);
   const nombreFallback = leadEnCola?.nombre ?? 'Lead';
+  const ruta = leadEnCola?.ruta ?? null;
 
   try {
-    const ficha = await api.ficha(leadId);
-    renderFicha(contenedor, ficha, nombreFallback);
+    const ficha = await api.ficha(st.leadActivo);
+    renderFicha(contenedor, ficha, nombreFallback, ruta);
   } catch (err) {
     if (err instanceof ErrorAPI && err.estadoHTTP === 404) {
-      renderFicha(contenedor, null, nombreFallback);
+      renderFicha(contenedor, null, nombreFallback, ruta);
     } else {
-      contenedor.innerHTML = `<div class="banda-advertencia">⚠️ Error cargando la ficha comercial: ${(err as Error).message}</div>`;
+      contenedor.innerHTML = `<div class="details-vacio">⚠️ Error cargando la ficha comercial: ${escapar((err as Error).message)}</div>`;
     }
   }
 }
 
-async function cargarYRenderizarGerencia(contenedor: HTMLElement, proyectoId: string): Promise<void> {
-  const alCambiarProyecto = (id: string) => {
-    proyectoGerenciaSeleccionado = id;
-    ultimaGerenciaCargada = id;
-    cargarYRenderizarGerencia(contenedor, id);
-  };
-
-  try {
-    const bp = await api.buyerPersona(proyectoId);
-    renderGerencia(contenedor, bp, proyectoId, alCambiarProyecto);
-  } catch {
-    renderGerencia(contenedor, null, proyectoId, alCambiarProyecto);
-  }
-}
-
-/** Aviso inline en la botonera de demo: nunca abre una ventana nativa
- * (prompt/alert), que en pantalla compartida puede renderizarse fuera del
- * área capturada o quedar detrás de la ventana. */
 function avisarDemo(texto: string, esError = false): void {
   const el = document.getElementById('demo-aviso');
   if (!el) return;
@@ -185,15 +170,9 @@ function montarBotoneraDemo(contenedor: HTMLElement): void {
   renderBotoneraDemo(
     contenedor,
     async () => {
-      const input = document.getElementById('demo-fecha') as HTMLInputElement | null;
-      const hasta = input?.value;
-      if (!hasta) {
-        avisarDemo('Elegí una fecha primero.', true);
-        return;
-      }
       try {
-        const r = await api.avanzarTiempo(hasta);
-        avisarDemo(`Tiempo avanzado a ${hasta} · ${r.hitos_disparados} hito(s) disparado(s).`);
+        const r = await api.avanzarTiempo(fechaAvanceDemo());
+        avisarDemo(`Tiempo avanzado a ${fechaAvanceDemo()} · ${r.hitos_disparados} hito(s) disparado(s).`);
         cargarCola();
       } catch (e) {
         avisarDemo(`Error al avanzar tiempo: ${(e as Error).message}`, true);
@@ -203,7 +182,6 @@ function montarBotoneraDemo(contenedor: HTMLElement): void {
       try {
         await api.reiniciar();
 
-        // Tras el reinicio el lead anterior ya no existe: hay que crear uno nuevo.
         let nuevoLead: string | null = null;
         try {
           nuevoLead = (await api.crearLead('ana')).lead_id;
@@ -211,12 +189,19 @@ function montarBotoneraDemo(contenedor: HTMLElement): void {
           console.error('[dashboard] no se pudo recrear el lead tras reiniciar:', e);
         }
 
-        actualizar({ leadActivo: nuevoLead, tabActiva: 'cola' });
+        ultimaFichaCargada = null;
+        actualizar({ leadActivo: nuevoLead });
         cargarCola();
-        avisarDemo('Demo reiniciado al estado inicial.');
+        avisarDemo('Demo reiniciada al estado inicial.');
       } catch (e) {
         avisarDemo(`Error al reiniciar demo: ${(e as Error).message}`, true);
       }
     },
   );
+}
+
+function escapar(s: string): string {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }

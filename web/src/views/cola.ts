@@ -1,107 +1,125 @@
 import type { ColaLeads, LeadEnCola } from '../models/tipos';
 
-const ZONA_SEMAFORO = {
-  VERDE: { etiqueta: 'VERDE', zona: 'zona-verde' },
-  AMBAR: { etiqueta: 'ÁMBAR', zona: 'zona-ambar' },
-  GRIS: { etiqueta: 'GRIS', zona: 'zona-gris' },
-} as const;
+const POR_PAGINA = 6;
+
+/** Umbral de prioridad para derivar Alta/Media/Baja (LeadEnCola no trae un
+ * campo de intención a nivel de cola — sólo `prioridad`, un float). Elegido
+ * en frontend, sin pedir un cambio de contrato. */
+type Bucket = 'Alta' | 'Media' | 'Baja';
+function bucketDePrioridad(p: number): Bucket {
+  if (p >= 0.7) return 'Alta';
+  if (p >= 0.4) return 'Media';
+  return 'Baja';
+}
+
+let paginaActual = 0;
+let filtroActual: 'Todos' | Bucket = 'Todos';
+let busquedaActual = '';
 
 /**
- * Renderiza la cola priorizada de leads como un registro tipo informe.
- * IMPORTANTE: El backend YA envía la lista ordenada por prioridad (US-14).
- * El frontend NO reordena la lista.
+ * Renderiza el panel de leads: encabezado, buscador, filtros, lista
+ * paginada y pie. El backend YA envía la lista ordenada por prioridad
+ * (US-14); el frontend nunca reordena, sólo filtra/pagina sobre ese orden.
  */
 export function renderCola(
   contenedor: HTMLElement,
   cola: ColaLeads,
-  onVerFicha: (id: string) => void,
-  onVerChat: (id: string) => void,
+  leadActivoId: string | null,
+  onSeleccionar: (id: string) => void,
 ): void {
-  const usados = cola.cupo_10.usados;
-  const ventana = cola.cupo_10.porcentaje_ventana;
-  const pct = (usados / (ventana || 1)) * 100;
-  const esAlerta = pct >= 80;
+  const conteos: Record<'Todos' | Bucket, number> = { Todos: cola.leads.length, Alta: 0, Media: 0, Baja: 0 };
+  for (const l of cola.leads) conteos[bucketDePrioridad(l.prioridad)]++;
+
+  const filtrados = cola.leads.filter(l => {
+    const pasaFiltro = filtroActual === 'Todos' || bucketDePrioridad(l.prioridad) === filtroActual;
+    const pasaBusqueda = !busquedaActual || l.nombre.toLocaleLowerCase('es').includes(busquedaActual);
+    return pasaFiltro && pasaBusqueda;
+  });
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
+  if (paginaActual >= totalPaginas) paginaActual = totalPaginas - 1;
+  const inicio = paginaActual * POR_PAGINA;
+  const pagina = filtrados.slice(inicio, inicio + POR_PAGINA);
 
   contenedor.innerHTML = `
-    <div class="hoja-informe informe-cola">
-      <header class="masthead-cola">
-        <div class="masthead-cola-titulo">
-          <span class="masthead-kicker">Registro de leads</span>
-          <p class="masthead-cifra"><span class="cifra">${cola.leads.length}</span> en cola</p>
-        </div>
-        <div class="medidor-cupo ${esAlerta ? 'alerta' : ''}"
-             title="${esAlerta ? 'Cupo regulatorio de no afiliados casi lleno (≥80%)' : 'Uso del cupo regulatorio del 10%'}">
-          <span class="medidor-cupo-etiqueta">Cupo regulatorio 10%</span>
-          <div class="medidor-cupo-escala" role="img" aria-label="Cupo usado: ${usados} de ${ventana}">
-            ${renderTicks(ventana)}
-            <div class="medidor-cupo-relleno" style="transform: scaleX(${pct / 100})"></div>
-          </div>
-          <span class="medidor-cupo-cifra cifra">${usados}/${ventana}</span>
-        </div>
-      </header>
-      <ul class="registro-leads" role="list">
-        ${cola.leads.map(renderFilaLead).join('')}
-      </ul>
+    <div class="leads-heading">
+      <span>Todos los leads</span>
+      <button type="button" aria-label="Configurar leads">⚙</button>
+    </div>
+    <label class="search-wrap">
+      <span>⌕</span>
+      <input id="buscar-lead" type="search" placeholder="Buscar lead..." value="${escapar(busquedaActual)}">
+    </label>
+    <nav class="filter-tabs" aria-label="Filtrar leads">
+      ${(['Todos', 'Alta', 'Media', 'Baja'] as const).map(f => `
+        <button type="button" class="filter ${filtroActual === f ? 'active' : ''}" data-filtro="${f}">
+          ${f} <strong>${conteos[f]}</strong>
+        </button>`).join('')}
+    </nav>
+    <div class="lead-list" id="lead-list" role="list">
+      ${pagina.length ? pagina.map(l => renderFilaLead(l, l.lead_id === leadActivoId)).join('') : '<p style="padding:1rem;color:#647198;font-size:13px">Ningún lead coincide.</p>'}
+    </div>
+    <div class="list-pager">
+      <button type="button" class="pager-button" id="pager-prev" ${paginaActual === 0 ? 'disabled' : ''} aria-label="Anterior">‹</button>
+      <span>Mostrando ${pagina.length ? inicio + 1 : 0}–${inicio + pagina.length} de ${filtrados.length}</span>
+      <button type="button" class="pager-button" id="pager-next" ${paginaActual >= totalPaginas - 1 ? 'disabled' : ''} aria-label="Siguiente">›</button>
     </div>
   `;
 
-  // Listeners para clic y botones dentro de cada fila
-  contenedor.querySelectorAll<HTMLLIElement>('[data-lead-id]').forEach(el => {
-    const leadId = el.dataset.leadId!;
-    const btnChat = el.querySelector<HTMLButtonElement>('[data-btn-chat]');
+  contenedor.querySelectorAll<HTMLButtonElement>('[data-lead-id]').forEach(el => {
+    el.addEventListener('click', () => onSeleccionar(el.dataset.leadId!));
+  });
 
-    if (btnChat) {
-      btnChat.addEventListener('click', (e) => {
-        e.stopPropagation(); // Evitar que dispare la apertura de la ficha
-        onVerChat(leadId);
-      });
-    }
+  const buscador = contenedor.querySelector<HTMLInputElement>('#buscar-lead')!;
+  buscador.addEventListener('input', () => {
+    busquedaActual = buscador.value.trim().toLocaleLowerCase('es');
+    paginaActual = 0;
+    renderCola(contenedor, cola, leadActivoId, onSeleccionar);
+  });
+  if (document.activeElement !== buscador && busquedaActual) {
+    const cursor = buscador.value.length;
+    buscador.focus();
+    buscador.setSelectionRange(cursor, cursor);
+  }
 
-    el.addEventListener('click', () => onVerFicha(leadId));
-    el.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onVerFicha(leadId);
-      }
+  contenedor.querySelectorAll<HTMLButtonElement>('.filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filtroActual = btn.dataset.filtro as 'Todos' | Bucket;
+      paginaActual = 0;
+      renderCola(contenedor, cola, leadActivoId, onSeleccionar);
     });
+  });
+
+  contenedor.querySelector<HTMLButtonElement>('#pager-prev')?.addEventListener('click', () => {
+    paginaActual = Math.max(0, paginaActual - 1);
+    renderCola(contenedor, cola, leadActivoId, onSeleccionar);
+  });
+  contenedor.querySelector<HTMLButtonElement>('#pager-next')?.addEventListener('click', () => {
+    paginaActual = Math.min(totalPaginas - 1, paginaActual + 1);
+    renderCola(contenedor, cola, leadActivoId, onSeleccionar);
   });
 }
 
-function renderFilaLead(l: LeadEnCola): string {
-  const zona = ZONA_SEMAFORO[l.semaforo] ?? ZONA_SEMAFORO.GRIS;
-  const inicial = l.nombre.trim().charAt(0).toUpperCase() || '?';
+function renderFilaLead(l: LeadEnCola, seleccionado: boolean): string {
+  const bucket = bucketDePrioridad(l.prioridad);
+  const claseBucket = bucket === 'Alta' ? 'hot' : bucket === 'Media' ? 'medium' : '';
+  const clasePrioridad = bucket === 'Media' ? 'medium' : bucket === 'Baja' ? 'baja' : '';
+  const iniciales = l.nombre.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase() || '?';
+  const afiliacion = l.afiliado ? 'Afiliado' : 'No afiliado';
+
   return `
-    <li class="fila-lead ${zona.zona}" data-lead-id="${l.lead_id}" tabindex="0" role="listitem">
-      <span class="fila-lead-avatar" aria-hidden="true">${escapar(inicial)}</span>
-      <div class="fila-lead-cuerpo">
-        <div class="fila-lead-linea1">
-          <span class="lead-nombre">${escapar(l.nombre)}</span>
-          <span class="fila-lead-afiliado ${l.afiliado ? 'es-afiliado' : ''}">${l.afiliado ? 'Afiliado' : 'No afiliado'}</span>
-          <span class="fila-lead-zona" aria-label="Semáforo ${l.semaforo}">${zona.etiqueta}</span>
-          <span class="lead-ruta">${escapar(l.ruta)}</span>
-        </div>
-        <p class="lead-resumen">${escapar(l.resumen)}</p>
-      </div>
-      <span class="fila-lead-prioridad" title="Prioridad calculada">
-        <span class="fila-lead-prioridad-etiqueta">Prioridad</span>
-        <span class="fila-lead-prioridad-cifra cifra">${l.prioridad.toFixed(2)}</span>
+    <button type="button" class="lead-row ${claseBucket} ${seleccionado ? 'selected' : ''}" data-lead-id="${l.lead_id}" role="listitem">
+      <span class="avatar lead-avatar" aria-hidden="true">${escapar(iniciales)}</span>
+      <span class="lead-info">
+        <span class="lead-name">${escapar(l.nombre)}</span>
+        <span class="lead-meta">${escapar(afiliacion)}</span>
+        <span class="lead-last">${escapar(l.resumen)}</span>
       </span>
-      <button class="btn-ver-chat" data-btn-chat="true" title="Ver chat en vivo con ${escapar(l.nombre)}" type="button">
-        Ver chat
-      </button>
-    </li>
+      <span class="priority ${clasePrioridad}">${bucket}</span>
+    </button>
   `;
 }
 
-/** Marcas de calibración de la escala del cupo (una por unidad, sin el borde final). */
-function renderTicks(max: number): string {
-  const n = Math.max(1, Math.round(max));
-  return Array.from({ length: n - 1 }, (_, i) =>
-    `<span class="medidor-tick" style="left: ${((i + 1) / n) * 100}%"></span>`,
-  ).join('');
-}
-
-/** SIEMPRE escapar: anti-XSS */
 function escapar(s: string): string {
   const d = document.createElement('div');
   d.textContent = s;
