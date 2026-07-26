@@ -1,0 +1,100 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-20-calificar-ficha
+issue:
+  number: 20
+  title: "Calificar lead and generate deterministic advisor ficha"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply-slice-1
+next_recommended: apply
+branch: feat/issue-20-calificar-ficha
+worktree: /tmp/vivi-issue-20
+base: origin/main
+base_sha: 0345180
+delivery:
+  strategy: feature-branch-chain
+  target: main
+  review_budget_authored_lines: 400
+  planned_authored_lines: 500-700
+  hard_stop_authored_lines: 400
+  budget_risk: high
+  decision_needed_before_apply: false
+  chained_prs_recommended: true
+  size_exception: prohibited
+scope:
+  include:
+    - internal/usecase/calificar_lead.go
+    - internal/usecase/generar_ficha.go
+    - deterministic usecase tests
+  exclude:
+    - internal/domain
+    - internal/domain/motor
+    - internal/usecase/puertos.go
+    - internal/infrastructure
+    - internal/adapters
+    - HTTP/frontend
+    - migrations/config
+    - Contract/Wiki
+    - LLM/narrative port
+artifacts:
+  exploration: openspec/changes/issue-20-calificar-ficha/exploration.md
+  proposal: openspec/changes/issue-20-calificar-ficha/proposal.md
+  specs:
+    - openspec/changes/issue-20-calificar-ficha/specs/calificar-lead/spec.md
+    - openspec/changes/issue-20-calificar-ficha/specs/generar-ficha/spec.md
+  design: openspec/changes/issue-20-calificar-ficha/design.md
+  tasks: openspec/changes/issue-20-calificar-ficha/tasks.md
+  apply_progress: openspec/changes/issue-20-calificar-ficha/apply-progress.md
+  state: openspec/changes/issue-20-calificar-ficha/state.yaml
+engram_topics:
+  exploration: sdd/issue-20-calificar-ficha/explore
+  proposal: sdd/issue-20-calificar-ficha/proposal
+  spec: sdd/issue-20-calificar-ficha/spec
+  design: sdd/issue-20-calificar-ficha/design
+  tasks: sdd/issue-20-calificar-ficha/tasks
+  state: sdd/issue-20-calificar-ficha/state
+capabilities:
+  new:
+    - calificar-lead
+    - generar-ficha
+  modified: []
+delivery_slices:
+  - id: 1
+    content: internal/usecase/calificar_lead.go + deterministic tests
+    target: feature/bloque-a
+    forecast_authored_lines:
+      runtime: 130
+      tests: 210
+      total: 340
+      maximum: 400
+  - id: 2
+    content: internal/usecase/generar_ficha.go + deterministic tests and error/retry paths
+    target: slice-1 branch
+    forecast_authored_lines:
+      runtime: 135
+      tests: 215
+      total: 350
+      maximum: 400
+task_progress:
+  total: 10
+  completed: 4
+  pending: 6
+  all_complete: false
+constraints:
+  - Calificar only CALIFICADO leads.
+  - Choose lowest positive catalog PrecioDesde within preliminary budget.
+  - Recalculate capacity with candidate price; motor median fallback applies when candidate is zero.
+  - Use GemeloKNN K=30, exact catalog zones, and existing recommendation and matrix motors.
+  - Conversion is INDEPENDIENTE OR hogar_con_afiliado OR nonblank caja_externa.
+  - Apply Contract priority formula with ratio capped at 1.2 and derive semaforo via helper.
+  - Set ConsumeCupo10 only for non-affiliate ASESOR.
+  - Keep ASESOR as CALIFICADO for GenerarFicha; transition other routes to EN_NUTRICION, REMARKETING, or DESPEDIDO.
+  - Publish RutaDecidida only after durable lead save.
+  - GenerarFicha accepts only CALIFICADO ASESOR and emits deterministic Contract Ficha content with fixed-order benefits/arguments/alert.
+  - Persist ficha before transitioning lead to ENTREGADO and saving lead.
+  - No LLM, narrative field, new port, domain/motor, adapter, infrastructure, HTTP, frontend, migration, config, or Contract/Wiki changes.
+  - Document partial writes; ficha upsert makes retry repair feasible.
+last_updated: 2026-07-25T21:39:42-05:00
