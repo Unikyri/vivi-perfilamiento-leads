@@ -8,12 +8,23 @@ artifact_store:
   primary: engram
   repository: openspec
 status: active
-current_phase: verify
-next_recommended: resolve-blockers
-branch: feat/issue-20-generar-ficha
-worktree: /tmp/vivi-issue-20-ficha
+current_phase: apply
+next_recommended: verify
+branch: test/issue-20-qualification-edges
+worktree: /tmp/vivi-issue-20-verify
 base: origin/main
 base_sha: 0345180
+apply_batch:
+  name: qualification-edge-hardening
+  files:
+    - internal/usecase/calificar_lead_edges_test.go
+  authored_lines: 63
+  runtime_lines: 0
+  test_lines: 63
+  focused_test: 'go test ./internal/usecase -run TestCalificarLead(PriorityCapsRatioAndUsesPartialConfidence|NonCanonicalCatalogKeyOmitsKNNZone|RutaDecididaPayloadContainsCopiedDecisionData)$ -count=1 -v'
+  result: pass
+  scope: test-only; no production or forbidden paths changed
+  timestamp: 2026-07-25T22:42:29-05:00
 delivery:
   strategy: feature-branch-chain
   target: main

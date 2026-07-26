@@ -2,11 +2,11 @@
 
 ## Batch
 - Change: `issue-20-calificar-ficha`
-- Slice: 2 — deterministic ficha generation remediation
-- Branch: `feat/issue-20-generar-ficha`
-- Worktree: `/tmp/vivi-issue-20-ficha`
+- Slice: qualification-edge-hardening after independent verification
+- Branch: `test/issue-20-qualification-edges`
+- Worktree: `/tmp/vivi-issue-20-verify`
 - Mode: Standard (strict TDD disabled by project configuration)
-- Delivery: feature-branch-chain, Slice 2 boundary; no size exception
+- Delivery: feature-branch-chain, focused test-only slice; no size exception
 
 ## Completed Tasks
 - [x] 1.1–1.4 Slice 1 qualification, shared decision, routing, CAS, and event ordering (inherited from Slice 1).
@@ -15,37 +15,37 @@
 - [x] 2.3 Fixed-clock/ID tests cover deterministic content, recommendation parity, threshold `.20` versus `>.20`, no-rent behavior, and read-only output isolation.
 - [x] 2.4 Ficha-first persistence and repair retry preserve stable ficha ID/time, leave failed lead CAS unchanged, and complete `ENTREGADO` on retry without events; the public API is `Ejecutar(ctx context.Context, leadID string) (*domain.Ficha, error)` and successful handoff stamps `ActualizadoEn` from `Reloj`.
 - [x] 3.1 Slice validation and physical source budget evidence recorded below.
+- [x] Qualification edge hardening: added three deterministic tests for ratio `>1.2` with confidence `<1`, exact catalog-key zone behavior, and complete copied `RutaDecidida` payload fields.
 - [ ] 3.2 Commit/work-unit closure remains pending because this executor was explicitly instructed not to commit.
 
 ## Implementation
-- `internal/usecase/generar_ficha.go`: removed `EntradaGenerarFicha`, `EntradaFicha`, and `SalidaGenerarFicha`; changed `Ejecutar` to the explicit leadID/pointer-result API; preserved all guards, read failures, ficha-first save, transition, CAS, retry, no-event, and no-LLM behavior; set `toSave.ActualizadoEn = uc.Reloj.Ahora()` immediately before the successful lead save.
-- `internal/usecase/generar_ficha_test.go`: updated existing helper and retry calls to the explicit API and asserted the fixed Reloj timestamp on the persisted delivered lead.
-- `internal/usecase/calificar_lead.go`: unchanged.
+- `internal/usecase/generar_ficha.go`: unchanged in this batch; previous Slice 2 implementation remains cumulative progress.
+- `internal/usecase/generar_ficha_test.go`: unchanged in this batch; previous Slice 2 tests remain cumulative progress.
+- `internal/usecase/calificar_lead.go`: unchanged; no production code was modified.
+- `internal/usecase/calificar_lead_edges_test.go`: added 63 formatted test lines covering the three verifier warnings. The priority case uses ratio `2.0` and confidence `0.85`, proving priority is `1.2 * confidence`; the zone case compares canonical and noncanonical keys and asserts the normalized missing-zone distance; the event case asserts `ruta`, `semaforo`, `consume_cupo_10`, `prioridad`, and copied `recomendaciones`.
 
 ## Work Unit Evidence
 | Evidence | Result |
 |---|---|
-| Focused test | `go test ./internal/usecase -run TestGenerarFicha -count=1` — PASS; all GenerarFicha tests and subcases passed. |
-| Runtime harness | N/A — synchronous provider-free usecase has no HTTP, process, shell, or external runtime boundary; deterministic fake catalog, ficha repository, fixed clock/ID, and retry-after-CAS-failure harness exercised the persistence boundary. |
-| Rollback boundary | Revert only `internal/usecase/generar_ficha.go` and `internal/usecase/generar_ficha_test.go`; Slice 1 qualification files remain untouched. |
+| Focused test | `go test ./internal/usecase -run 'TestCalificarLead(PriorityCapsRatioAndUsesPartialConfidence|NonCanonicalCatalogKeyOmitsKNNZone|RutaDecididaPayloadContainsCopiedDecisionData)$' -count=1 -v` — PASS; all 3 edge tests passed. |
+| Runtime harness | N/A — synchronous provider-free usecase has no HTTP, process, shell, or external runtime boundary; the focused tests exercise the deterministic usecase, motor KNN, event payload, and fake repository/bus boundary. |
+| Rollback boundary | Revert only `internal/usecase/calificar_lead_edges_test.go`; no production, domain, motor, ports, infrastructure, adapter, HTTP, frontend, migration, config, Contract, or Wiki path changed. |
 
 ## Full Validation
-- `go test ./internal/usecase -run TestGenerarFicha -count=1` — PASS.
-- `go test ./...` — PASS.
-- `go test -race ./...` — PASS.
+- `go test ./internal/usecase -run 'TestCalificarLead(PriorityCapsRatioAndUsesPartialConfidence|NonCanonicalCatalogKeyOmitsKNNZone|RutaDecididaPayloadContainsCopiedDecisionData)$' -count=1 -v` — PASS.
+- `go test ./... -count=1` — PASS.
+- `go test -race ./... -count=1` — PASS.
 - `go build ./...` — PASS.
 - `go vet ./...` — PASS.
 - `go mod verify` — PASS (`all modules verified`).
-- `go list ./...` — PASS; 14 packages listed.
-- `gofmt -l internal/usecase/generar_ficha.go internal/usecase/generar_ficha_test.go` — no output.
+- `test -z "$(gofmt -l internal/usecase/calificar_lead_edges_test.go)"` — PASS; no output.
 - `git diff --check` — PASS.
-- Legacy API grep (`EntradaGenerarFicha|EntradaFicha|SalidaGenerarFicha`) — no references.
-- Scope/status — only the two Slice 2 Go files and active SDD artifacts are changed; no forbidden or Slice 1 implementation path changed.
-- Physical Slice 2 source — `199 + 189 = 388` formatted lines, within the 400-line hard ceiling.
+- Test-only batch source budget — `63` authored lines, `0` runtime lines, `63` test lines; well below the 400-line hard ceiling.
 
 ## Deviations and Risks
-- No implementation deviation from the Slice 2 design; remediation only aligns the public API and lead timestamp behavior with Issue #20.
-- Commit closure is intentionally pending under the explicit no-commit constraint; implementation is ready for independent verification after work-unit commit handling by the parent workflow.
+- No production or design deviation; this batch only adds readable deterministic coverage for the verifier's three concrete warnings.
+- Commit/work-unit closure is intentionally pending under the explicit no-commit constraint; independent verification should rerun after the parent workflow establishes review authority and work-unit closure.
+- The pre-existing authority-only verification blockers remain unchanged: bound review receipt and commit closure are outside this executor's scope.
 
 ## Next
-Independent SDD verification should run after commit/work-unit closure. No events or LLM calls are introduced by this slice.
+Run independent SDD verification after the parent workflow handles the existing authority/commit gates. Do not archive in this executor.
