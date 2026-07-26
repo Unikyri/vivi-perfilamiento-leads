@@ -38,9 +38,9 @@ Docs/vivi-perfilamiento-leads.wiki/
 # Binarios compilados
 bin/
 
-# Frontend build output (pero conservar placeholder para go:embed)
-internal/adapters/http/estaticos/*
-!internal/adapters/http/estaticos/index.html
+# La SPA compilada SÍ se versiona: //go:embed all:estaticos (issue #27) sólo
+# puede empaquetar lo que está en el árbol de git al compilar. Regenerar con
+# `make front-build` y commitear el resultado. El CI verifica que esté al día.
 
 # Node
 web/node_modules/
