@@ -1,6 +1,14 @@
+/** Fecha fija de la demo: el reset del backend siempre vuelve al 2026-07-26
+ * (`approvedDemoDate` en demo_repository.go), y el hito de afiliación más
+ * rápido en dispararse cae a +8 días de creado el plan. Saltar a esta fecha
+ * lo cubre con margen sin ir tan lejos como para pasarse la prima de
+ * diciembre, si en algún momento se quiere mostrar esa también. */
+const FECHA_AVANCE_DEMO = '2026-08-10';
+
 /**
- * Renderiza la botonera del Demo (US-12, US-17).
- * Estilo "Control Room" (grafito #111827), visualmente separada del producto.
+ * Renderiza los controles de demo en el topbar: un botón para avanzar
+ * tiempo a una fecha fija (sin selector, sin ventanas nativas) y uno para
+ * reiniciar. El aviso de resultado aparece inline, nunca en un alert().
  */
 export function renderBotoneraDemo(
   contenedor: HTMLElement,
@@ -8,32 +16,19 @@ export function renderBotoneraDemo(
   onReiniciarDemo: () => void,
 ): void {
   contenedor.innerHTML = `
-    <div class="botonera-demo">
-      <label class="campo-fecha">
-        Avanzar a
-        <input type="date" id="demo-fecha" value="2026-08-01" min="2026-07-26" />
-      </label>
-
-      <button id="btn-avanzar-tiempo" class="btn-demo-action" type="button" title="Simular avance en la línea de tiempo">
-        ⏩ Avanzar tiempo
-      </button>
-
-      <button id="btn-reiniciar-demo" class="btn-demo-action" type="button" title="Reiniciar demo al estado inicial (<3s)">
-        ↺ Reiniciar demo
-      </button>
-
-      <span id="demo-aviso" role="status" aria-live="polite" class="demo-aviso"></span>
-    </div>
+    <button id="btn-avanzar-tiempo" class="top-action primary" type="button" title="Avanzar la demo a ${FECHA_AVANCE_DEMO}">
+      <span class="play">▶</span> Avanzar tiempo
+    </button>
+    <button id="btn-reiniciar-demo" class="top-action" type="button" title="Reiniciar demo al estado inicial">
+      <span>↺</span> Reiniciar
+    </button>
+    <span id="demo-aviso" role="status" aria-live="polite" class="demo-aviso"></span>
   `;
 
-  // Listeners
-  const btnAvanzar = contenedor.querySelector<HTMLButtonElement>('#btn-avanzar-tiempo');
-  if (btnAvanzar) {
-    btnAvanzar.addEventListener('click', onAvanzarTiempo);
-  }
+  contenedor.querySelector<HTMLButtonElement>('#btn-avanzar-tiempo')?.addEventListener('click', onAvanzarTiempo);
+  contenedor.querySelector<HTMLButtonElement>('#btn-reiniciar-demo')?.addEventListener('click', onReiniciarDemo);
+}
 
-  const btnReiniciar = contenedor.querySelector<HTMLButtonElement>('#btn-reiniciar-demo');
-  if (btnReiniciar) {
-    btnReiniciar.addEventListener('click', onReiniciarDemo);
-  }
+export function fechaAvanceDemo(): string {
+  return FECHA_AVANCE_DEMO;
 }

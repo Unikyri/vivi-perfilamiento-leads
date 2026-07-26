@@ -42,17 +42,24 @@ export function renderEscribiendo(el: HTMLElement, activo: boolean): void {
 /** Renderiza la estructura HTML inicial del panel de chat (se monta una vez). */
 export function renderShellChat(panel: HTMLElement): void {
   panel.innerHTML = `
-    <div class="chat-header">
-      <div class="avatar-vivi">V</div>
-      <div class="info-header">
-        <span class="nombre-vivi">Vivi</span>
-        <span class="escribiendo" id="indicador-escribiendo">escribiendo…</span>
+    <header class="chat-top">
+      <button class="back" aria-label="Volver">‹</button>
+      <span class="avatar chat-avatar" id="chat-avatar" aria-hidden="true">?</span>
+      <div class="chat-name">
+        <span id="chat-nombre-lead">Selecciona un lead</span>
+        <small>en línea <span class="online">●</span></small>
       </div>
-    </div>
+      <div class="chat-tools">
+        <button type="button" aria-label="Llamar">☎</button>
+        <button type="button" aria-label="Videollamar">▣</button>
+        <button type="button" aria-label="Más acciones">⋮</button>
+      </div>
+    </header>
     <div class="mensajes-scroll" id="mensajes-scroll">
       <div class="mensajes" id="contenedor-mensajes"></div>
+      <button class="btn-nuevos" id="btn-nuevos" type="button">↓ nuevos mensajes</button>
     </div>
-    <button class="btn-nuevos" id="btn-nuevos" aria-label="Ir a nuevos mensajes">↓ nuevos mensajes</button>
+    <span class="escribiendo" id="indicador-escribiendo" style="padding:0 16px">escribiendo…</span>
     <div class="barra-entrada">
       <button class="btn-mic" id="btn-mic" aria-label="Grabar nota de voz" type="button">🎤</button>
       <div class="mic-grabando" id="mic-grabando">
@@ -61,10 +68,22 @@ export function renderShellChat(panel: HTMLElement): void {
         <button class="btn-detener-mic" id="btn-detener-mic" type="button">■</button>
       </div>
       <input type="text" class="input-mensaje" id="input-mensaje"
-             placeholder="Escribe un mensaje…" autocomplete="off" />
+             placeholder="Escribí un mensaje..." autocomplete="off" />
       <button class="btn-enviar" id="btn-enviar" aria-label="Enviar mensaje" type="button">➤</button>
     </div>
   `;
+}
+
+/** Actualiza sólo el nombre/avatar del encabezado — no remonta el panel
+ * entero al cambiar de lead activo (el polling sigue corriendo). */
+export function actualizarCabeceraChat(nombre: string): void {
+  const nombreEl = document.getElementById('chat-nombre-lead');
+  const avatarEl = document.getElementById('chat-avatar');
+  if (nombreEl) nombreEl.textContent = nombre;
+  if (avatarEl) {
+    const iniciales = nombre.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase() || '?';
+    avatarEl.textContent = iniciales;
+  }
 }
 
 /** SIEMPRE escapar: el texto viene del LLM y del usuario (anti-XSS). */
