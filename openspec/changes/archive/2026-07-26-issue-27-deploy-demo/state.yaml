@@ -1,0 +1,118 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-27-deploy-demo
+issue:
+  number: 27
+  title: "[B6] Deploy a Heroku, seed del demo y guion de entrega"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: archived
+phase: archive
+artifacts:
+  explore: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+tasks_progress:
+  total: 14
+  completed: 14
+  pending: []
+next: none
+archive:
+  status: archived_and_closed
+  path: openspec/changes/archive/2026-07-26-issue-27-deploy-demo
+  date: 2026-07-26
+  specs_synced:
+    - demo-control
+    - despliegue-heroku
+    - estaticos-spa
+    - seed-demo
+  review_gate: allow
+  review_lineage: review-3225019e6219019b
+  review_binding_revision: sha256:54c70eefcc12b7aac61b848f4c7ec8b513a0ab7a26f22fc934ab26e64f59d3ea
+last_slice: focused-verifier-remediation
+s4_doc12_source: unavailable-in-target-checkout-and-git-history
+delivery:
+  strategy: ask-on-risk
+  review_budget_changed_lines: 400
+  slices:
+    - s1-ci-toolchain-build-order
+    - s2-embedded-spa-serving
+    - s3-demo-seed-and-reset
+    - s4-demo-and-ops-docs
+    - s5-credential-gated-heroku-promotion
+constraints:
+  demo_seed_default: false
+  secrets_in_repo: forbidden
+  adk_go: excluded
+  dynos: 1
+  external_calls_in_sdd_phases: forbidden
+blockers:
+  external: []
+  decisions: []
+allowed_edit_roots:
+  - /tmp/vivi-issue-27/.github/workflows
+  - /tmp/vivi-issue-27/app.json
+  - /tmp/vivi-issue-27/Makefile
+  - /tmp/vivi-issue-27/go.mod
+  - /tmp/vivi-issue-27/.gitignore
+  - /tmp/vivi-issue-27/.env.example
+  - /tmp/vivi-issue-27/web/vite.config.ts
+  - /tmp/vivi-issue-27/web/package.json
+  - /tmp/vivi-issue-27/cmd/servidor
+  - /tmp/vivi-issue-27/internal/adapters/http
+  - /tmp/vivi-issue-27/internal/usecase
+  - /tmp/vivi-issue-27/docs
+  - /tmp/vivi-issue-27/openspec/changes/issue-27-deploy-demo
+last_updated: 2026-07-26
+remediation:
+  status: complete
+  scope: verifier-warnings-only
+  warnings:
+    - heroku-node-lifecycle-before-go-compile
+    - ignored-static-placeholder-stale-output
+  external_calls: none
+verification:
+  status: complete
+  verdict: pass_with_warnings
+  schema: gentle-ai.verify-result/v1
+  requirements: 8/8
+  scenarios: 12/12
+  test_command: go test ./... -count=1
+  test_exit_code: 0
+  build_command: go build ./...
+  build_exit_code: 0
+  evidence_revision: sha256:2b263a3bdf6f2177775dbbdb13594dda5239f68ee90faaa96b1552b85e78b0eb
+  validator: gentle-ai 2.2.0-rc.1 sdd-verify-validate --requirements 8 --scenarios 12
+  report_sha256: 71defbf70a005df85d35cbe007eebd5b9a2b84e0ca048869e401aeb6a732ce19
+  workspace: /tmp/vivi-issue-27-archive
+  candidate_tree: 50668e718815c7d7206efaa8b9e10dc0872c1cc6
+  review_lineage: review-90f1e5d054fafb2a
+  binding_revision: sha256:7ea734d0e6f873ad24547e54b1cf8f4277c654ce73461c9ebe3f98b5e768e4aa
+  runtime_attempt:
+    ordinal: 1
+    request_id: issue-27-final-verify-20260726
+    expected_revision: sha256:6d757e74071977f87a41d8519e9e768f1f83d4869cbfc1ec3537def5a5eb014c
+    finish_request_id: issue-27-final-verify-20260726-finish-2
+    finish_revision: sha256:46a388453c7a02a8709ff7fec14d46d719df5342136c769c7b46904d60eb4b80
+    outcome: passed
+    harness_disposition: reused
+    complete: true
+  warnings:
+    - live-postgres-integration-not-executed
+    - acceptance-and-ping-scenario-is-documentation-governed
+    - public-salud-check-remains-operator-step
+    - preexisting-web-npm-audit-findings
+    - wiki-doc-12-source-unavailable
+  external_calls: none
+  verified_at: 2026-07-26
+  archive_gate_note: |
+    Native post-apply review authority was revalidated against this workspace and returned
+    result allow. The approved lineage is review-3225019e6219019b with binding revision
+    sha256:54c70eefcc12b7aac61b848f4c7ec8b513a0ab7a26f22fc934ab26e64f59d3ea. The prior
+    Engram state snapshot's resolve-review note is superseded by this current native authority;
+    it is retained only as historical state inside this audit trail.
