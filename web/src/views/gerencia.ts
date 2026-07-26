@@ -8,8 +8,8 @@ const PROYECTOS_DISPONIBLES = [
 ];
 
 /**
- * Renderiza el panel de Gerencia / Buyer Persona Vivo (US-16).
- * Sobrio, estilo junta directiva con barras horizontales azules sobre blanco.
+ * Renderiza el panel de Gerencia / Buyer Persona Vivo (US-16) como un
+ * informe de junta directiva: cifras tabulares sobre papel, sin tarjetas.
  */
 export function renderGerencia(
   contenedor: HTMLElement,
@@ -19,6 +19,7 @@ export function renderGerencia(
 ): void {
   const muestras = bp ? bp.muestras : 312;
   const desistimientoPct = bp ? (bp.tasa_desistimiento * 100).toFixed(0) : '11';
+  const proyectoActual = PROYECTOS_DISPONIBLES.find(p => p.id === proyectoSeleccionadoId)?.nombre ?? 'Proyecto';
 
   // Datos fallback si el backend aún no retorna agregados
   const afilData = bp?.afiliacion ?? { afiliados: 180, no_afiliados: 132 };
@@ -26,10 +27,14 @@ export function renderGerencia(
   const edadData = bp?.rango_edad ?? { '18-25': 20, '26-35': 150, '36-45': 90, '46+': 52 };
 
   contenedor.innerHTML = `
-    <div class="gerencia-container">
-      <header class="gerencia-header">
+    <div class="hoja-informe informe-gerencia">
+      <header class="masthead-gerencia">
+        <div class="masthead-gerencia-titulo">
+          <span class="masthead-kicker">Buyer persona vivo</span>
+          <h2 class="masthead-nombre">${escapar(proyectoActual)}</h2>
+        </div>
         <div class="selector-proyecto-wrap">
-          <label for="select-proyecto-gerencia">Proyecto:</label>
+          <label for="select-proyecto-gerencia">Proyecto</label>
           <select id="select-proyecto-gerencia" class="select-proyecto">
             ${PROYECTOS_DISPONIBLES.map(p => `
               <option value="${p.id}" ${p.id === proyectoSeleccionadoId ? 'selected' : ''}>
@@ -38,52 +43,43 @@ export function renderGerencia(
             `).join('')}
           </select>
         </div>
-
-        <span class="nota-actualizacion">
-          ℹ️ Se actualiza en tiempo real con cada lead perfilado
-        </span>
       </header>
 
-      <!-- Métricas Clave -->
-      <div class="metricas-row">
-        <div class="card-metrica">
-          <div class="metrica-label">Personas en vivo interesadas</div>
-          <div class="metrica-valor">${muestras}</div>
+      <p class="nota-actualizacion">Se actualiza en tiempo real con cada lead perfilado.</p>
+
+      <!-- Franja de métricas clave -->
+      <div class="franja-metricas">
+        <div class="franja-metrica">
+          <span class="franja-metrica-etiqueta">Personas en vivo interesadas</span>
+          <span class="franja-metrica-cifra cifra">${muestras}</span>
         </div>
-        <div class="card-metrica">
-          <div class="metrica-label">Tasa de Desistimiento Histórica</div>
-          <div class="metrica-valor">${desistimientoPct}%</div>
+        <div class="franja-metrica">
+          <span class="franja-metrica-etiqueta">Tasa de desistimiento histórica</span>
+          <span class="franja-metrica-cifra cifra">${desistimientoPct}%</span>
         </div>
       </div>
 
-      <!-- Gráficos de Barras Horizontales (Estilo Junta Directiva) -->
-      <div class="grid-tres-columnas">
-
-        <!-- Gráfico 1: Afiliación -->
-        <article class="grafico-barras-card">
-          <h4>Distribución por Afiliación</h4>
+      <!-- Columnas de distribución (estilo junta directiva) -->
+      <section class="panel-graficos">
+        <div class="columna-grafico">
+          <h4 class="seccion-titulo">Distribución por afiliación</h4>
           <div class="barras-lista">
             ${renderBarras(afilData)}
           </div>
-        </article>
-
-        <!-- Gráfico 2: Categoría -->
-        <article class="grafico-barras-card">
-          <h4>Categoría de Afiliación</h4>
+        </div>
+        <div class="columna-grafico">
+          <h4 class="seccion-titulo">Categoría de afiliación</h4>
           <div class="barras-lista">
             ${renderBarras(catData)}
           </div>
-        </article>
-
-        <!-- Gráfico 3: Rango de Edad -->
-        <article class="grafico-barras-card">
-          <h4>Rango de Edad</h4>
+        </div>
+        <div class="columna-grafico">
+          <h4 class="seccion-titulo">Rango de edad</h4>
           <div class="barras-lista">
             ${renderBarras(edadData)}
           </div>
-        </article>
-
-      </div>
+        </div>
+      </section>
     </div>
   `;
 
@@ -96,6 +92,22 @@ export function renderGerencia(
   }
 }
 
+// Claves crudas del Contrato (data/compradores.json) que no son ya un
+// rótulo legible — los rangos de edad ('20-35', '55+', ...) sí lo son
+// y se muestran tal cual.
+const ETIQUETAS_CLAVE: Record<string, string> = {
+  afiliados: 'Afiliados',
+  no_afiliados: 'No afiliados',
+  SIN_DATO: 'Sin dato',
+  A: 'Categoría A',
+  B: 'Categoría B',
+  C: 'Categoría C',
+};
+
+function etiquetarClave(clave: string): string {
+  return ETIQUETAS_CLAVE[clave] ?? clave;
+}
+
 function renderBarras(datos: Record<string, number>): string {
   const maxVal = Math.max(...Object.values(datos), 1);
 
@@ -103,11 +115,11 @@ function renderBarras(datos: Record<string, number>): string {
     const pctBarra = ((val / maxVal) * 100).toFixed(0);
     return `
       <div class="barra-item">
-        <span class="barra-label">${escapar(lbl)}</span>
+        <span class="barra-label">${escapar(etiquetarClave(lbl))}</span>
         <div class="barra-track">
-          <div class="barra-fill" style="width: ${pctBarra}%"></div>
+          <div class="barra-fill" style="transform: scaleX(${Number(pctBarra) / 100})"></div>
         </div>
-        <span class="barra-val">${val}</span>
+        <span class="barra-val cifra">${val}</span>
       </div>
     `;
   }).join('');

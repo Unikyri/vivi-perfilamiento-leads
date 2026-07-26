@@ -82,7 +82,59 @@ body {
   flex: 1;
   display: flex;
   overflow: hidden;
+  position: relative;
 }
+
+.panel-colapsado {
+  flex: 0 0 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border: none !important;
+}
+
+/* El panel restante ocupa el espacio que libera su vecino colapsado. */
+.split:has(#panel-asesor.panel-colapsado) #panel-chat {
+  flex: 1 1 auto !important;
+  max-width: none !important;
+}
+
+.split:has(#panel-chat.panel-colapsado) #panel-asesor {
+  flex: 1 1 auto !important;
+}
+
+.btn-colapsar {
+  flex-shrink: 0;
+  align-self: center;
+  width: 22px;
+  height: 44px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #5f6368;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  z-index: 5;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-colapsar:hover {
+  background: #f1f3f4;
+}
+
+.btn-colapsar-chat {
+  border-radius: 0 8px 8px 0;
+  margin-left: -1px;
+}
+
+.btn-colapsar-asesor {
+  border-radius: 8px 0 0 8px;
+  margin-right: -1px;
+  order: -1;
+}
+
+[aria-expanded="false"].btn-colapsar-chat { transform: scaleX(-1); }
+[aria-expanded="false"].btn-colapsar-asesor { transform: scaleX(-1); }
 
 .panel {
   overflow-y: auto;

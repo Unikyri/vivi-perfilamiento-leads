@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-26T00:00:00Z",
+  "title": "Design System: Vivi — Advisor Panel",
+  "extensions": {
+    "colorMeta": {
+      "colsubsidio-azul": { "role": "primary", "displayName": "Colsubsidio Azul", "canonical": "#003DA6", "tonalRamp": ["#001433", "#00205A", "#002D7A", "#003DA6", "#0056B3", "#2E75C7", "#7FA9DE", "#D6E4F5"] },
+      "colsubsidio-azul-oscuro": { "role": "primary", "displayName": "Colsubsidio Azul Oscuro", "canonical": "#002D7A" },
+      "colsubsidio-azul-claro": { "role": "primary", "displayName": "Colsubsidio Azul Claro", "canonical": "#0056B3" },
+      "colsubsidio-amarillo": { "role": "secondary", "displayName": "Colsubsidio Amarillo", "canonical": "#FFC700", "tonalRamp": ["#4D3A00", "#806100", "#B38700", "#E6AE00", "#FFC700", "#FFD84D", "#FFE58C", "#FFF3C4"] },
+      "colsubsidio-amarillo-suave": { "role": "secondary", "displayName": "Amarillo Suave", "canonical": "#FFF3C4" },
+      "ok": { "role": "semantic-fill", "displayName": "Semáforo Verde", "canonical": "#2E8540" },
+      "ok-ink": { "role": "semantic-text", "displayName": "Verde Tinta (texto WCAG)", "canonical": "#256B34" },
+      "alerta": { "role": "semantic-fill", "displayName": "Semáforo Ámbar", "canonical": "#E8A200" },
+      "alerta-ink": { "role": "semantic-text", "displayName": "Ámbar Tinta (texto WCAG)", "canonical": "#8A5A00" },
+      "neutro": { "role": "semantic-fill", "displayName": "Semáforo Gris", "canonical": "#9E9E9E" },
+      "gris-ink": { "role": "semantic-text", "displayName": "Gris Tinta (texto WCAG)", "canonical": "#5B5B5B" },
+      "error": { "role": "semantic-fill", "displayName": "Error de Sistema", "canonical": "#C0392B" },
+      "papel": { "role": "neutral", "displayName": "Papel", "canonical": "#FFFFFF" },
+      "papel-suave": { "role": "neutral", "displayName": "Papel Suave", "canonical": "#F5F4EF" },
+      "fondo": { "role": "neutral", "displayName": "Fondo del Panel", "canonical": "#FAFAF8" },
+      "zona-verde-bg": { "role": "neutral", "displayName": "Zona Verde (fondo)", "canonical": "#EAF6EC" },
+      "zona-ambar-bg": { "role": "neutral", "displayName": "Zona Ámbar (fondo)", "canonical": "#FDF3DF" },
+      "zona-gris-bg": { "role": "neutral", "displayName": "Zona Gris (fondo)", "canonical": "#F1F1EF" },
+      "texto-principal": { "role": "neutral", "displayName": "Texto Principal", "canonical": "#1F2937" },
+      "texto-secundario": { "role": "neutral", "displayName": "Texto Secundario", "canonical": "#4B5563" },
+      "borde-suave": { "role": "neutral", "displayName": "Borde Suave", "canonical": "#E5E7EB" },
+      "regla-fuerte": { "role": "neutral", "displayName": "Regla Fuerte", "canonical": "#C9CDD3" }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Masthead names (.masthead-nombre) and the cola's dominant lead-count figure (.masthead-cifra)." },
+      "title": { "displayName": "Section Title", "purpose": "Blue uppercase section headers (.seccion-titulo) dividing a card." },
+      "body": { "displayName": "Body", "purpose": "Card prose: summaries (.lead-resumen), identity values, observation lists." },
+      "label": { "displayName": "Label", "purpose": "Small-caps field/gauge/table captions (.medidor-cupo-etiqueta, .fila-lead-prioridad-etiqueta)." },
+      "cifra": { "displayName": "Cifra", "purpose": "Inter tabular-nums figures (.cifra) for every score, amount, date, id, percentage — no separate mono family." }
+    },
+    "shadows": [
+      { "name": "sombra-card", "value": "0 1px 2px rgba(17,24,39,0.04), 0 6px 16px rgba(17,24,39,0.06)", "purpose": "Ambient lift under every card-like unit: .hoja-informe, .fila-lead, .columna-grafico, .banner-siguiente-paso." },
+      { "name": "sombra-fila", "value": "0 4px 12px rgba(17,24,39,0.09)", "purpose": "Stronger structural lift on .fila-lead hover/focus only." }
+    ],
+    "motion": [
+      { "name": "gauge-fill", "value": "transform 0.4s ease-out (scaleX, transform-origin: left)", "purpose": "Progress fills (.medidor-cupo-relleno, .medidor-confianza-relleno, .barra-fill) animate via scaleX, never width, to avoid layout thrash." },
+      { "name": "fila-lead-hover", "value": "background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease (translateY(-1px))", "purpose": "Lead-queue row lift on hover/focus-visible." },
+      { "name": "btn-colapsar-flip", "value": "transform: scaleX(-1) when [aria-expanded=\"false\"]", "purpose": "Collapse-toggle chevron flips direction when its panel is collapsed." },
+      { "name": "reduced-motion", "value": "@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }", "purpose": "Global accessibility commitment (doc 12 §5)." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Lead Queue Row",
+      "kind": "custom",
+      "refersTo": "fila-lead",
+      "description": "Signature component: a rounded lead-queue card with avatar initial, identity line, semaphore dot+pill, affiliation pill, priority figure, and a WhatsApp-green chat action — replaces the old ledger row.",
+      "html": "<li class=\"ds-fila-lead ds-zona-verde\" tabindex=\"0\"><span class=\"ds-fila-lead-avatar\">M</span><div class=\"ds-fila-lead-cuerpo\"><div class=\"ds-fila-lead-linea1\"><span class=\"ds-lead-nombre\">María Restrepo</span><span class=\"ds-fila-lead-afiliado ds-es-afiliado\">Afiliado</span><span class=\"ds-fila-lead-zona\">VERDE</span><span class=\"ds-lead-ruta\">VIVIENDA NUEVA</span></div><p class=\"ds-lead-resumen\">Interesada en apto de 2 alcobas, cupo aprobado.</p></div><span class=\"ds-fila-lead-prioridad\"><span class=\"ds-fila-lead-prioridad-etiqueta\">Prioridad</span><span class=\"ds-fila-lead-prioridad-cifra ds-cifra\">0.92</span></span><button class=\"ds-btn-ver-chat\" type=\"button\">Ver chat</button></li>",
+      "css": ".ds-fila-lead { display: grid; grid-template-columns: auto 1fr auto auto; grid-template-areas: \"avatar cuerpo prioridad accion\"; align-items: center; gap: 0.5rem 1rem; padding: 0.85rem 1rem; background: #F5F4EF; border: 1px solid #E5E7EB; border-radius: 14px; cursor: pointer; transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; list-style: none; } .ds-fila-lead:hover, .ds-fila-lead:focus-visible { background: #FFFFFF; box-shadow: 0 4px 12px rgba(17,24,39,0.09); transform: translateY(-1px); outline: none; } .ds-fila-lead-avatar { grid-area: avatar; width: 40px; height: 40px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #fff; background: #0056B3; } .ds-fila-lead-cuerpo { grid-area: cuerpo; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; } .ds-fila-lead-linea1 { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; } .ds-lead-nombre { font-weight: 700; font-size: 0.98rem; color: #1F2937; } .ds-lead-ruta { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: #4B5563; } .ds-lead-resumen { font-size: 0.85rem; color: #4B5563; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-fila-lead-zona { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; } .ds-fila-lead-zona::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; } .ds-zona-verde .ds-fila-lead-zona { color: #256B34; } .ds-fila-lead-afiliado { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 600; padding: 0.05rem 0.5rem; border-radius: 999px; background: #F1F1EF; color: #5B5B5B; } .ds-fila-lead-afiliado.ds-es-afiliado { background: #EAF0FB; color: #003DA6; } .ds-fila-lead-prioridad { grid-area: prioridad; display: flex; flex-direction: column; align-items: flex-end; gap: 0.1rem; } .ds-fila-lead-prioridad-etiqueta { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: #4B5563; } .ds-fila-lead-prioridad-cifra { font-size: 1.05rem; font-weight: 700; color: #1F2937; font-variant-numeric: tabular-nums; } .ds-btn-ver-chat { grid-area: accion; background: #075E54; color: #fff; border: 1px solid #128C7E; padding: 0.45rem 0.85rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 5px rgba(7,94,84,0.25); transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; } .ds-btn-ver-chat:hover { background: #128C7E; box-shadow: 0 4px 10px rgba(7,94,84,0.3); transform: translateY(-1px); } .ds-btn-ver-chat:focus-visible { outline: 2px solid #003DA6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Provenance Stamp — Verificado",
+      "kind": "chip",
+      "refersTo": "sello-verificado",
+      "description": "Confirmed-source pill: double border reads as 'confirmed', now pill-shaped instead of the old near-square ledger stamp.",
+      "html": "<span class=\"ds-sello ds-sello-verificado\">VERIFICADO</span>",
+      "css": ".ds-sello { display: inline-flex; align-items: center; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; padding: 0.14rem 0.55rem; border-radius: 999px; white-space: nowrap; } .ds-sello-verificado { background: #EAF6EC; color: #256B34; border: 2px double #2E8540; }"
+    },
+    {
+      "name": "Provenance Stamp — Declarado",
+      "kind": "chip",
+      "refersTo": "sello-declarado",
+      "description": "Self-reported-data pill: single solid border.",
+      "html": "<span class=\"ds-sello ds-sello-declarado\">DECLARADO</span>",
+      "css": ".ds-sello { display: inline-flex; align-items: center; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; padding: 0.14rem 0.55rem; border-radius: 999px; white-space: nowrap; } .ds-sello-declarado { background: #EAF0FB; color: #003DA6; border: 1px solid #003DA6; }"
+    },
+    {
+      "name": "Provenance Stamp — Inferido",
+      "kind": "chip",
+      "refersTo": "sello-inferido",
+      "description": "Estimated/unconfirmed-value pill: dashed border.",
+      "html": "<span class=\"ds-sello ds-sello-inferido\">INFERIDO</span>",
+      "css": ".ds-sello { display: inline-flex; align-items: center; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; padding: 0.14rem 0.55rem; border-radius: 999px; white-space: nowrap; } .ds-sello-inferido { background: #FDF3DF; color: #8A5A00; border: 1px dashed #8A5A00; }"
+    },
+    {
+      "name": "Instrument Gauge — Confianza",
+      "kind": "custom",
+      "refersTo": "medidor-confianza",
+      "description": "Calibrated-scale gauge with tick marks, a marker line, and a large tabular readout; track is now rounded/overflow-hidden instead of square.",
+      "html": "<div class=\"ds-medidor\"><span class=\"ds-medidor-etiqueta\">Confianza del perfil</span><div class=\"ds-medidor-escala\"><span class=\"ds-medidor-tick\" style=\"left:25%\"></span><span class=\"ds-medidor-tick\" style=\"left:50%\"></span><span class=\"ds-medidor-tick\" style=\"left:75%\"></span><div class=\"ds-medidor-relleno\" style=\"transform: scaleX(0.82)\"></div><div class=\"ds-medidor-marcador\" style=\"left:82%\"></div></div><span class=\"ds-medidor-cifra\">82<span class=\"ds-medidor-unidad\">/100</span></span></div>",
+      "css": ".ds-medidor { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; min-width: 200px; } .ds-medidor-etiqueta { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #4B5563; } .ds-medidor-escala { position: relative; width: min(220px, 100%); height: 14px; background: #F5F4EF; border: 1px solid #C9CDD3; border-radius: 999px; overflow: hidden; } .ds-medidor-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #C9CDD3; } .ds-medidor-relleno { position: absolute; inset: 0; transform-origin: left; background: #0056B3; transition: transform 0.4s ease-out; } .ds-medidor-marcador { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #002D7A; transition: left 0.4s ease-out; } .ds-medidor-cifra { font-size: 1.7rem; font-weight: 700; line-height: 1; color: #003DA6; font-variant-numeric: tabular-nums; } .ds-medidor-unidad { font-size: 0.95rem; font-weight: 500; color: #4B5563; }"
+    },
+    {
+      "name": "Primary Button — Copiar Resumen",
+      "kind": "button",
+      "refersTo": "btn-copiar-resumen",
+      "description": "The one amarillo action per view, inside the single next-step banner.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Copiar resumen</button>",
+      "css": ".ds-btn-primary { background: #FFC700; color: #002D7A; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background-color 0.15s ease, transform 0.1s ease; } .ds-btn-primary:hover { background: #E6B200; transform: scale(1.02); } .ds-btn-primary:focus-visible { outline: 2px solid #003DA6; outline-offset: 2px; } .ds-btn-primary:disabled { background: #FFF3C4; color: #4B5563; cursor: not-allowed; }"
+    },
+    {
+      "name": "Zone Badge (Semaphore Verdict)",
+      "kind": "custom",
+      "refersTo": "zona-veredicto",
+      "description": "Semaphore state rendered as a named, bordered, tinted region with rounded corners — the one place a whole-card tint is not treated as the banned side-accent pattern.",
+      "html": "<div class=\"ds-zona ds-zona-ambar\"><p class=\"ds-veredicto-nivel\">Nivel MEDIA</p><p class=\"ds-veredicto-confianza\">Confianza: alta</p></div>",
+      "css": ".ds-zona { padding: 1rem 1.25rem; border: 1px solid #E5E7EB; border-radius: 14px; } .ds-zona-ambar { background: #FDF3DF; border-color: #E8A200; } .ds-veredicto-nivel { font-size: 1.2rem; font-weight: 800; color: #8A5A00; margin: 0; } .ds-veredicto-confianza { font-size: 0.8rem; color: #4B5563; margin: 0; }"
+    },
+    {
+      "name": "Chart Column Card",
+      "kind": "card",
+      "refersTo": "columna-grafico",
+      "description": "Gerencia's distribution-bar card: a rounded papel-suave card wrapping a labeled horizontal bar list, animated via scaleX.",
+      "html": "<div class=\"ds-columna-grafico\"><h4 class=\"ds-seccion-titulo\">Distribución por afiliación</h4><div class=\"ds-barras-lista\"><div class=\"ds-barra-item\"><span class=\"ds-barra-label\">Afiliados</span><div class=\"ds-barra-track\"><div class=\"ds-barra-fill\" style=\"transform: scaleX(0.64)\"></div></div><span class=\"ds-barra-val ds-cifra\">64%</span></div></div></div>",
+      "css": ".ds-columna-grafico { display: flex; flex-direction: column; gap: 0.9rem; background: #F5F4EF; border: 1px solid #E5E7EB; border-radius: 14px; padding: 1.1rem 1.25rem; } .ds-seccion-titulo { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #003DA6; margin: 0; } .ds-barras-lista { display: flex; flex-direction: column; gap: 0.65rem; } .ds-barra-item { display: grid; grid-template-columns: 96px 1fr 45px; align-items: center; gap: 0.75rem; font-size: 0.82rem; } .ds-barra-label { font-weight: 600; color: #4B5563; text-align: right; } .ds-barra-track { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 999px; height: 14px; overflow: hidden; } .ds-barra-fill { background: #003DA6; width: 100%; height: 100%; transform-origin: left; transition: transform 0.4s ease-out; } .ds-barra-val { font-weight: 700; color: #1F2937; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Panel navigation: transparent at rest, blue underline + papel-suave fill when active, rounded top corners.",
+      "html": "<nav class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" aria-selected=\"true\">Cola</button><button class=\"ds-tab\">Ficha</button><button class=\"ds-tab\">Gerencia</button></nav>",
+      "css": ".ds-tabs { display: flex; background: #FFFFFF; border-bottom: 2px solid #E5E7EB; padding: 0 1rem; } .ds-tab { padding: 0.75rem 1.25rem; border: none; background: transparent; font-size: 0.92rem; font-weight: 600; letter-spacing: 0.01em; color: #4B5563; cursor: pointer; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; margin-bottom: -2px; transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease; } .ds-tab:hover { color: #003DA6; background: #F5F4EF; } .ds-tab:focus-visible { outline: 2px solid #003DA6; outline-offset: 2px; } .ds-tab[aria-selected=\"true\"] { color: #003DA6; border-bottom-color: #003DA6; background: #F5F4EF; }"
+    },
+    {
+      "name": "Collapse Toggle",
+      "kind": "custom",
+      "refersTo": "btn-colapsar",
+      "description": "Chevron button on the panel seam that collapses/expands #panel-chat or #panel-asesor; shell chrome, not part of the card system proper — colors here (#e0e0e0, #5f6368) predate DESIGN.md and live in base.css.",
+      "html": "<button class=\"ds-btn-colapsar\" type=\"button\" aria-expanded=\"true\">&lsaquo;</button>",
+      "css": ".ds-btn-colapsar { flex-shrink: 0; width: 22px; height: 44px; border: 1px solid #e0e0e0; background: #fff; color: #5f6368; cursor: pointer; font-size: 0.9rem; border-radius: 0 8px 8px 0; transition: background-color 0.15s ease, color 0.15s ease; } .ds-btn-colapsar:hover { background: #f1f3f4; } .ds-btn-colapsar[aria-expanded=\"false\"] { transform: scaleX(-1); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lead Workspace",
+    "overview": "The advisor panel is a calm, rounded-card workspace the advisor scans mid-call — not an audited paper report. This redesign replaces the previous \"Auditor's Ledger\" register (flat paper, square corners, IBM Plex Mono figures) with soft white cards floating on a pale panel ground, following a reference screenshot the user pinned directly: a clean lead-queue/ficha dashboard with avatar-initial cards, pill badges, and a single humanist sans typeface throughout. The Colsubsidio blue/amarillo brand and logo are unchanged — this redesign is about card language and typography, not corporate identity.\n\nThis is still an Operate-mode surface: legibility and scan speed win over expression. The card language serves that goal by grouping each lead's identity, status, and action into one visually contained unit the eye can jump between, instead of parsing table-like rows.",
+    "keyCharacteristics": [
+      "Rounded white cards (`--radio-card`, 14px) on a soft off-white/blue-gray ground — no flat paper-report register, no square corners.",
+      "Single typeface (`Inter`) for everything, including figures — hierarchy comes from weight/size, not a mono/sans split. `.cifra` keeps `tabular-nums` for column alignment, but no longer switches font family.",
+      "Semaphore status shown twice, redundantly but subtly: a small colored dot inline in a pill label, and the pill's own tint — never a thick accent border (that reads as generic AI-slop card decoration, and was deliberately removed after the mechanical detector flagged it).",
+      "Avatar-initial circles give each lead a visual anchor, matching the pinned reference.",
+      "Provenance stamps and the \"one amarillo per view\" rule carry over unchanged from the previous system — both were sound and not tied to the paper-report metaphor.",
+      "Color stays restrained: blue for identity/primary actions, amarillo for the single next-step, the semaphore trio for status only. Not \"drenched\" — cards are white/off-white, color is spent on accents and pills, never a card's whole background."
+    ],
+    "rules": [
+      { "name": "The Ink-Not-Fill Rule", "body": "Semaphore text always uses the darkened `-ink` counterpart; the base token is reserved for fills, borders, and the status dot.", "section": "colors" },
+      { "name": "The One Amarillo Rule", "body": "Amarillo appears on exactly one element per view, the next-step action inside `.banner-siguiente-paso`.", "section": "colors" },
+      { "name": "The No-Side-Accent Rule", "body": "Lead-queue cards do not carry a colored left border for semaphore state — an earlier draft did, and the mechanical design detector flagged it as the canonical AI-generated-UI tell (`side-tab` / thick left accent on a card). Status is communicated instead by a small dot + colored pill label (`.fila-lead-zona`) and, for affiliation, a separate muted/blue pill (`.fila-lead-afiliado`) — both legible without relying on a border cliché.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do use `.cifra` (`tabular-nums`) for every score, amount, date, id, and percentage — the alignment rule survives even though the font-family switch does not.",
+      "Do use the `-ink` semaphore variant for any text on a semaphore-colored surface.",
+      "Do give every card-like unit (`hoja-informe`, `fila-lead`, `columna-grafico`, `zona-veredicto`, `banner-siguiente-paso`) rounded corners and its own soft shadow.",
+      "Do treat the Colsubsidio blue/amarillo/logo brand system as fixed — this redesign changed shape and type, never brand color or the logo.",
+      "Do keep amarillo to exactly one active-action element per view.",
+      "Do show semaphore state as a dot + pill label, never a border accent."
+    ],
+    "donts": [
+      "Don't use `.panel-chat` / WhatsApp visual patterns as a reference for the advisor panel — still out of scope; `.btn-ver-chat`'s WhatsApp-green remains the one confirmed exception.",
+      "Don't add a colored left/side border to a card for status — this is the specific anti-pattern this redesign removed; use the dot+pill instead.",
+      "Don't show lead segment/category (`Básico`/`Joven`/`Medio`, etc.) on queue cards — `GET /api/leads` doesn't return it; only the full `Ficha` view has `categoria`.",
+      "Don't reintroduce a second (mono) font family for figures — one Inter family carries the whole surface now.",
+      "Don't square off card corners — rounded is load-bearing for this register, the inverse of the previous system."
+    ]
+  }
+}

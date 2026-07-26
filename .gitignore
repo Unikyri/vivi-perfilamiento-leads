@@ -57,5 +57,12 @@ data/*.html
 data/*_files/
 data/informacion_desglozada_proyectos/
 
+# Impeccable design-hook local state (per-developer, not shared config)
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+
+# WSL/Windows zone-identifier sidecar files
+*:Zone.Identifier
+
 # Local Heroku diagnostic screenshots (may contain sensitive configuration)
 Pruebas-Heroku/

@@ -1,0 +1,41 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-07-26T13:35:35.157Z",
+        "reason": "User confirmed Inter is intentional, matches pinned reference screenshot"
+      },
+      {
+        "rule": "single-font",
+        "value": "*",
+        "files": [
+          "web/index.html"
+        ],
+        "createdAt": "2026-07-26T13:35:41.034Z",
+        "reason": "User confirmed one Inter family with weight/size hierarchy is intentional for this Operate-mode dashboard"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "web/src/estilos/marca.css"
+        ],
+        "createdAt": "2026-07-26T13:35:45.792Z",
+        "reason": "User confirmed the rounded-top-corner + bottom-border tab indicator reads cleanly (verified in screenshots), not a clashing accent"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "web/index.html"
+        ],
+        "createdAt": "2026-07-26T13:37:14.703Z",
+        "reason": "User confirmed Inter is intentional, matches pinned reference screenshot (value-extraction for this Google-Fonts-link finding shape doesn't match the specific-font path, so scoping to the file instead)"
+      }
+    ]
+  }
+}

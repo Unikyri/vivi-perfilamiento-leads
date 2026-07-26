@@ -1,9 +1,13 @@
 import type { ColaLeads, LeadEnCola } from '../models/tipos';
 
-const COLOR_SEMAFORO = { VERDE: '🟢', AMBAR: '🟡', GRIS: '⚪' } as const;
+const ZONA_SEMAFORO = {
+  VERDE: { etiqueta: 'VERDE', zona: 'zona-verde' },
+  AMBAR: { etiqueta: 'ÁMBAR', zona: 'zona-ambar' },
+  GRIS: { etiqueta: 'GRIS', zona: 'zona-gris' },
+} as const;
 
 /**
- * Renderiza la cola priorizada de leads.
+ * Renderiza la cola priorizada de leads como un registro tipo informe.
  * IMPORTANTE: El backend YA envía la lista ordenada por prioridad (US-14).
  * El frontend NO reordena la lista.
  */
@@ -19,17 +23,23 @@ export function renderCola(
   const esAlerta = pct >= 80;
 
   contenedor.innerHTML = `
-    <div class="cola-container">
-      <header class="cola-header">
-        <h2>Leads en Cola (${cola.leads.length})</h2>
-        <div class="cupo-bar ${esAlerta ? 'alerta' : ''}"
+    <div class="hoja-informe informe-cola">
+      <header class="masthead-cola">
+        <div class="masthead-cola-titulo">
+          <span class="masthead-kicker">Registro de leads</span>
+          <p class="masthead-cifra"><span class="cifra">${cola.leads.length}</span> en cola</p>
+        </div>
+        <div class="medidor-cupo ${esAlerta ? 'alerta' : ''}"
              title="${esAlerta ? 'Cupo regulatorio de no afiliados casi lleno (≥80%)' : 'Uso del cupo regulatorio del 10%'}">
-          <span>Cupo 10%:</span>
-          <progress value="${usados}" max="${ventana}"></progress>
-          <span>${usados}/${ventana}</span>
+          <span class="medidor-cupo-etiqueta">Cupo regulatorio 10%</span>
+          <div class="medidor-cupo-escala" role="img" aria-label="Cupo usado: ${usados} de ${ventana}">
+            ${renderTicks(ventana)}
+            <div class="medidor-cupo-relleno" style="transform: scaleX(${pct / 100})"></div>
+          </div>
+          <span class="medidor-cupo-cifra cifra">${usados}/${ventana}</span>
         </div>
       </header>
-      <ul class="lista-leads" role="list">
+      <ul class="registro-leads" role="list">
         ${cola.leads.map(renderFilaLead).join('')}
       </ul>
     </div>
@@ -58,19 +68,37 @@ export function renderCola(
 }
 
 function renderFilaLead(l: LeadEnCola): string {
-  const semaforoIcono = COLOR_SEMAFORO[l.semaforo] ?? '⚪';
+  const zona = ZONA_SEMAFORO[l.semaforo] ?? ZONA_SEMAFORO.GRIS;
+  const inicial = l.nombre.trim().charAt(0).toUpperCase() || '?';
   return `
-    <li class="fila-lead" data-lead-id="${l.lead_id}" tabindex="0" role="listitem">
-      <span class="semaforo-dot" aria-label="Semáforo ${l.semaforo}">${semaforoIcono}</span>
-      <span class="lead-nombre">${escapar(l.nombre)}</span>
-      <span class="lead-ruta">${escapar(l.ruta)}</span>
-      <span class="lead-prio-badge" title="Prioridad calculada">Prio ${l.prioridad.toFixed(2)}</span>
+    <li class="fila-lead ${zona.zona}" data-lead-id="${l.lead_id}" tabindex="0" role="listitem">
+      <span class="fila-lead-avatar" aria-hidden="true">${escapar(inicial)}</span>
+      <div class="fila-lead-cuerpo">
+        <div class="fila-lead-linea1">
+          <span class="lead-nombre">${escapar(l.nombre)}</span>
+          <span class="fila-lead-afiliado ${l.afiliado ? 'es-afiliado' : ''}">${l.afiliado ? 'Afiliado' : 'No afiliado'}</span>
+          <span class="fila-lead-zona" aria-label="Semáforo ${l.semaforo}">${zona.etiqueta}</span>
+          <span class="lead-ruta">${escapar(l.ruta)}</span>
+        </div>
+        <p class="lead-resumen">${escapar(l.resumen)}</p>
+      </div>
+      <span class="fila-lead-prioridad" title="Prioridad calculada">
+        <span class="fila-lead-prioridad-etiqueta">Prioridad</span>
+        <span class="fila-lead-prioridad-cifra cifra">${l.prioridad.toFixed(2)}</span>
+      </span>
       <button class="btn-ver-chat" data-btn-chat="true" title="Ver chat en vivo con ${escapar(l.nombre)}" type="button">
-        💬 Ver chat
+        Ver chat
       </button>
-      <p class="lead-resumen">${escapar(l.resumen)}</p>
     </li>
   `;
+}
+
+/** Marcas de calibración de la escala del cupo (una por unidad, sin el borde final). */
+function renderTicks(max: number): string {
+  const n = Math.max(1, Math.round(max));
+  return Array.from({ length: n - 1 }, (_, i) =>
+    `<span class="medidor-tick" style="left: ${((i + 1) / n) * 100}%"></span>`,
+  ).join('');
 }
 
 /** SIEMPRE escapar: anti-XSS */

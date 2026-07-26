@@ -72,4 +72,17 @@ async function arrancar(): Promise<void> {
   console.info('Vivi web iniciado completo (Chat + Dashboard)');
 }
 
+/** Sidebars contraíbles: cada panel se colapsa a una franja angosta. */
+function iniciarColapsoPaneles(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-colapsar]').forEach(btn => {
+    const panel = document.getElementById(btn.dataset.colapsar!);
+    if (!panel) return;
+    btn.addEventListener('click', () => {
+      const colapsado = panel.classList.toggle('panel-colapsado');
+      btn.setAttribute('aria-expanded', String(!colapsado));
+    });
+  });
+}
+
+iniciarColapsoPaneles();
 void arrancar();
