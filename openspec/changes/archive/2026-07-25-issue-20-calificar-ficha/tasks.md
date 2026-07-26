@@ -43,7 +43,7 @@ Both authored totals are <=400. PR #1 targets `feature/bloque-a`; PR #2 targets 
 ## Phase 3: Slice evidence and guard
 
 - [x] 3.1 Run each unit's focused command, record exact result and fail-at-step harness evidence; keep each PR's authored `git diff --stat` total <=400.
-- [ ] 3.2 Validation commands (`go test ./...`, `go vet ./...`, `go build ./...`, race/module/diff checks) pass; commit/work-unit closure remains pending because this executor was explicitly instructed not to commit.
+- [x] 3.2 Validation commands (`go test ./...`, `go vet ./...`, `go build ./...`, race/module/diff checks) pass, including the 63-line qualification edge suite; committed as `23f4a2e` (`test(usecase): cover qualification edges`).
 
 ## Scope and Definition of Done
 
