@@ -4,6 +4,7 @@ import { renderCola } from '../views/cola';
 import { renderFicha } from '../views/ficha';
 import { renderGerencia } from '../views/gerencia';
 import { renderBotoneraDemo } from '../views/demo';
+import { solicitarTexto, mostrarConfirmacion, mostrarNotificacion } from '../views/modal';
 
 const INTERVALO_POLL_COLA_MS = 5000;
 let pollColaTimer: ReturnType<typeof setInterval> | null = null;
@@ -150,29 +151,65 @@ async function cargarYRenderizarGerencia(contenedor: HTMLElement, proyectoId: st
   }
 }
 
+
 function montarBotoneraDemo(contenedor: HTMLElement): void {
   renderBotoneraDemo(
     contenedor,
     async () => {
-      const hasta = prompt('Avanzar fecha/tiempo simulado (formato ISO, ej: 2026-08-01):', '2026-08-01');
+      const hasta = await solicitarTexto({
+        icono: '⏩',
+        titulo: 'Avanzar Tiempo Simulado',
+        mensaje: 'Ingresa la fecha a la cual deseas avanzar la simulación (Formato ISO AAAA-MM-DD):',
+        valorDefecto: '2026-08-01',
+        textoConfirmar: 'Avanzar Tiempo',
+        textoCancelar: 'Cancelar',
+      });
+
       if (hasta) {
         try {
           await api.avanzarTiempo(hasta);
-          alert(`Tiempo avanzado exitosamente a ${hasta}.`);
+          await mostrarNotificacion({
+            icono: '✅',
+            titulo: 'Tiempo Avanzado',
+            mensaje: `El reloj de simulación avanzó correctamente a ${hasta}.`,
+          });
           cargarCola();
         } catch (e) {
-          alert(`Error al avanzar tiempo: ${(e as Error).message}`);
+          await mostrarNotificacion({
+            icono: '⚠️',
+            titulo: 'Error al Avanzar Tiempo',
+            mensaje: (e as Error).message,
+          });
         }
       }
     },
     async () => {
-      try {
-        await api.reiniciar();
-        actualizar({ leadActivo: 'mock-1', tabActiva: 'cola' });
-        cargarCola();
-        alert('Demo reiniciado al estado inicial.');
-      } catch (e) {
-        alert(`Error al reiniciar demo: ${(e as Error).message}`);
+      const confirmado = await mostrarConfirmacion({
+        icono: '🔄',
+        titulo: '¿Reiniciar Demostración?',
+        mensaje: 'Esta acción restaurará la cola de leads y los datos de prueba a su estado inicial.',
+        textoConfirmar: 'Sí, Reiniciar Demo',
+        textoCancelar: 'Cancelar',
+        tipoBoton: 'advertencia',
+      });
+
+      if (confirmado) {
+        try {
+          await api.reiniciar();
+          actualizar({ leadActivo: 'mock-1', tabActiva: 'cola' });
+          cargarCola();
+          await mostrarNotificacion({
+            icono: '✅',
+            titulo: 'Demo Reiniciado',
+            mensaje: 'El estado de la demostración se ha restaurado con éxito.',
+          });
+        } catch (e) {
+          await mostrarNotificacion({
+            icono: '⚠️',
+            titulo: 'Error al Reiniciar Demo',
+            mensaje: (e as Error).message,
+          });
+        }
       }
     },
   );

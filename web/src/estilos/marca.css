@@ -900,6 +900,161 @@
   .lead-ruta { display: none; }
 }
 
+/* ── MODALES CENTRADOS Y ELEGANTES ────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+  padding: 1rem;
+}
+
+.modal-overlay.activo {
+  opacity: 1;
+}
+
+.modal-card {
+  background: var(--blanco);
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--borde-suave);
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.activo .modal-card {
+  transform: scale(1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem 0.5rem 1.5rem;
+}
+
+.modal-icon {
+  font-size: 1.6rem;
+  background: #F1F5F9;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-titulo {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--texto-principal);
+  margin: 0;
+}
+
+.modal-body {
+  padding: 0.75rem 1.5rem 1.25rem 1.5rem;
+}
+
+.modal-mensaje {
+  font-size: 0.9rem;
+  color: var(--texto-secundario);
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+.input-modal-texto {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--texto-principal);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-modal-texto:focus {
+  border-color: var(--colsubsidio-azul);
+  box-shadow: 0 0 0 3px rgba(0, 61, 166, 0.1);
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.5rem;
+  background: #F8FAFC;
+  border-top: 1px solid #F1F5F9;
+}
+
+.btn-modal-cancelar {
+  background: var(--blanco);
+  color: var(--texto-secundario);
+  border: 1px solid #CBD5E1;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-modal-cancelar:hover {
+  background: #F1F5F9;
+  color: var(--texto-principal);
+}
+
+.btn-modal-primario {
+  background: var(--colsubsidio-azul);
+  color: var(--blanco);
+  border: none;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 61, 166, 0.25);
+  transition: all 0.15s ease;
+}
+
+.btn-modal-primario:hover {
+  background: #002D7A;
+  transform: translateY(-1px);
+}
+
+.btn-modal-peligro {
+  background: #D97706;
+  color: var(--blanco);
+  border: none;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.25);
+  transition: all 0.15s ease;
+}
+
+.btn-modal-peligro:hover {
+  background: #B45309;
+  transform: translateY(-1px);
+}
+
 /* ── Foco Visible de Accesibilidad (Doc 12 §5) ─────────────── */
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, li:focus-visible {
   outline: 2px solid var(--colsubsidio-azul) !important;
