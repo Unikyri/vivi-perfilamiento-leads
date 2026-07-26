@@ -38,9 +38,9 @@ Docs/vivi-perfilamiento-leads.wiki/
 # Binarios compilados
 bin/
 
-# Frontend build output (pero conservar placeholder para go:embed)
-internal/adapters/http/estaticos/*
-!internal/adapters/http/estaticos/index.html
+# Compiled SPA output is versioned: //go:embed packages the exact tree
+# reviewed in Git. Regenerate it with `npm run heroku-postbuild` when web/
+# changes; the Node lifecycle verifies every index.html asset before Go builds.
 
 # Node
 web/node_modules/
@@ -57,3 +57,5 @@ data/*.html
 data/*_files/
 data/informacion_desglozada_proyectos/
 
+# Local Heroku diagnostic screenshots (may contain sensitive configuration)
+Pruebas-Heroku/

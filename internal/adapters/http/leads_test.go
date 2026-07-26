@@ -86,3 +86,16 @@ func TestS1ConversationMissingIsPrivate404(t *testing.T) {
 		t.Fatalf("private 404: %d %s", r.Code, r.Body)
 	}
 }
+
+func TestS1CreateLeadRecognizesAllDemoSeeds(t *testing.T) {
+	for _, id := range []string{"ana", "carlos", "luisa"} {
+		t.Run(id, func(t *testing.T) {
+			p := &perfiladorHTTPFake{salida: usecase.SalidaPerfilar{LeadID: "lead-1", Estado: domain.EstadoLeadPerfilando}}
+			r := httptest.NewRecorder()
+			newRouter(p, &leadHTTPFake{}).ServeHTTP(r, httptest.NewRequest(http.MethodPost, "/api/leads", strings.NewReader(`{"precargado_id":"`+id+`"}`)))
+			if r.Code != http.StatusCreated || p.entrada.Fuente != "DEMO" || p.entrada.Nombre == "" || p.entrada.Cedula == "" {
+				t.Fatalf("id=%s response=%d input=%+v body=%s", id, r.Code, p.entrada, r.Body)
+			}
+		})
+	}
+}

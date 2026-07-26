@@ -1,0 +1,27 @@
+{
+  "name": "vivi-perfilamiento-leads",
+  "description": "Vivi — perfilamiento inteligente de leads para una demo controlada.",
+  "keywords": ["go", "nodejs", "postgresql"],
+  "buildpacks": [
+    { "url": "https://github.com/heroku/heroku-buildpack-nodejs.git" },
+    { "url": "https://github.com/heroku/heroku-buildpack-go.git" }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "env": {
+    "DEMO_SEED": {
+      "description": "Enable synthetic demo seed/reset only on the controlled demo app.",
+      "value": "false",
+      "required": false
+    },
+    "GO_INSTALL_PACKAGE_SPEC": {
+      "description": "Go package compiled by the Heroku Go buildpack.",
+      "value": "./cmd/servidor",
+      "required": false
+    }
+  }
+}
