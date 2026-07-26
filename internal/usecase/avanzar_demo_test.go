@@ -31,3 +31,22 @@ func TestAvanzarDemoPersistsAndPublishesOnce(t *testing.T) {
 	}
 }
 func ptrInt(v int) *int { return &v }
+
+func TestAvanzarDemoRejectsBackwardWithoutPersistence(t *testing.T) {
+	start := time.Date(2026, 7, 26, 0, 0, 0, 0, time.UTC)
+	repo, clock := &demoUsecaseRepo{date: start}, NuevoRelojFake(start)
+	backward := start.AddDate(0, 0, -1)
+
+	_, err := (&AvanzarDemo{Demo: repo, Reloj: clock}).Ejecutar(
+		context.Background(), EntradaAvanzarDemo{Hasta: &backward},
+	)
+	if err != ErrTiempoSimuladoAtras {
+		t.Fatalf("err=%v, want %v", err, ErrTiempoSimuladoAtras)
+	}
+	if repo.saves != 0 {
+		t.Fatalf("saves=%d, want 0 after rejected backward advance", repo.saves)
+	}
+	if !repo.date.Equal(start) || !clock.FechaSimulada().Equal(start) {
+		t.Fatalf("backward rejection changed state: repo=%v clock=%v", repo.date, clock.FechaSimulada())
+	}
+}
