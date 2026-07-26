@@ -1,4 +1,5 @@
 import type { Ficha, FuenteCampo, ItemDesglose, Ruta } from '../models/tipos';
+import { avatarPersona, avatarProyecto } from '../util/avatares';
 
 const RUTA_INFO: Record<Ruta, { icono: string; titulo: string; detalle: string }> = {
   ASESOR: { icono: '👥', titulo: 'ASESOR', detalle: 'Lead listo para asesor comercial. Prioridad alta en cola.' },
@@ -46,12 +47,11 @@ function pintar(contenedor: HTMLElement, ficha: Ficha, ruta: Ruta | null): void 
   const infoRuta = ruta ? RUTA_INFO[ruta] : null;
   const nivelIntencion = ficha.intencion.nivel;
   const claseAtencion = nivelIntencion === 'MEDIA' ? 'media' : nivelIntencion === 'BAJA' ? 'baja' : '';
-  const iniciales = (iden.nombre || 'L').trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase();
   const cuotaMensual = estimarCuotaMensual(ficha.perfil);
 
   contenedor.innerHTML = `
     <header class="profile-head">
-      <span class="avatar profile-avatar" aria-hidden="true">${escapar(iniciales)}</span>
+      <img class="avatar profile-avatar" src="${avatarPersona(ficha.lead_id)}" alt="" aria-hidden="true">
       <div>
         <div class="profile-name">${escapar(iden.nombre || 'Lead')}</div>
         <div class="profile-sub">${iden.afiliada ? `Afiliada · Categoría ${escapar(iden.categoria || 'N/A')}` : 'No afiliado'}</div>
@@ -163,7 +163,7 @@ function renderProyecto(ficha: Ficha): string {
         ${hayMas ? `<button class="link" id="btn-ver-alternativas" type="button">Ver alternativas (${indiceAlternativa + 1}/${ficha.recomendaciones.length}) ›</button>` : ''}
       </div>
       <div class="project-info">
-        <div class="project-image" aria-label="Imagen del proyecto ${escapar(r.nombre)}"></div>
+        <div class="project-image" style="background-image:url('${avatarProyecto(r.proyecto_id)}')" aria-label="Imagen del proyecto ${escapar(r.nombre)}"></div>
         <div>
           <h3 class="project-name">${escapar(r.nombre)}</h3>
           <div class="project-place">${escapar(r.zona)}</div>

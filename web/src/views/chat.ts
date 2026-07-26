@@ -1,4 +1,5 @@
 import type { Mensaje, Recomendacion } from '../models/tipos';
+import { avatarPersona, avatarProyecto } from '../util/avatares';
 
 export function renderMensajes(contenedor: HTMLElement, mensajes: Mensaje[]): void {
   contenedor.innerHTML = mensajes.map(renderMensaje).join('');
@@ -24,6 +25,7 @@ function renderMensaje(m: Mensaje): string {
 function renderTarjetas(recs: Recomendacion[]): string {
   return `<div class="carrusel" role="list">${recs.slice(0, 3).map(r => `
     <article class="tarjeta-proyecto" role="listitem">
+      <div class="tarjeta-imagen" style="background-image:url('${avatarProyecto(r.proyecto_id)}')" aria-hidden="true"></div>
       <header class="franja-azul">${escapar(r.nombre)}</header>
       <p class="zona">${escapar(r.zona)}</p>
       <p class="precio">Desde $${(r.precio_desde / 1_000_000).toFixed(0)}M</p>
@@ -44,7 +46,7 @@ export function renderShellChat(panel: HTMLElement): void {
   panel.innerHTML = `
     <header class="chat-top">
       <button class="back" aria-label="Volver">‹</button>
-      <span class="avatar chat-avatar" id="chat-avatar" aria-hidden="true">?</span>
+      <img class="avatar chat-avatar" id="chat-avatar" src="" alt="" aria-hidden="true" style="display:none">
       <div class="chat-name">
         <span id="chat-nombre-lead">Selecciona un lead</span>
         <small>en línea <span class="online">●</span></small>
@@ -75,14 +77,16 @@ export function renderShellChat(panel: HTMLElement): void {
 }
 
 /** Actualiza sólo el nombre/avatar del encabezado — no remonta el panel
- * entero al cambiar de lead activo (el polling sigue corriendo). */
-export function actualizarCabeceraChat(nombre: string): void {
+ * entero al cambiar de lead activo (el polling sigue corriendo). `leadId`
+ * es la semilla del avatar generado: el mismo lead siempre muestra el
+ * mismo avatar, tanto acá como en la lista de leads y en la ficha. */
+export function actualizarCabeceraChat(leadId: string, nombre: string): void {
   const nombreEl = document.getElementById('chat-nombre-lead');
-  const avatarEl = document.getElementById('chat-avatar');
+  const avatarEl = document.getElementById('chat-avatar') as HTMLImageElement | null;
   if (nombreEl) nombreEl.textContent = nombre;
   if (avatarEl) {
-    const iniciales = nombre.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase() || '?';
-    avatarEl.textContent = iniciales;
+    avatarEl.src = avatarPersona(leadId);
+    avatarEl.style.display = '';
   }
 }
 

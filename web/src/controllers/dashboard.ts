@@ -113,9 +113,19 @@ function renderPanelLeads(contenedor: HTMLElement, forzar = false): void {
   if (!forzar && st.cola === ultimaColaRenderizada && st.leadActivo === ultimoLeadRenderizado && seccionActiva === ultimaSeccionRenderizada) {
     return;
   }
+  const cambioDeLead = st.leadActivo !== ultimoLeadRenderizado;
   ultimaColaRenderizada = st.cola;
   ultimoLeadRenderizado = st.leadActivo;
   ultimaSeccionRenderizada = seccionActiva;
+
+  // Cubre el lead seleccionado automáticamente al arrancar (main.ts crea el
+  // lead inicial y setea leadActivo directo, sin pasar por seleccionarLead):
+  // sin esto, el header del chat se quedaría en "Selecciona un lead" hasta
+  // que el usuario hiciera clic manual sobre una fila ya resaltada.
+  if (cambioDeLead && st.leadActivo) {
+    const lead = st.cola.leads.find(l => l.lead_id === st.leadActivo);
+    if (lead) actualizarCabeceraChat(lead.lead_id, lead.nombre);
+  }
 
   const cola = ordenarParaSeccion(st.cola, seccionActiva);
   renderCola(contenedor, cola, st.leadActivo, leadId => seleccionarLead(leadId));
@@ -124,7 +134,7 @@ function renderPanelLeads(contenedor: HTMLElement, forzar = false): void {
 function seleccionarLead(leadId: string): void {
   const st = obtener();
   const lead = st.cola?.leads.find(l => l.lead_id === leadId);
-  if (lead) actualizarCabeceraChat(lead.nombre);
+  if (lead) actualizarCabeceraChat(lead.lead_id, lead.nombre);
   actualizar({ leadActivo: leadId });
 }
 
