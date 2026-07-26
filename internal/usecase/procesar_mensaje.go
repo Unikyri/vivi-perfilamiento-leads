@@ -92,6 +92,10 @@ func (uc *ProcesarMensaje) Ejecutar(ctx context.Context, entrada EntradaMensaje)
 		HistorialReciente: history,
 		EsAfiliado:        lead.Afiliado,
 	}
+	if uc.LLM == nil {
+		return fmt.Errorf("%w: proveedor LLM no configurado (defina GEMINI_API_KEY en entorno)", ErrValidacion)
+	}
+
 	var salida SalidaTurno
 	if entrada.Tipo == domain.TipoMensajeAudio {
 		_, decodeErr := base64.StdEncoding.Strict().DecodeString(entrada.Audio.Base64)

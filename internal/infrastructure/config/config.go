@@ -22,6 +22,7 @@ type Config struct {
 	DemoSeed          bool
 	LogNivel          string
 	TrustedProxyCIDRs []netip.Prefix
+	RateLimit         int
 }
 
 // Cargar lee la configuración del entorno y valida lo obligatorio.
@@ -36,6 +37,12 @@ func Cargar() (Config, error) {
 		LLMFallback:  valor("LLM_FALLBACK", "qwen"),
 		LogNivel:     valor("LOG_NIVEL", "info"),
 	}
+
+	rateLimit, _ := strconv.Atoi(valor("RATE_LIMIT", "300"))
+	if rateLimit < 1 {
+		rateLimit = 300
+	}
+	c.RateLimit = rateLimit
 
 	tasa, err := strconv.ParseFloat(valor("TASA_EA", "0.107"), 64)
 	if err != nil {

@@ -38,6 +38,10 @@ type rateLimiter struct {
 func NuevoLimitadorTasa(next http.Handler, trusted []netip.Prefix) http.Handler {
 	return nuevoLimitadorTasa(next, trusted, time.Now, defaultRateLimit, defaultRateWindow, defaultMaxClients)
 }
+
+func NuevoLimitadorTasaConLimite(next http.Handler, trusted []netip.Prefix, limit int) http.Handler {
+	return nuevoLimitadorTasa(next, trusted, time.Now, limit, defaultRateWindow, defaultMaxClients)
+}
 func nuevoLimitadorTasa(next http.Handler, trusted []netip.Prefix, now func() time.Time, limit int, window time.Duration, maxClients int) http.Handler {
 	if now == nil {
 		now = time.Now
@@ -61,9 +65,6 @@ func (l *rateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeError(w, ErrLimiteTasaHTTP)
 }
 func (l *rateLimiter) allow(client string, now time.Time) bool {
-	if client == "127.0.0.1" || client == "::1" || client == "localhost" {
-		return true
-	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	for key, entry := range l.clients {
