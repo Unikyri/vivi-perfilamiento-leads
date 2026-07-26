@@ -83,6 +83,16 @@ jobs:
         run: |
           npm ci
           npm run build
+      - name: Verificar que los estáticos versionados están al día
+        if: steps.existe.outputs.hay == 'true'
+        run: |
+          if ! git diff --quiet -- internal/adapters/http/estaticos; then
+            echo "::error::internal/adapters/http/estaticos está desactualizado respecto de web/src."
+            echo "Ejecutá 'make front-build' y commiteá el resultado."
+            git diff --stat -- internal/adapters/http/estaticos
+            exit 1
+          fi
+          echo "Estáticos al día."
 
   secretos:
     name: Escaneo de secretos

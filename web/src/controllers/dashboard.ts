@@ -9,6 +9,12 @@ const INTERVALO_POLL_COLA_MS = 5000;
 let pollColaTimer: ReturnType<typeof setInterval> | null = null;
 let proyectoGerenciaSeleccionado = 'mongui';
 
+// Evita refetchear Ficha/Gerencia en cada poll de la cola (cada 5 s) cuando
+// nada relevante cambió. Se invalidan explícitamente al salir de la pestaña
+// o al cambiar de lead/proyecto — nunca queda un dato congelado.
+let ultimaFichaCargada: string | null = null;
+let ultimaGerenciaCargada: string | null = null;
+
 /**
  * Inicializa el Panel del Asesor y sus tres pestañas (Cola, Ficha, Gerencia) + Botonera Demo.
  */
@@ -73,6 +79,10 @@ function renderTabActiva(contenedor: HTMLElement): void {
 
   switch (st.tabActiva) {
     case 'cola':
+      // Al volver a Cola, invalidar: si el asesor vuelve a Ficha/Gerencia
+      // después, el dato debe refrescarse, no quedar congelado.
+      ultimaFichaCargada = null;
+      ultimaGerenciaCargada = null;
       if (st.cola) {
         renderCola(
           contenedor,
@@ -86,15 +96,22 @@ function renderTabActiva(contenedor: HTMLElement): void {
       break;
 
     case 'ficha':
-      if (st.leadActivo) {
-        cargarYRenderizarFicha(contenedor, st.leadActivo);
-      } else {
+      if (!st.leadActivo) {
+        ultimaFichaCargada = null;
         contenedor.innerHTML = '<div style="padding:1.5rem; text-align:center; color:#6B7280">Selecciona un lead de la cola para ver su ficha comercial.</div>';
+        break;
+      }
+      if (st.leadActivo !== ultimaFichaCargada) {
+        ultimaFichaCargada = st.leadActivo;
+        cargarYRenderizarFicha(contenedor, st.leadActivo);
       }
       break;
 
     case 'gerencia':
-      cargarYRenderizarGerencia(contenedor, proyectoGerenciaSeleccionado);
+      if (proyectoGerenciaSeleccionado !== ultimaGerenciaCargada) {
+        ultimaGerenciaCargada = proyectoGerenciaSeleccionado;
+        cargarYRenderizarGerencia(contenedor, proyectoGerenciaSeleccionado);
+      }
       break;
   }
 }
@@ -136,33 +153,50 @@ async function cargarYRenderizarFicha(contenedor: HTMLElement, leadId: string): 
 }
 
 async function cargarYRenderizarGerencia(contenedor: HTMLElement, proyectoId: string): Promise<void> {
+  const alCambiarProyecto = (id: string) => {
+    proyectoGerenciaSeleccionado = id;
+    ultimaGerenciaCargada = id;
+    cargarYRenderizarGerencia(contenedor, id);
+  };
+
   try {
     const bp = await api.buyerPersona(proyectoId);
-    renderGerencia(contenedor, bp, proyectoId, id => {
-      proyectoGerenciaSeleccionado = id;
-      cargarYRenderizarGerencia(contenedor, id);
-    });
+    renderGerencia(contenedor, bp, proyectoId, alCambiarProyecto);
   } catch {
-    renderGerencia(contenedor, null, proyectoId, id => {
-      proyectoGerenciaSeleccionado = id;
-      cargarYRenderizarGerencia(contenedor, id);
-    });
+    renderGerencia(contenedor, null, proyectoId, alCambiarProyecto);
   }
+}
+
+/** Aviso inline en la botonera de demo: nunca abre una ventana nativa
+ * (prompt/alert), que en pantalla compartida puede renderizarse fuera del
+ * área capturada o quedar detrás de la ventana. */
+function avisarDemo(texto: string, esError = false): void {
+  const el = document.getElementById('demo-aviso');
+  if (!el) return;
+  el.textContent = texto;
+  el.classList.toggle('es-error', esError);
+  setTimeout(() => {
+    el.textContent = '';
+    el.classList.remove('es-error');
+  }, 4000);
 }
 
 function montarBotoneraDemo(contenedor: HTMLElement): void {
   renderBotoneraDemo(
     contenedor,
     async () => {
-      const hasta = prompt('Avanzar fecha/tiempo simulado (formato ISO, ej: 2026-08-01):', '2026-08-01');
-      if (hasta) {
-        try {
-          await api.avanzarTiempo(hasta);
-          alert(`Tiempo avanzado exitosamente a ${hasta}.`);
-          cargarCola();
-        } catch (e) {
-          alert(`Error al avanzar tiempo: ${(e as Error).message}`);
-        }
+      const input = document.getElementById('demo-fecha') as HTMLInputElement | null;
+      const hasta = input?.value;
+      if (!hasta) {
+        avisarDemo('Elegí una fecha primero.', true);
+        return;
+      }
+      try {
+        const r = await api.avanzarTiempo(hasta);
+        avisarDemo(`Tiempo avanzado a ${hasta} · ${r.hitos_disparados} hito(s) disparado(s).`);
+        cargarCola();
+      } catch (e) {
+        avisarDemo(`Error al avanzar tiempo: ${(e as Error).message}`, true);
       }
     },
     async () => {
@@ -179,9 +213,9 @@ function montarBotoneraDemo(contenedor: HTMLElement): void {
 
         actualizar({ leadActivo: nuevoLead, tabActiva: 'cola' });
         cargarCola();
-        alert('Demo reiniciado al estado inicial.');
+        avisarDemo('Demo reiniciado al estado inicial.');
       } catch (e) {
-        alert(`Error al reiniciar demo: ${(e as Error).message}`);
+        avisarDemo(`Error al reiniciar demo: ${(e as Error).message}`, true);
       }
     },
   );

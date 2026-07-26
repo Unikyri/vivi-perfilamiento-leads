@@ -38,9 +38,9 @@ Docs/vivi-perfilamiento-leads.wiki/
 # Binarios compilados
 bin/
 
-# Compiled SPA output is versioned: //go:embed packages the exact tree
-# reviewed in Git. Regenerate it with `npm run heroku-postbuild` when web/
-# changes; the Node lifecycle verifies every index.html asset before Go builds.
+# Compiled SPA output is versioned: //go:embed packages the exact reviewed tree.
+# Regenerate it with `make front-build` (or `npm run heroku-postbuild`) when
+# web/ changes; CI verifies the generated index and all referenced assets.
 
 # Node
 web/node_modules/

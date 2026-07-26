@@ -71,14 +71,24 @@ func TestCatalogoRepository_SourceFailureAndTypedMisses(t *testing.T) {
 	if _, err := NuevoCatalogo(os.DirFS(t.TempDir())); err == nil {
 		t.Fatal("missing source files must fail initialization")
 	}
-	invalidRoot := t.TempDir()
-	writeCatalogFiles(t, invalidRoot)
-	if err := os.WriteFile(filepath.Join(invalidRoot, "compradores.json"), []byte(`[{"id":1,"proyecto_id":"missing"}]`), 0o644); err != nil {
+	// A comprador referencing a proyecto_id absent from the catalog is real
+	// historical data (~20% of the production dataset), not corruption: it
+	// must NOT fail initialization, and must still be readable — GemeloKNN
+	// treats it as a valid kNN comparison point with no resolvable zone.
+	orphanRoot := t.TempDir()
+	writeCatalogFiles(t, orphanRoot)
+	if err := os.WriteFile(filepath.Join(orphanRoot, "compradores.json"), []byte(`[{"id":1,"proyecto_id":"missing"}]`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := NuevoCatalogo(os.DirFS(invalidRoot)); err == nil {
-		t.Fatal("buyer with unknown project must fail initialization")
+	orphanRepo, err := NuevoCatalogo(os.DirFS(orphanRoot))
+	if err != nil {
+		t.Fatalf("buyer with unknown project must not fail initialization: %v", err)
 	}
+	orphanBuyers, err := orphanRepo.Compradores(context.Background())
+	if err != nil || len(orphanBuyers) != 1 || orphanBuyers[0].ProyectoID != "missing" {
+		t.Fatalf("orphan comprador must still be retrievable: buyers=%#v err=%v", orphanBuyers, err)
+	}
+
 	root := t.TempDir()
 	writeCatalogFiles(t, root)
 	repository, err := NuevoCatalogo(os.DirFS(root))

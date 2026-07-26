@@ -97,26 +97,31 @@ const fichasDemo: Record<string, Ficha> = {
   },
 };
 
+// Rangos de edad y categorías del Contrato v1.1 §1 / doc 13, no inventados:
+// data/compradores.json trae exactamente 20-35 · 36-45 · 46-55 · 55+ · SIN_DATO
+// y categoria A · B · C · SIN_DATO. Las sumas de cada proyecto cuadran con
+// `muestras`, y categoria.SIN_DATO == afiliacion.no_afiliados porque así sale
+// del dataset real: un no afiliado siempre llega sin categoría asignada.
 const buyerPersonaDemo: Record<string, BuyerPersona> = {
   mongui: {
     proyecto_id: 'mongui', nombre: 'Monguí', muestras: 312,
     afiliacion: { afiliados: 198, no_afiliados: 114 },
-    categoria: { 'Cat A': 110, 'Cat B': 68, 'Cat C': 20, 'No Afiliado': 114 },
-    rango_edad: { '18-25': 25, '26-35': 165, '36-45': 82, '46+': 40 },
+    categoria: { A: 110, B: 68, C: 20, SIN_DATO: 114 },
+    rango_edad: { '20-35': 165, '36-45': 82, '46-55': 40, '55+': 12, SIN_DATO: 13 },
     tasa_desistimiento: 0.11, actualizado_en: new Date().toISOString(),
   },
   macarena: {
     proyecto_id: 'macarena', nombre: 'La Macarena', muestras: 185,
     afiliacion: { afiliados: 140, no_afiliados: 45 },
-    categoria: { 'Cat A': 85, 'Cat B': 42, 'Cat C': 13, 'No Afiliado': 45 },
-    rango_edad: { '18-25': 15, '26-35': 95, '36-45': 50, '46+': 25 },
+    categoria: { A: 85, B: 42, C: 13, SIN_DATO: 45 },
+    rango_edad: { '20-35': 100, '36-45': 50, '46-55': 20, '55+': 8, SIN_DATO: 7 },
     tasa_desistimiento: 0.08, actualizado_en: new Date().toISOString(),
   },
   versalles: {
     proyecto_id: 'versalles', nombre: 'Versalles', muestras: 142,
     afiliacion: { afiliados: 85, no_afiliados: 57 },
-    categoria: { 'Cat A': 40, 'Cat B': 32, 'Cat C': 13, 'No Afiliado': 57 },
-    rango_edad: { '18-25': 10, '26-35': 70, '36-45': 42, '46+': 20 },
+    categoria: { A: 40, B: 32, C: 13, SIN_DATO: 57 },
+    rango_edad: { '20-35': 70, '36-45': 42, '46-55': 15, '55+': 8, SIN_DATO: 7 },
     tasa_desistimiento: 0.15, actualizado_en: new Date().toISOString(),
   },
 };

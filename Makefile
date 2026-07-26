@@ -1,4 +1,4 @@
-.PHONY: build build-todo check-static-assets test vet run datos validar-datos limpiar db-up db-down db-reset db-validate ci-local
+.PHONY: build build-todo check-static-assets test vet run datos validar-datos limpiar db-up db-down db-reset db-validate ci-local front-instalar front-dev front-build front-verificar
 
 # Production order: package Vite output before compiling Go.
 build: build-todo
