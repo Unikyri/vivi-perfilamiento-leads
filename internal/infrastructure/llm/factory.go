@@ -35,7 +35,11 @@ func providerFor(name string, cfg config.Config) (usecase.LLMProvider, error) {
 		if strings.TrimSpace(cfg.QwenAPIKey) == "" {
 			return nil, providerError(KindConfig, nil)
 		}
-		return NewQwenProvider(cfg.QwenAPIKey, cfg.QwenBaseURL), nil
+		opts := []QwenOption{}
+		if strings.TrimSpace(cfg.QwenModel) != "" {
+			opts = append(opts, WithQwenModel(cfg.QwenModel))
+		}
+		return NewQwenProvider(cfg.QwenAPIKey, cfg.QwenBaseURL, opts...), nil
 	default:
 		return nil, providerError(KindConfig, nil)
 	}

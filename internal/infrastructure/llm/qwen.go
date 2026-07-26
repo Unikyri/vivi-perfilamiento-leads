@@ -11,7 +11,7 @@ import (
 
 const (
 	DefaultQwenBaseURL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-	DefaultQwenModel   = "qwen-plus"
+	DefaultQwenModel   = "qwen3.7-plus"
 )
 
 type QwenOption func(*QwenProvider)
