@@ -136,9 +136,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid #ffe363; outline-
 .lead-row.medium::before { background: #efb62d; opacity: 1; }
 
 .avatar {
-  display: grid; place-items: center; flex: none; overflow: hidden; border-radius: 50%;
-  background: linear-gradient(145deg, #ffb27a 45%, #092d65 46%);
-  border: 2px solid #fff; box-shadow: 0 1px 4px #10285a32; color: #fff; font-weight: 800;
+  display: block; flex: none; overflow: hidden; border-radius: 50%; object-fit: cover;
+  background: #eef2fb;
+  border: 2px solid #fff; box-shadow: 0 1px 4px #10285a32;
 }
 .lead-avatar { width: 40px; height: 40px; font-size: 13px; }
 .profile-avatar { width: 56px; height: 56px; font-size: 16px; }
@@ -196,6 +196,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #ffe363; outline-
 
 .carrusel { display: flex; gap: 10px; overflow-x: auto; margin: 0 0 14px; padding-bottom: 4px; }
 .tarjeta-proyecto { flex: none; width: 200px; border: 1px solid var(--linea); border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 6px #1436690a; }
+.tarjeta-imagen { height: 70px; background-size: cover; background-position: center; }
 .tarjeta-proyecto .franja-azul { padding: 8px 10px; background: var(--azul); color: #fff; font-size: 13px; font-weight: 800; }
 .tarjeta-proyecto p { margin: 0; padding: 4px 10px; font-size: 12px; color: #344b80; }
 .tarjeta-proyecto .precio { color: #0a2067; font-weight: 800; font-size: 14px; }
@@ -268,7 +269,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #ffe363; outline-
 
 .project-card { padding: 0 12px 12px; }
 .project-info { display: grid; grid-template-columns: 96px 1fr; gap: 12px; padding-top: 4px; }
-.project-image { position: relative; height: 90px; overflow: hidden; border-radius: 9px; background: linear-gradient(#1375c2 0%, #9bd4ef 40%, #35642d 41%, #88ae55 100%); background-size: cover; background-position: center; }
+.project-image { position: relative; height: 90px; overflow: hidden; border-radius: 9px; background-size: cover; background-position: center; }
 .project-name { margin: 0 0 3px; color: #0b216b; font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .project-place, .project-meta, .project-foot { color: #61729a; font-size: 12px; line-height: 1.6; }
 .project-foot strong { color: #f06b22; font-weight: 700; }

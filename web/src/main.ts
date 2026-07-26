@@ -3,6 +3,7 @@ import { api, ErrorAPI } from './models/api';
 import { actualizar } from './models/estado';
 import { iniciarChat } from './controllers/chat';
 import { iniciarDashboard } from './controllers/dashboard';
+import { avatarPersona } from './util/avatares';
 
 const params = new URLSearchParams(location.search);
 
@@ -29,7 +30,7 @@ app.innerHTML = `
       <div class="demo-actions" id="botonera-demo"></div>
       <div class="account">
         <span class="bell">🔔<span class="notification">3</span></span>
-        <span class="avatar account-avatar" aria-hidden="true">AG</span>
+        <img class="avatar account-avatar" src="${avatarPersona('asesora-ana-gomez')}" alt="" aria-hidden="true">
         <span>Ana Gómez</span>
         <span class="chevron">⌄</span>
       </div>
