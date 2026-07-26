@@ -1,0 +1,27 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-24-agent-skills
+issue:
+  number: 24
+  title: "[A16] Agent skills (SKILL.md) and per-agent loading"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+phase: apply
+artifacts:
+  proposal: false
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: false
+tasks_progress:
+  total: 4
+  completed: 4
+  pending: []
+next: sdd-verify
+allowed_edit_roots:
+  - /tmp/vivi-issue-24/skills
+  - /tmp/vivi-issue-24/internal/adapters/agentes/skills.go
+  - /tmp/vivi-issue-24/internal/adapters/agentes/skills_test.go
