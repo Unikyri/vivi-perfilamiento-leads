@@ -107,11 +107,11 @@ func main() {
 	busEventos := bus.Nuevo(slog.Default())
 	ids := ids.NuevoGeneradorID()
 	perfilador := &usecase.PerfilarLead{Leads: leadRepo, Catalogo: catalogo, IDs: ids, Bus: busEventos, Reloj: reloj}
-	saludo := &usecase.SaludarLead{Leads: leadRepo, IDs: ids, Reloj: reloj}
+	saludo := &usecase.SaludarLead{Leads: leadRepo, LLM: provider, IDs: ids, Reloj: reloj}
 	planRepo := postgres.NuevoPlanRepository(pool)
 	hitos := &usecase.EjecutarHitos{Leads: leadRepo, Planes: planRepo, Gateway: demoGateway{}, Reloj: reloj, IDs: ids, Bus: busEventos}
 	agentes.Nueva(busEventos, agentes.Dependencias{LeadNuevo: saludo.Ejecutar, Nutricionista: hitos}).Registrar()
-	procesarMensaje := &usecase.ProcesarMensaje{Leads: leadRepo, LLM: provider, IDs: ids, Bus: busEventos, Reloj: reloj}
+	procesarMensaje := &usecase.ProcesarMensaje{Leads: leadRepo, LLM: provider, IDs: ids, Bus: busEventos, Reloj: reloj, Saludo: saludo}
 	turnos := adapterhttp.NuevoEjecutorTurnos(procesarMensaje, ids, reloj)
 	defer turnos.Cerrar()
 	controlador, err := adapterhttp.NuevoControlador(adapterhttp.Dependencias{Perfilar: perfilador, Leads: leadRepo, Fichas: fichaRepo, Planes: planRepo, Catalogo: catalogo, Turnos: turnos, Demo: demoRepo, Reloj: reloj, AvanzarDemo: &usecase.AvanzarDemo{Demo: demoRepo, Reloj: reloj, Bus: busEventos}, ReiniciarDemo: &usecase.ReiniciarDemo{Repository: demoRepo, Reloj: reloj, Habilitado: cfg.DemoSeed}})

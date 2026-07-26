@@ -1,0 +1,25 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-29-greeting-consent
+issue: 29
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: false
+task_progress:
+  total: 11
+  completed: 11
+  pending: 0
+  all_complete: true
+delivery_strategy: single-pr
+next_recommended: sdd-verify
+last_updated: 2026-07-26T06:55:00-05:00
