@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -33,6 +34,7 @@ type TurnoAceptado struct {
 
 type EjecutorTurnos struct {
 	procesador TurnoProcesador
+	leads      usecase.LeadRepository
 	ids        usecase.GeneradorID
 	reloj      usecase.Reloj
 	ctx        context.Context
@@ -43,9 +45,13 @@ type EjecutorTurnos struct {
 	wg         sync.WaitGroup
 }
 
-func NuevoEjecutorTurnos(p TurnoProcesador, ids usecase.GeneradorID, reloj usecase.Reloj) *EjecutorTurnos {
+func NuevoEjecutorTurnos(p TurnoProcesador, ids usecase.GeneradorID, reloj usecase.Reloj, leads ...usecase.LeadRepository) *EjecutorTurnos {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &EjecutorTurnos{procesador: p, ids: ids, reloj: reloj, ctx: ctx, cancel: cancel, activos: make(map[string]struct{})}
+	e := &EjecutorTurnos{procesador: p, ids: ids, reloj: reloj, ctx: ctx, cancel: cancel, activos: make(map[string]struct{})}
+	if len(leads) > 0 {
+		e.leads = leads[0]
+	}
+	return e
 }
 
 func (e *EjecutorTurnos) Aceptar(ctx context.Context, entrada usecase.EntradaMensaje) (TurnoAceptado, error) {
@@ -87,8 +93,41 @@ func (e *EjecutorTurnos) ejecutar(entrada usecase.EntradaMensaje) {
 		e.mu.Unlock()
 	}()
 	if err := e.procesador.Ejecutar(e.ctx, entrada); err != nil {
-		log.Printf("[turnos] error procesando turno para lead %s: %v", entrada.LeadID, err)
+		log.Printf("[turnos] error procesando turno para lead %s: %v — guardando fallback", entrada.LeadID, err)
+		e.guardarFallback(entrada)
 	}
+}
+
+func (e *EjecutorTurnos) guardarFallback(entrada usecase.EntradaMensaje) {
+	if e.leads == nil {
+		return
+	}
+	lead, err := e.leads.PorID(e.ctx, entrada.LeadID)
+	if err != nil || lead == nil {
+		return
+	}
+	recibidoEn := entrada.RecibidoEn
+	if recibidoEn.IsZero() {
+		recibidoEn = e.reloj.Ahora()
+	}
+	msgID := entrada.MensajeID
+	if msgID == "" {
+		msgID = e.ids.Nuevo()
+	}
+	inbound := &domain.Mensaje{
+		MensajeID: msgID, LeadID: lead.LeadID, Autor: domain.AutorMensajeLead,
+		TipoContenido: domain.TipoContenidoTexto, Texto: entrada.Texto, CreadoEn: recibidoEn.UTC(),
+	}
+	if entrada.Tipo == domain.TipoMensajeAudio && entrada.Audio != nil {
+		inbound.Adjunto = map[string]any{"audio_original": true}
+	}
+	_ = e.leads.AgregarMensaje(e.ctx, inbound)
+
+	textoRespuesta := fallbackRespuestaTexto(entrada.Texto, lead.Afiliado)
+	_ = e.leads.AgregarMensaje(e.ctx, &domain.Mensaje{
+		MensajeID: e.ids.Nuevo(), LeadID: lead.LeadID, Autor: domain.AutorMensajeVivi,
+		TipoContenido: domain.TipoContenidoTexto, Texto: textoRespuesta, CreadoEn: e.reloj.Ahora().UTC(),
+	})
 }
 
 func (e *EjecutorTurnos) Activo(leadID string) bool {
@@ -150,4 +189,26 @@ func (c *Controlador) mensaje(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusAccepted, mensajeResponse{MensajeID: accepted.MensajeID, RecibidoEn: accepted.RecibidoEn, TurnoEnProceso: true})
+}
+
+var (
+	reProyecto = regexp.MustCompile(`(?i)(proyecto|comprar|vivienda|casa|apto|apartamento)`)
+	reIngreso  = regexp.MustCompile(`(?i)(ingreso|gano|salario|sueldo|\$\d)`)
+	reZona     = regexp.MustCompile(`(?i)(zona|sector|barrio|soacha|kennedy|bosa|engativ)`)
+)
+
+func fallbackRespuestaTexto(texto string, afiliado bool) string {
+	switch {
+	case reProyecto.MatchString(texto):
+		return "¡Genial! Tenemos varios proyectos que se ajustan a tu perfil. ¿Podrías contarme cuánto es tu ingreso mensual familiar para calcular tu capacidad?"
+	case reIngreso.MatchString(texto):
+		if afiliado {
+			return "Perfecto, con eso puedo estimar tu capacidad. Como afiliada a Colsubsidio tienes acceso a subsidios especiales. ¿Tienes algún ahorro o recursos propios para la cuota inicial?"
+		}
+		return "Gracias por la información. ¿Tienes algún ahorro o recursos propios para la cuota inicial?"
+	case reZona.MatchString(texto):
+		return "Excelente ubicación. Tenemos proyectos muy buenos en esa zona. ¿Cuántas personas conforman tu hogar? Esto nos ayuda a recomendarte el tipo de vivienda ideal."
+	default:
+		return "¡Qué bueno saberlo! Para ayudarte mejor, ¿podrías contarme cuál es tu ingreso mensual familiar o si tienes ahorros preparados para la vivienda?"
+	}
 }

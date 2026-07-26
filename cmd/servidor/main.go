@@ -112,7 +112,7 @@ func main() {
 	hitos := &usecase.EjecutarHitos{Leads: leadRepo, Planes: planRepo, Gateway: demoGateway{}, Reloj: reloj, IDs: ids, Bus: busEventos}
 	agentes.Nueva(busEventos, agentes.Dependencias{LeadNuevo: saludo.Ejecutar, Nutricionista: hitos}).Registrar()
 	procesarMensaje := &usecase.ProcesarMensaje{Leads: leadRepo, LLM: provider, IDs: ids, Bus: busEventos, Reloj: reloj, Saludo: saludo}
-	turnos := adapterhttp.NuevoEjecutorTurnos(procesarMensaje, ids, reloj)
+	turnos := adapterhttp.NuevoEjecutorTurnos(procesarMensaje, ids, reloj, leadRepo)
 	defer turnos.Cerrar()
 	controlador, err := adapterhttp.NuevoControlador(adapterhttp.Dependencias{Perfilar: perfilador, Leads: leadRepo, Fichas: fichaRepo, Planes: planRepo, Catalogo: catalogo, Turnos: turnos, Demo: demoRepo, Reloj: reloj, AvanzarDemo: &usecase.AvanzarDemo{Demo: demoRepo, Reloj: reloj, Bus: busEventos}, ReiniciarDemo: &usecase.ReiniciarDemo{Repository: demoRepo, Reloj: reloj, Habilitado: cfg.DemoSeed}})
 	if err != nil {
