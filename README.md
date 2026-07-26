@@ -2,34 +2,46 @@
 
 > **Vivi convierte leads en vecinos.**
 
-Asesora digital de vivienda por WhatsApp que **conoce al prospecto antes de saludarlo**: cruza el lead con los datos de afiliados de Colsubsidio, calcula su capacidad de compra con un motor determinista y auditable, recomienda proyectos por similitud (gemelo comprador kNN) y entrega al asesor una ficha inteligente con score, subsidios y prioridad. Hackathon Colsubsidio × 30X.
+## Sobre el proyecto
 
-## Stack
+Muchas familias afiliadas a Colsubsidio ya tienen una oportunidad real de vivienda y nunca la descubren: el primer contacto llega tarde, la información es difícil de entender, o el asesor debe empezar cada conversación desde cero. Un lead se enfría antes de saber si tiene subsidios, capacidad de compra o un proyecto posible.
 
-- **Backend:** Go 1.24+ · ADK Go 2.0 · Clean Architecture
-- **Frontend:** TypeScript · patrón MVC
-- **BD:** PostgreSQL · **LLM:** Gemini (primario) con conmutación a Qwen/Anthropic
-- **Deploy:** Heroku · CI/CD desde GitHub
+**Vivi no es un chatbot ni una única asesora digital: es un equipo comercial digital dedicado a cada lead.** Mientras una asesora conversa con calidez por WhatsApp, un equipo de agentes especializados perfila la necesidad, calcula la capacidad financiera, identifica subsidios, recomienda proyectos por similitud (gemelo comprador kNN) y prepara el mejor momento para que intervenga un asesor humano.
 
-## Estructura (planeada)
+> No reemplazamos al asesor: le entregamos una conversación que ya tiene contexto, prioridad y una ruta posible.
 
-```
-cmd/          # servidor (composition root) + pipeline de datos
-internal/     # domain (motor) · usecase · adapters · infrastructure
-web/          # SPA MVC: chat (WhatsApp) + dashboard asesor
-skills/       # SKILL.md por skill de agente
-data/  references/  migrations/
-```
+## Arquitectura multiagente
 
-## Documentación
+Cada lead avanza por un equipo de agentes coordinados mediante un **bus de eventos en memoria** y una **Coordinadora** (patrón Mediator, `internal/adapters/agentes`) — sin acoplar a los agentes entre sí:
 
-La documentación de diseño vive en la **[Wiki](https://github.com/Unikyri/vivi-perfilamiento-leads/wiki)** (14 documentos: Visión, BRD, PRD, User Stories, Casos de Uso, NFR, **Contrato v1.1**, Arquitectura, PDD, **Criterios del Motor**, Referencia de Dominio).
+| Agente | Rol | Dónde vive |
+|---|---|---|
+| **Saludo** | Primer contacto y consentimiento de datos (Ley 1581) | `usecase.SaludarLead` |
+| **Perfilador** | Convierte la conversación en una ficha estructurada | `usecase.PerfilarLead` / `ProcesarMensaje` |
+| **Analista de capacidad** | Calcula crédito, subsidio y presupuesto — **motor determinista, cero LLM** | `internal/domain/motor` |
+| **Especialista en subsidios** | Identifica los subsidios aplicables y por qué | `internal/domain/motor` |
+| **Recomendador** | Encuentra el proyecto más compatible (kNN + matriz 2×2) | `internal/domain/motor` |
+| **Nutricionista** | Si el lead aún no está listo, lo acompaña con un plan y calendario | `usecase.GestionarPlan` |
 
-> El **Contrato** (doc 10) es la frontera entre bloques y **manda ante cualquier conflicto**. Los **Criterios del Motor** (doc 13) fijan los números exactos que el código debe reproducir.
+La IA conversa, entiende intención y coordina el equipo; **no inventa decisiones financieras**. Los cálculos y subsidios salen de un motor auditable con reglas y fuentes explícitas (`VERIFICADO_BASE` / `DECLARADO` / `INFERIDO`), no de un LLM. Cada agente además carga su propio *skill* (`skills/*/SKILL.md`: tono Colsubsidio, dominio de caja, explicación financiera humana, siguiente mejor pregunta, entre otros) para mantener un comportamiento consistente y auditable.
 
-## Inicio local
+## Construido con
 
-Requisitos: Go 1.24+, Node/npm y Docker Compose para PostgreSQL. Desde la raíz del repositorio:
+- **Backend:** Go 1.24+ · Clean Architecture · bus de eventos en memoria + Mediator (sin framework externo de agentes)
+- **Frontend:** TypeScript · patrón MVC · SPA sin dependencias de UI
+- **Base de datos:** PostgreSQL
+- **LLM:** Gemini (primario), con conmutación automática a Qwen ante fallas (circuit breaker + fallback en cascada)
+- **Despliegue:** Heroku · CI/CD con GitHub Actions
+
+## Empezar
+
+### Prerrequisitos
+
+- Go 1.24+
+- Node.js y npm
+- Docker Compose (para PostgreSQL local)
+
+### Instalación
 
 ```bash
 cp .env.example .env
@@ -39,45 +51,44 @@ make run
 curl --fail --silent http://127.0.0.1:8080/salud
 ```
 
-`make run` mantiene el servidor en primer plano; ejecuta el último comando desde otra terminal. El `.env.example` solo contiene valores locales de ejemplo y no credenciales.
+`make run` mantiene el servidor en primer plano; ejecutá el `curl` desde otra terminal. `.env.example` sólo trae valores locales de ejemplo, nunca credenciales reales.
+
+## Demo
+
+**[vivi-37863aed9d29.herokuapp.com](https://vivi-37863aed9d29.herokuapp.com/)**
+
+La documentación de diseño completa (Visión, BRD, PRD, User Stories, Casos de Uso, NFR, **Contrato v1.1**, Arquitectura, PDD, **Criterios del Motor**, Referencia de Dominio) vive en la **[Wiki](https://github.com/Unikyri/vivi-perfilamiento-leads/wiki)**. El **Contrato** (doc 10) es la frontera entre bloques y manda ante cualquier conflicto; los **Criterios del Motor** (doc 13) fijan los números exactos que el código reproduce.
 
 ## Mapa RF → paquete
 
-| Módulo (RF) | Paquetes y fuentes principales |
+| Módulo | Paquetes principales |
 |---|---|
-| M1 · Pipeline de datos | `cmd/pipeline`, `internal/pipeline`, `data/`, `references/`, `migrations/` |
-| M2 · Motor determinista | `internal/domain/motor`, `internal/domain` |
-| M3 · Orquestación y agentes | `internal/adapters/agentes`, `internal/usecase`, `skills/` |
-| M4 · Conversación | `internal/usecase`, `internal/adapters/http` |
-| M5 · Nutrición | `internal/usecase`, `internal/domain` |
-| M6 · Ficha y dashboard | `internal/usecase`, `web/src/views`, `web/src/controllers` |
-| M7 · Frontend chat | `web/src` |
-| M8 · Infraestructura y CI/CD | `internal/infrastructure`, `.github/`, `cmd/servidor` |
-| M9 · Activos del demo | `docs/`, `tests/carga/`, `internal/usecase` |
+| Pipeline de datos | `cmd/pipeline`, `internal/pipeline`, `data/`, `references/` |
+| Motor determinista | `internal/domain/motor`, `internal/domain` |
+| Agentes y orquestación | `internal/adapters/agentes`, `internal/usecase`, `skills/` |
+| Conversación (WhatsApp) | `internal/usecase`, `internal/adapters/http` |
+| Nutrición | `internal/usecase`, `internal/domain` |
+| Ficha y dashboard | `internal/usecase`, `web/src/views`, `web/src/controllers` |
+| Infraestructura y CI/CD | `internal/infrastructure`, `.github/`, `cmd/servidor` |
 
-La API HTTP y la SPA se encuentran en `internal/adapters/http/` y `web/`, respectivamente. La descripción completa de capas y flujos está en [docs/arquitectura.md](docs/arquitectura.md).
+Descripción completa de capas y flujos en [docs/arquitectura.md](docs/arquitectura.md).
 
-## Límites operativos y evidencia local
+## Hoja de ruta
 
-- El límite HTTP aplica a `/api` y `/api/*`: 30 solicitudes aceptadas por identidad en una ventana fija de 60 segundos. `/salud` y los estáticos no consumen cuota. El estado es **local al proceso**: no es un contador distribuido y cada proceso tendría su propia ventana.
-- `Forwarded` y `X-Forwarded-For` se ignoran por defecto porque `TRUSTED_PROXY_CIDRS` está vacío. Solo una red de proxy explícitamente configurada puede aportar la identidad reenviada; el harness de pruebas confía únicamente en `127.0.0.1/32` y `::1/128`.
-- La política de carga reproducible y sus resultados medidos viven en [tests/carga/README.md](tests/carga/README.md). El harness es **solo de pruebas**, escucha en loopback, usa respuestas deterministas en proceso y no llama PostgreSQL, proveedores LLM, credenciales ni endpoints públicos. No apuntar k6 a una URL pública ni incluir credenciales en `BASE_URL`.
+El siguiente paso es un **piloto con afiliados y asesores reales** para medir tiempo de respuesta, calidad de perfilamiento y tasa de entrega comercial. En el corto plazo:
 
-## Git flow (hackathon — simple)
+- Cerrar la vista de Nutrición y el catálogo de Proyectos en el dashboard del asesor.
+- Prueba de carga formal y rate limiting distribuido (hoy el límite es local al proceso).
+- Integración con los canales oficiales de Colsubsidio más allá del demo de WhatsApp simulado.
 
-Dos desarrolladores, dos bloques paralelos que solo se tocan por el Contrato:
+## Licencia
 
-| Rama | Bloque | Alcance |
-|---|---|---|
-| `main` | — | Siempre desplegable. Solo entra por PR con CI verde. |
-| `feature/bloque-a` | **A · Núcleo de decisión** | Motor, agentes (ADK), conversación, nutrición |
-| `feature/bloque-b` | **B · Datos y experiencia** | Pipeline de datos, dashboard, frontend, CI/CD |
+MIT — ver [LICENSE](LICENSE).
 
-**Flujo:** cada quien trabaja en su rama de bloque → PR a `main` → merge tras CI verde. Cambios al Contrato (doc 10) van en PR aparte etiquetado `contrato`, con aprobación de ambos. Nadie importa código del otro bloque: la integración es la API HTTP + los archivos de datos.
+## Contacto
 
-```bash
-git checkout feature/bloque-a   # o bloque-b
-# ...trabajar, commitear...
-git push
-# abrir PR hacia main
-```
+Juan Arango · Nicolás Lozano · David Hernández Ortiz
+
+## Agradecimientos
+
+Hackathon Colsubsidio × 30X.
