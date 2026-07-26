@@ -1,6 +1,9 @@
-.PHONY: build test vet run datos validar-datos limpiar db-up db-down db-reset db-validate ci-local
+.PHONY: build test vet run datos validar-datos limpiar db-up db-down db-reset db-validate ci-local front-instalar front-dev front-build front-verificar
 
-build:
+# front-build depende de que el front esté fresco antes de embeber la SPA en
+# el binario (issue #88): quien compile obtiene siempre estáticos al día,
+# sin depender de acordarse de correr front-build a mano.
+build: front-build
 	go build -o bin/servidor ./cmd/servidor
 	go build -o bin/pipeline ./cmd/pipeline
 
