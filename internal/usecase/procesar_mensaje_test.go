@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -41,10 +42,11 @@ func coreUC(llm LLMProvider) (*ProcesarMensaje, *LeadRepoFake) {
 }
 
 func TestSiguientePreguntaCore(t *testing.T) {
-	perfil := domain.Perfil{"ingreso_hogar": {Valor: int64(1), Fuente: domain.FuenteCampoVerificadoBase}}
+	perfil := domain.Perfil{"ingreso_hogar": {Fuente: domain.FuenteCampoVerificadoBase}}
 	if got := SiguienteMejorPregunta(perfil); got != "recursos_propios" {
-		t.Fatalf("next=%q", got)
+		t.Fatalf("verified nil field must be skipped, next=%q", got)
 	}
+	perfil["ingreso_hogar"] = domain.CampoPerfil{Valor: int64(1), Fuente: domain.FuenteCampoVerificadoBase}
 	perfil["recursos_propios"] = domain.CampoPerfil{Valor: int64(2)}
 	perfil["zona_deseada"] = domain.CampoPerfil{Valor: "Norte"}
 	if !PerfilEstaCompleto(perfil) || SiguienteMejorPregunta(perfil) != "plazo_compra_meses" {
@@ -117,4 +119,179 @@ func TestProcesarMensajeCoreAudioAndVerifiedFields(t *testing.T) {
 	if len(messages) != 2 || messages[0].Autor != domain.AutorMensajeLead || messages[0].Texto != input.Texto || messages[0].Adjunto["audio_original"] != true || messages[1].Texto != llm.out.Respuesta {
 		t.Fatalf("messages=%+v", messages)
 	}
+}
+
+func TestProcesarMensajeAudioProviderErrorHasNoWrites(t *testing.T) {
+	providerErr := errors.New("audio provider unavailable")
+	llm := &coreLLM{err: providerErr}
+	uc, repo := coreUC(llm)
+	input := EntradaMensaje{
+		LeadID: "lead-1", Tipo: domain.TipoMensajeAudio, Texto: "quiero comprar",
+		Audio: &Audio{Base64: "aGVsbG8=", MIME: "audio/webm", DuracionS: 2},
+	}
+	if err := uc.Ejecutar(context.Background(), input); !errors.Is(err, providerErr) {
+		t.Fatalf("err=%v", err)
+	}
+	if llm.audioCalls != 1 || llm.textCalls != 0 {
+		t.Fatalf("audio/text calls=%d/%d", llm.audioCalls, llm.textCalls)
+	}
+	conversation, _ := repo.Conversacion(context.Background(), "lead-1")
+	if len(conversation) != 0 {
+		t.Fatalf("provider failure wrote %d messages", len(conversation))
+	}
+}
+
+type edgeRepo struct {
+	*LeadRepoFake
+	failAdd, addCalls int
+	failSave          bool
+}
+
+func (r *edgeRepo) AgregarMensaje(ctx context.Context, m *domain.Mensaje) error {
+	r.addCalls++
+	if r.failAdd == r.addCalls {
+		return errors.New("add failure")
+	}
+	return r.LeadRepoFake.AgregarMensaje(ctx, m)
+}
+func (r *edgeRepo) Guardar(ctx context.Context, l *domain.Lead) error {
+	if r.failSave {
+		return errors.New("cas failure")
+	}
+	return r.LeadRepoFake.Guardar(ctx, l)
+}
+
+type edgeBus struct{ events []Evento }
+
+func (b *edgeBus) Publicar(_ context.Context, e Evento)          { b.events = append(b.events, e) }
+func (*edgeBus) Suscribir(string, func(context.Context, Evento)) {}
+func edgeSetup(out SalidaTurno) (*ProcesarMensaje, *edgeRepo, *coreLLM, *edgeBus) {
+	r := &edgeRepo{LeadRepoFake: NuevoLeadRepoFake()}
+	_ = r.Crear(context.Background(), coreLead())
+	b, l := &edgeBus{}, &coreLLM{out: out}
+	return &ProcesarMensaje{Leads: r, LLM: l, IDs: NuevoIDFake("edge"), Bus: b, Reloj: NuevoRelojFake(time.Unix(100, 0))}, r, l, b
+}
+func edgeInput() EntradaMensaje {
+	return EntradaMensaje{LeadID: "lead-1", Tipo: domain.TipoMensajeTexto, Texto: "respuesta"}
+}
+
+func TestProcesarMensajeEdges(t *testing.T) {
+	t.Run("two pass normalization and protected motor", func(t *testing.T) {
+		uc, r, llm, _ := edgeSetup(SalidaTurno{Respuesta: "ok", CamposExtraidos: []CampoExtraido{
+			{Campo: "ingreso_hogar", Valor: int64(9), Fuente: domain.FuenteCampoDeclarado, Confianza: 1},
+			{Campo: "recursos_propios", Valor: float64(200), Fuente: domain.FuenteCampoDeclarado, Confianza: .8},
+			{Campo: "zona_deseada", Valor: "Norte", Fuente: domain.FuenteCampoVerificadoBase, Confianza: .8},
+			{Campo: "tipo_hogar", Valor: "APTO", Fuente: domain.FuenteCampoVerificadoBase, Confianza: .8},
+			{Campo: "reporte_credito", Valor: true, Fuente: domain.FuenteCampoDeclarado, Confianza: 1},
+			{Campo: "desconocido", Valor: true, Fuente: domain.FuenteCampoDeclarado, Confianza: 1},
+		}})
+		lead, _ := r.PorID(context.Background(), "lead-1")
+		lead.Capacidad = &domain.Capacidad{PresupuestoMax: 4100000, CreditoMax: 2800000, SubsidioAplicable: 900000, RecursosPropios: 400000}
+		if err := r.Guardar(context.Background(), lead); err != nil {
+			t.Fatal(err)
+		}
+		if err := uc.Ejecutar(context.Background(), edgeInput()); err != nil {
+			t.Fatal(err)
+		}
+		wantMotor := map[string]int64{
+			"presupuesto_max":    4100000,
+			"credito_max":        2800000,
+			"subsidio_aplicable": 900000,
+			"recursos_propios":   400000,
+		}
+		for campo, want := range wantMotor {
+			if got := llm.last.NumerosDelMotor[campo]; got != want {
+				t.Fatalf("motor[%q]=%d, want %d; captured=%v", campo, got, want, llm.last.NumerosDelMotor)
+			}
+		}
+		l, _ := r.PorID(context.Background(), "lead-1")
+		if l.Perfil["ingreso_hogar"].Valor != int64(3000000) || l.Perfil["recursos_propios"].Valor != int64(200) || l.Perfil["zona_deseada"].Fuente != domain.FuenteCampoDeclarado || l.Perfil["reporte_credito"].Valor != true || l.Capacidad.RecursosPropios != 200 {
+			t.Fatalf("profile/capacity=%+v/%+v", l.Perfil, l.Capacidad)
+		}
+	})
+	t.Run("invalid recognized output is side effect free", func(t *testing.T) {
+		for _, fields := range [][]CampoExtraido{{{Campo: "edad", Valor: "x", Fuente: domain.FuenteCampoDeclarado}}, {{Campo: "edad", Valor: 2, Fuente: "bad"}}, {{Campo: "edad", Valor: 1, Fuente: domain.FuenteCampoDeclarado}, {Campo: "edad", Valor: 2, Fuente: domain.FuenteCampoDeclarado}}, {{Campo: "reporte_credito", Valor: "true", Fuente: domain.FuenteCampoDeclarado}}} {
+			uc, r, _, _ := edgeSetup(SalidaTurno{CamposExtraidos: fields})
+			before, _ := r.PorID(context.Background(), "lead-1")
+			if err := uc.Ejecutar(context.Background(), edgeInput()); !errors.Is(err, ErrSalidaTurnoInvalida) {
+				t.Fatalf("err=%v", err)
+			}
+			after, _ := r.PorID(context.Background(), "lead-1")
+			messages, _ := r.Conversacion(context.Background(), "lead-1")
+			if len(messages) != 0 || len(after.Perfil) != len(before.Perfil) || after.Estado != before.Estado || after.Capacidad != before.Capacidad {
+				t.Fatalf("mutation/messages: before=%+v after=%+v writes=%d", before, after, len(messages))
+			}
+		}
+	})
+	t.Run("unintelligible audio stores response only", func(t *testing.T) {
+		uc, r, l, b := edgeSetup(SalidaTurno{Respuesta: "repite", Accion: AccionAudioInint, CamposExtraidos: []CampoExtraido{{Campo: "zona_deseada", Valor: "Norte", Fuente: domain.FuenteCampoDeclarado}}})
+		before, _ := r.PorID(context.Background(), "lead-1")
+		before.Capacidad = &domain.Capacidad{PresupuestoMax: 7}
+		_ = r.Guardar(context.Background(), before)
+		in := edgeInput()
+		in.Tipo, in.Audio = domain.TipoMensajeAudio, &Audio{Base64: "aA==", MIME: "audio/webm", DuracionS: 2}
+		if err := uc.Ejecutar(context.Background(), in); err != nil {
+			t.Fatal(err)
+		}
+		lead, _ := r.PorID(context.Background(), "lead-1")
+		messages, _ := r.Conversacion(context.Background(), "lead-1")
+		if l.audioCalls != 1 || len(messages) != 1 || messages[0].Autor != domain.AutorMensajeVivi || lead.Capacidad.PresupuestoMax != 7 || lead.Perfil["zona_deseada"].Valor != nil || len(b.events) != 0 {
+			t.Fatalf("audio state/messages/events=%+v/%+v/%d", lead, messages, len(b.events))
+		}
+	})
+	t.Run("affiliate cap completes and publishes once", func(t *testing.T) {
+		uc, r, l, b := edgeSetup(SalidaTurno{Respuesta: "listo", Accion: AccionContinuar})
+		lead, _ := r.PorID(context.Background(), "lead-1")
+		lead.Afiliado = true
+		_ = r.Guardar(context.Background(), lead)
+		for i := 0; i < 3; i++ {
+			_ = r.AgregarMensaje(context.Background(), &domain.Mensaje{LeadID: "lead-1", Autor: domain.AutorMensajeLead, CreadoEn: time.Unix(int64(i), 0)})
+		}
+		if err := uc.Ejecutar(context.Background(), edgeInput()); err != nil {
+			t.Fatal(err)
+		}
+		got, _ := r.PorID(context.Background(), "lead-1")
+		if got.Estado != domain.EstadoLeadCalificado || len(b.events) != 1 || l.textCalls != 1 {
+			t.Fatalf("state/events/calls=%s/%d/%d", got.Estado, len(b.events), l.textCalls)
+		}
+		if err := uc.Ejecutar(context.Background(), edgeInput()); !errors.Is(err, ErrLeadNoPerfilando) {
+			t.Fatalf("post completion=%v", err)
+		}
+	})
+	t.Run("non affiliate cap and bounded history", func(t *testing.T) {
+		uc, r, l, _ := edgeSetup(SalidaTurno{Respuesta: "listo", Accion: AccionContinuar})
+		for i := 0; i < 8; i++ {
+			a := domain.AutorMensajeVivi
+			if i < 5 {
+				a = domain.AutorMensajeLead
+			}
+			_ = r.AgregarMensaje(context.Background(), &domain.Mensaje{LeadID: "lead-1", Autor: a, Texto: string(rune('a' + i)), CreadoEn: time.Unix(int64(i), 0)})
+		}
+		if err := uc.Ejecutar(context.Background(), edgeInput()); err != nil || l.textCalls != 1 || len(l.last.HistorialReciente) != 7 {
+			t.Fatalf("err/calls/history=%v/%d/%d", err, l.textCalls, len(l.last.HistorialReciente))
+		}
+		blocked, rr, ll, _ := edgeSetup(SalidaTurno{Accion: AccionContinuar})
+		for i := 0; i < 6; i++ {
+			_ = rr.AgregarMensaje(context.Background(), &domain.Mensaje{LeadID: "lead-1", Autor: domain.AutorMensajeLead})
+		}
+		if err := blocked.Ejecutar(context.Background(), edgeInput()); !errors.Is(err, ErrLimiteTurnos) || ll.textCalls != 0 {
+			t.Fatalf("post cap err/calls=%v/%d", err, ll.textCalls)
+		}
+	})
+	t.Run("failure prefixes publish no event", func(t *testing.T) {
+		for _, fail := range []int{1, 2} {
+			uc, r, _, b := edgeSetup(SalidaTurno{Respuesta: "ok", Accion: AccionPerfilCompleto})
+			r.failAdd = fail
+			err := uc.Ejecutar(context.Background(), edgeInput())
+			if err == nil || !strings.Contains(err.Error(), "guardar") || len(b.events) != 0 {
+				t.Fatalf("fail=%d err/events=%v/%d", fail, err, len(b.events))
+			}
+		}
+		uc, r, _, b := edgeSetup(SalidaTurno{Respuesta: "ok", Accion: AccionPerfilCompleto})
+		r.failSave = true
+		err := uc.Ejecutar(context.Background(), edgeInput())
+		if err == nil || !strings.Contains(err.Error(), "guardar lead") || len(b.events) != 0 {
+			t.Fatalf("cas err/events=%v/%d", err, len(b.events))
+		}
+	})
 }

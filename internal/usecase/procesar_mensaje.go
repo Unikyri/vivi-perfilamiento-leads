@@ -3,12 +3,17 @@ package usecase
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
+	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain/motor"
 )
 
 var (
@@ -92,12 +97,24 @@ func (uc *ProcesarMensaje) Ejecutar(ctx context.Context, entrada EntradaMensaje)
 	if err != nil {
 		return err
 	}
-	if err := validarSalida(salida); err != nil {
+	campos, err := normalizarCampos(salida.CamposExtraidos)
+	if err != nil {
 		return err
 	}
-	aplicarCamposBasicos(lead, salida.CamposExtraidos)
+	if salida.Accion == AccionAudioInint || salida.Accion == AccionPausarContacto {
+		return uc.responder(ctx, lead.LeadID, salida.Respuesta)
+	}
+	aplicarCampos(lead, campos, uc.Reloj.Ahora())
+	capacidad := motor.CalcularCapacidad(lead.Perfil, lead.Afiliado, 0)
+	lead.Capacidad = &capacidad
 	lead.Intencion = &salida.Intencion
 	lead.ActualizadoEn = uc.Reloj.Ahora()
+	complete := completaTurno(salida.Accion, lead.Perfil, turns+1 == limit)
+	if complete {
+		if err := lead.Transicionar(domain.EstadoLeadCalificado); err != nil {
+			return fmt.Errorf("transicionar lead: %w", err)
+		}
+	}
 
 	inbound := &domain.Mensaje{
 		MensajeID: uc.IDs.Nuevo(), LeadID: lead.LeadID, Autor: domain.AutorMensajeLead,
@@ -112,9 +129,19 @@ func (uc *ProcesarMensaje) Ejecutar(ctx context.Context, entrada EntradaMensaje)
 	if err := uc.Leads.Guardar(ctx, lead); err != nil {
 		return fmt.Errorf("guardar lead: %w", err)
 	}
+	if err := uc.responder(ctx, lead.LeadID, salida.Respuesta); err != nil {
+		return err
+	}
+	if complete && uc.Bus != nil {
+		uc.Bus.Publicar(ctx, Evento{Tipo: EvPerfilCompleto, LeadID: lead.LeadID})
+	}
+	return nil
+}
+
+func (uc *ProcesarMensaje) responder(ctx context.Context, leadID, texto string) error {
 	response := &domain.Mensaje{
-		MensajeID: uc.IDs.Nuevo(), LeadID: lead.LeadID, Autor: domain.AutorMensajeVivi,
-		TipoContenido: domain.TipoContenidoTexto, Texto: salida.Respuesta, CreadoEn: uc.Reloj.Ahora(),
+		MensajeID: uc.IDs.Nuevo(), LeadID: leadID, Autor: domain.AutorMensajeVivi,
+		TipoContenido: domain.TipoContenidoTexto, Texto: texto, CreadoEn: uc.Reloj.Ahora(),
 	}
 	if err := uc.Leads.AgregarMensaje(ctx, response); err != nil {
 		return fmt.Errorf("guardar respuesta: %w", err)
@@ -170,34 +197,107 @@ func numerosDelMotor(capacidad *domain.Capacidad) map[string]int64 {
 	return numeros
 }
 
-func validarSalida(salida SalidaTurno) error {
+var (
+	camposEnteros = map[string]bool{
+		"ingreso_hogar": true, "recursos_propios": true, "personas_hogar": true,
+		"edad": true, "plazo_compra_meses": true, "arriendo_actual": true,
+	}
+	camposBooleanos = map[string]bool{
+		"tiene_vivienda": true, "recibio_subsidio": true, "hogar_con_afiliado": true,
+		"reporte_credito": true,
+	}
+)
+
+func normalizarCampos(campos []CampoExtraido) ([]CampoExtraido, error) {
 	seen := make(map[string]bool)
-	for _, campo := range salida.CamposExtraidos {
+	out := make([]CampoExtraido, 0, len(campos))
+	for _, campo := range campos {
 		if !domain.CamposReconocidos[campo.Campo] {
 			continue
 		}
 		if seen[campo.Campo] || campo.Confianza < 0 || campo.Confianza > 1 {
-			return ErrSalidaTurnoInvalida
+			return nil, ErrSalidaTurnoInvalida
 		}
 		switch campo.Fuente {
 		case domain.FuenteCampoDeclarado, domain.FuenteCampoInferido, domain.FuenteCampoVerificadoBase:
 		default:
-			return ErrSalidaTurnoInvalida
+			return nil, ErrSalidaTurnoInvalida
 		}
+		valor, ok := normalizarValor(campo.Campo, campo.Valor)
+		if !ok {
+			return nil, ErrSalidaTurnoInvalida
+		}
+		campo.Valor = valor
 		seen[campo.Campo] = true
+		out = append(out, campo)
 	}
-	return nil
+	return out, nil
 }
 
-func aplicarCamposBasicos(lead *domain.Lead, campos []CampoExtraido) {
+func normalizarValor(campo string, valor any) (any, bool) {
+	if camposEnteros[campo] {
+		return normalizarEntero(valor)
+	}
+	if camposBooleanos[campo] {
+		v, ok := valor.(bool)
+		return v, ok
+	}
+	v, ok := valor.(string)
+	return v, ok
+}
+
+func normalizarEntero(valor any) (int64, bool) {
+	var n int64
+	switch v := valor.(type) {
+	case int:
+		n = int64(v)
+	case int32:
+		n = int64(v)
+	case int64:
+		n = v
+	case uint:
+		if uint64(v) > math.MaxInt64 {
+			return 0, false
+		}
+		n = int64(v)
+	case uint32:
+		n = int64(v)
+	case uint64:
+		if v > math.MaxInt64 {
+			return 0, false
+		}
+		n = int64(v)
+	case float64:
+		if math.IsNaN(v) || math.IsInf(v, 0) || math.Trunc(v) != v || v < -9223372036854775808.0 || v >= 9223372036854775808.0 {
+			return 0, false
+		}
+		n = int64(v)
+	case json.Number:
+		if i, err := v.Int64(); err == nil {
+			n = i
+		} else {
+			f, ferr := strconv.ParseFloat(string(v), 64)
+			if ferr != nil || math.IsNaN(f) || math.IsInf(f, 0) || math.Trunc(f) != f || f < math.MinInt64 || f > math.MaxInt64 {
+				return 0, false
+			}
+			n = int64(f)
+		}
+	default:
+		return 0, false
+	}
+	return n, true
+}
+
+func aplicarCampos(lead *domain.Lead, campos []CampoExtraido, tiempos ...time.Time) {
+	ahora := time.Time{}
+	if len(tiempos) > 0 {
+		ahora = tiempos[0]
+	}
 	if lead.Perfil == nil {
 		lead.Perfil = domain.Perfil{}
 	}
 	updated := copiarPerfil(lead.Perfil)
 	for _, campo := range campos {
-		if !domain.CamposReconocidos[campo.Campo] {
-			continue
-		}
 		if existente, ok := updated[campo.Campo]; ok && existente.Fuente == domain.FuenteCampoVerificadoBase {
 			continue
 		}
@@ -205,9 +305,22 @@ func aplicarCamposBasicos(lead *domain.Lead, campos []CampoExtraido) {
 		if fuente == domain.FuenteCampoVerificadoBase {
 			fuente = domain.FuenteCampoDeclarado
 		}
-		updated[campo.Campo] = domain.CampoPerfil{Valor: campo.Valor, Fuente: fuente, Confianza: campo.Confianza, RequiereConfirmacion: campo.RequiereConfirmacion}
+		updated[campo.Campo] = domain.CampoPerfil{Valor: campo.Valor, Fuente: fuente, Confianza: campo.Confianza, RequiereConfirmacion: campo.RequiereConfirmacion, ActualizadoEn: ahora}
 	}
 	lead.Perfil = updated
+}
+
+func completaTurno(accion string, perfil domain.Perfil, capReached bool) bool {
+	switch accion {
+	case AccionConsentimientoSi, AccionConsentimientoNo, AccionPausarContacto, AccionFueraDeDominio, AccionAudioInint:
+		return false
+	case AccionPerfilCompleto:
+		return true
+	case AccionContinuar:
+		return PerfilEstaCompleto(perfil) || capReached
+	default:
+		return PerfilEstaCompleto(perfil)
+	}
 }
 
 func copiarPerfil(perfil domain.Perfil) domain.Perfil {

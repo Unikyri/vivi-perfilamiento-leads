@@ -14,7 +14,11 @@ var camposCriticosPerfil = map[string]bool{
 // SiguienteMejorPregunta returns the highest-priority missing conversational field.
 func SiguienteMejorPregunta(perfil domain.Perfil) string {
 	for _, campo := range prioridadCampos {
-		if valor, ok := perfil[campo]; !ok || valor.Valor == nil || (valor.Fuente == domain.FuenteCampoVerificadoBase && valor.Valor == nil) {
+		valor, ok := perfil[campo]
+		if ok && valor.Fuente == domain.FuenteCampoVerificadoBase {
+			continue
+		}
+		if !ok || valor.Valor == nil {
 			return campo
 		}
 	}

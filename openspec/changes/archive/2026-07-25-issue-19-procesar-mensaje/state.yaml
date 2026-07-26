@@ -8,13 +8,13 @@ artifact_store:
   mode: hybrid
   primary: engram
   repository: openspec
-status: active
-current_phase: apply
-next_recommended: apply
+status: archived
+current_phase: archive
+next_recommended: none
 parallel_ready:
-  - apply
+  - verify
 branch: feat/issue-19-procesar-mensaje
-worktree: /tmp/vivi-issue-19
+worktree: /tmp/vivi-issue-19-edges
 base: origin/main
 delivery:
   strategy: feature-branch-chain
@@ -32,6 +32,16 @@ delivery:
       internal/usecase/procesar_mensaje.go: { additions: 265, deletions: 0 }
       internal/usecase/siguiente_pregunta.go: { additions: 42, deletions: 0 }
       internal/usecase/procesar_mensaje_test.go: { additions: 278, deletions: 0 }
+  final_measured:
+    base: origin/main
+    files:
+      internal/usecase/procesar_mensaje.go: { additions: 127, deletions: 14 }
+      internal/usecase/siguiente_pregunta.go: { additions: 5, deletions: 1 }
+      internal/usecase/procesar_mensaje_test.go: { additions: 179, deletions: 2 }
+    additions: 311
+    deletions: 17
+    total: 328
+    within_budget: true
   slices:
     - name: core
       base: feat/issue-19-procesar-mensaje
@@ -69,20 +79,21 @@ phases:
   spec: success
   design: success
   tasks: success
-  apply: in-progress
-  verify: not-started
-  archive: not-started
+  apply: success
+  verify: success
+  archive: success
 task_progress:
   total: 7
-  completed: 3
-  pending: 4
-  all_complete: false
+  completed: 7
+  pending: 0
+  all_complete: true
 artifacts:
   exploration: openspec/changes/issue-19-procesar-mensaje/exploration.md
   proposal: openspec/changes/issue-19-procesar-mensaje/proposal.md
   spec: openspec/changes/issue-19-procesar-mensaje/specs/procesar-mensaje/spec.md
   design: openspec/changes/issue-19-procesar-mensaje/design.md
   tasks: openspec/changes/issue-19-procesar-mensaje/tasks.md
+  apply_progress: openspec/changes/issue-19-procesar-mensaje/apply-progress.md
   state: openspec/changes/issue-19-procesar-mensaje/state.yaml
 engram_topics:
   exploration: sdd/issue-19-procesar-mensaje/explore
@@ -90,6 +101,7 @@ engram_topics:
   spec: sdd/issue-19-procesar-mensaje/spec
   design: sdd/issue-19-procesar-mensaje/design
   tasks: sdd/issue-19-procesar-mensaje/tasks
+  apply_progress: sdd/issue-19-procesar-mensaje/apply-progress
   state: sdd/issue-19-procesar-mensaje/state
 capabilities:
   new:
@@ -119,4 +131,21 @@ risks:
   - Rejecting non-PERFILANDO turns blocks post-qualification chat until issue 20.
   - The one-call constraint means post-merge motor values can only be offered to the next turn, not safely quoted in the current response.
   - Qwen ProcesarAudio returns a typed capability error.
-last_updated: 2026-07-25T19:38:05-05:00
+last_updated: 2026-07-25T20:35:00-05:00
+remediation:
+  status: complete
+  warnings: [W2, W3, W4, W6]
+  receipt_status: superseded_by_remediation
+  review_started: false
+  review_finalized: false
+  archive_started: false
+
+archive:
+  date: 2026-07-25
+  path: openspec/changes/archive/2026-07-25-issue-19-procesar-mensaje
+  review_gate: allow
+  review_lineage: review-f584989d93fb41b9
+  native_review_receipt: approved-and-bound
+  native_review_post_archive: receipt remains historical evidence for the pre-archive candidate; gates that rediscover the moved paths must validate a new candidate or explicitly use archive evidence
+  runtime_code_test_delta_against_origin_main: 328
+  source_and_tests_preserved: true
