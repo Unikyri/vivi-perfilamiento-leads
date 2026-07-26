@@ -168,7 +168,16 @@ function montarBotoneraDemo(contenedor: HTMLElement): void {
     async () => {
       try {
         await api.reiniciar();
-        actualizar({ leadActivo: 'mock-1', tabActiva: 'cola' });
+
+        // Tras el reinicio el lead anterior ya no existe: hay que crear uno nuevo.
+        let nuevoLead: string | null = null;
+        try {
+          nuevoLead = (await api.crearLead('ana')).lead_id;
+        } catch (e) {
+          console.error('[dashboard] no se pudo recrear el lead tras reiniciar:', e);
+        }
+
+        actualizar({ leadActivo: nuevoLead, tabActiva: 'cola' });
         cargarCola();
         alert('Demo reiniciado al estado inicial.');
       } catch (e) {
