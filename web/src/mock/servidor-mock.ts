@@ -11,9 +11,9 @@ const mensajesDemo: Mensaje[] = [
   },
 ];
 
-function obtenerConversacion(): Conversacion {
+function obtenerConversacion(leadId: string): Conversacion {
   return {
-    lead_id: 'mock-1', estado: 'PERFILANDO',
+    lead_id: leadId, estado: 'PERFILANDO',
     turno_en_proceso: turnoSimulado,
     mensajes: [...mensajesDemo],
   };
@@ -178,7 +178,8 @@ export function activarMock(): void {
 
     // GET conversación
     if (url.includes('/conversacion') && metodo === 'GET') {
-      return json(obtenerConversacion());
+      const m = url.match(/\/leads\/([^/]+)\/conversacion/);
+      return json(obtenerConversacion(m ? m[1] : 'mock-1'));
     }
 
     // POST mensaje (texto o audio)
@@ -232,7 +233,19 @@ export function activarMock(): void {
 
     // POST crear lead
     if (url.endsWith('/api/leads') && metodo === 'POST') {
-      return json({ lead_id: 'mock-1', estado: 'PERFILANDO', afiliado_detectado: true }, 201);
+      let body: { precargado_id?: string } = {};
+      try { body = JSON.parse((opciones?.body as string) || '{}'); } catch { body = {}; }
+
+      const porPrecargado: Record<string, string> = {
+        ana: 'mock-1', carlos: 'mock-2', luisa: 'mock-3',
+      };
+      const leadId = porPrecargado[body.precargado_id ?? 'ana'] ?? 'mock-1';
+
+      return json({
+        lead_id: leadId,
+        estado: 'PERFILANDO',
+        afiliado_detectado: leadId !== 'mock-2',
+      }, 201);
     }
 
     // GET cola
