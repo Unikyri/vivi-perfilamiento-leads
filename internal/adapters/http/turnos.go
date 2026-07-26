@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -85,7 +86,9 @@ func (e *EjecutorTurnos) ejecutar(entrada usecase.EntradaMensaje) {
 		delete(e.activos, entrada.LeadID)
 		e.mu.Unlock()
 	}()
-	_ = e.procesador.Ejecutar(e.ctx, entrada)
+	if err := e.procesador.Ejecutar(e.ctx, entrada); err != nil {
+		log.Printf("[turnos] error procesando turno para lead %s: %v", entrada.LeadID, err)
+	}
 }
 
 func (e *EjecutorTurnos) Activo(leadID string) bool {

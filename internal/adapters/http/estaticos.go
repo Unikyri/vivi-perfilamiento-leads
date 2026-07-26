@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const staticCSP = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'"
+const staticCSP = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'"
 
 // staticFiles contains the output produced by the Vite build. CI packages it
 // before compiling the Go binary; the entry check below prevents a bad binary.
