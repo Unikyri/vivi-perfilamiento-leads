@@ -144,25 +144,53 @@ func insertDemoLead(ctx context.Context, tx pgx.Tx, lead domain.Lead) error {
 
 	// Seed initial commercial Ficha for seed leads
 	fichaID := "ficha-seed-" + lead.LeadID
-	iden, _ := encodeJSONB(domain.Identificacion{Nombre: lead.Nombre, Afiliada: lead.Afiliado, Categoria: "A", Telefono: lead.Telefono})
 	recs := []domain.Recomendacion{
 		{ProyectoID: "mongui", Nombre: "Monguí", Zona: "Ciudadela Maiporé - Soacha", PrecioDesde: 156470000, Razon: "Tu presupuesto cubre el 100% de la cuota inicial", Vecinos: 622, TasaDesistimiento: 0.12, BrochureURL: "https://heyzine.com/flip-book/866af8f6a6.html", Recorrido360URL: "https://storage.net-fs.com/hosting/7532170/19/"},
 	}
 	if !lead.Afiliado {
 		recs[0] = domain.Recomendacion{ProyectoID: "versalles", Nombre: "Versalles", Zona: "Ciudadela Maiporé - Soacha", PrecioDesde: 195200000, Razon: "Certificación EDGE, ahorro en servicios", Vecinos: 174, TasaDesistimiento: 0.15, BrochureURL: "https://heyzine.com/flip-book/be784b0d5c.html", Recorrido360URL: "https://shape.com.co/360/COLSUBSIDIO-Versalles_APTOA"}
 	}
-	recsJSON, _ := encodeJSONB(recs)
-	beneficiosJSON, _ := encodeJSONB([]string{"Subsidio de vivienda Colsubsidio hasta $52,5M", "Tasa preferencial crédito hipotecario"})
-	argumentosJSON, _ := encodeJSONB([]string{"Cuota estimada mensual ($1,4M) es adecuada para tu nivel de ingresos"})
-	alertaJSON, _ := encodeJSONB(domain.AlertaDesistimiento{Activa: false, TasaVecinos: 0.12})
 	var bandaAdv *string
 	if !lead.Afiliado {
 		adv := "No afiliado a Colsubsidio — consume cupo del 10% regulatorio"
 		bandaAdv = &adv
 	}
-	inteJSON, _ := encodeJSONB(domain.Intencion{Nivel: domain.NivelAlta, Confianza: domain.NivelAlta, Senales: []string{"Busca comprar antes de 6 meses"}})
 
-	_, _ = tx.Exec(ctx, `INSERT INTO fichas (ficha_id,lead_id,generada_en,confianza_perfil,banda_advertencia,identificacion,capacidad,perfil,intencion,recomendaciones,beneficios,argumentos_venta,alerta_desistimiento,consume_cupo_10) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT (ficha_id) DO NOTHING`, fichaID, lead.LeadID, lead.CreadoEn, 0.94, bandaAdv, iden, capacidad, perfil, inteJSON, recsJSON, beneficiosJSON, argumentosJSON, alertaJSON, lead.ConsumeCupo10)
+	capacidadObj := domain.Capacidad{
+		PresupuestoMax: 180000000, CreditoMax: 117500000, SubsidioAplicable: 52500000,
+		RecursosPropios: 10000000, Ratio: 0.29, Confianza: 0.94,
+		Desglose: []domain.ItemDesglose{
+			{Concepto: "Subsidio Mi Casa Ya / Caja", Monto: 52500000, Regla: "Afiliado Cat A", Fuente: domain.FuenteCampoVerificadoBase},
+			{Concepto: "Preaprobado Bancolombia", Monto: 117500000, Regla: "Capacidad de endeudamiento 30%", Fuente: domain.FuenteCampoInferido},
+			{Concepto: "Ahorro Declarado", Monto: 10000000, Regla: "Declarado en chat", Fuente: domain.FuenteCampoDeclarado},
+		},
+	}
+	if !lead.Afiliado {
+		capacidadObj.SubsidioAplicable = 0
+		capacidadObj.CreditoMax = 170000000
+		capacidadObj.Desglose = []domain.ItemDesglose{
+			{Concepto: "Crédito Preaprobado", Monto: 170000000, Regla: "Capacidad de endeudamiento 30%", Fuente: domain.FuenteCampoInferido},
+			{Concepto: "Ahorro Declarado", Monto: 10000000, Regla: "Declarado en chat", Fuente: domain.FuenteCampoDeclarado},
+		}
+	}
+
+	fichaObj := domain.Ficha{
+		FichaID: fichaID, LeadID: lead.LeadID, GeneradaEn: lead.CreadoEn, ConfianzaPerfil: 0.94,
+		BandaAdvertencia: bandaAdv,
+		Identificacion:   domain.Identificacion{Nombre: lead.Nombre, Afiliada: lead.Afiliado, Categoria: "A", Telefono: lead.Telefono},
+		Capacidad:        capacidadObj, Perfil: lead.Perfil,
+		Intencion:        domain.Intencion{Nivel: domain.NivelAlta, Confianza: domain.NivelAlta, Senales: []string{"Busca comprar antes de 6 meses"}},
+		Recomendaciones:  recs,
+		Beneficios:       []string{"Subsidio de vivienda Colsubsidio hasta $52,5M", "Tasa preferencial crédito hipotecario"},
+		ArgumentosVenta:  []string{"Cuota estimada mensual ($1,4M) es adecuada para tu nivel de ingresos"},
+		AlertaDesistimiento: domain.AlertaDesistimiento{Activa: false, TasaVecinos: 0.12},
+		ConsumeCupo10:    lead.ConsumeCupo10,
+	}
+
+	fichaContent, errFicha := encodeJSONB(fichaObj)
+	if errFicha == nil {
+		_, _ = tx.Exec(ctx, `INSERT INTO fichas (ficha_id,lead_id,contenido,generada_en) VALUES ($1,$2,$3,$4) ON CONFLICT (lead_id) DO NOTHING`, fichaID, lead.LeadID, fichaContent, lead.CreadoEn)
+	}
 
 	return nil
 }
