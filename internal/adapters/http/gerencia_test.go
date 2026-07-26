@@ -44,20 +44,29 @@ func TestGerenciaBuyerPersonaProjectAndCatalogContract(t *testing.T) {
 	}
 	mux := buyerPersonaRouter(catalog)
 	for _, path := range []string{"/api/gerencia/buyer-persona?proyecto_id=p1", "/api/gerencia/buyer-persona"} {
-		r := httptest.NewRecorder()
-		mux.ServeHTTP(r, httptest.NewRequest(http.MethodGet, path, nil))
-		if r.Code != http.StatusOK {
-			t.Fatalf("%s response=%d %s", path, r.Code, r.Body)
-		}
-		if path[len(path)-1] == '1' {
-			var got usecase.BuyerPersonaResumen
-			if err := json.NewDecoder(r.Body).Decode(&got); err != nil || got.ProyectoID != "p1" || got.Afiliacion.Afiliados != 1 {
-				t.Fatalf("project=%+v err=%v", got, err)
+		var first string
+		for attempt := 0; attempt < 2; attempt++ {
+			r := httptest.NewRecorder()
+			mux.ServeHTTP(r, httptest.NewRequest(http.MethodGet, path, nil))
+			if r.Code != http.StatusOK {
+				t.Fatalf("%s response=%d %s", path, r.Code, r.Body)
 			}
-		} else {
-			var got usecase.BuyerPersonaCatalogo
-			if err := json.NewDecoder(r.Body).Decode(&got); err != nil || len(got.Proyectos) != 2 || got.Proyectos[0].ProyectoID != "p1" {
-				t.Fatalf("catalog=%+v err=%v", got, err)
+			raw := r.Body.String()
+			if attempt == 0 {
+				first = raw
+			} else if raw != first {
+				t.Fatalf("%s response changed between identical requests", path)
+			}
+			if strings.Contains(path, "proyecto_id=") {
+				var got usecase.BuyerPersonaResumen
+				if err := json.Unmarshal([]byte(raw), &got); err != nil || got.ProyectoID != "p1" || got.Nombre != "Proyecto Uno" || got.Muestras != 1 || got.Afiliacion.Afiliados != 1 {
+					t.Fatalf("project=%+v err=%v", got, err)
+				}
+			} else {
+				var got usecase.BuyerPersonaCatalogo
+				if err := json.Unmarshal([]byte(raw), &got); err != nil || len(got.Proyectos) != 2 || got.Proyectos[0].ProyectoID != "p1" || got.Proyectos[1].ProyectoID != "p2" {
+					t.Fatalf("catalog=%+v err=%v", got, err)
+				}
 			}
 		}
 	}

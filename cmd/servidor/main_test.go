@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	adapterhttp "github.com/Unikyri/vivi-perfilamiento-leads/internal/adapters/http"
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/infrastructure/llm"
@@ -40,5 +41,30 @@ func TestSaludReportsLiveBreakerState(t *testing.T) {
 	}
 	if got.FechaSimulada == "" {
 		t.Fatal("health date must be present")
+	}
+}
+
+type healthClock struct{ simulated time.Time }
+
+func (c healthClock) Ahora() time.Time         { return time.Now().UTC() }
+func (c healthClock) FechaSimulada() time.Time { return c.simulated }
+func (healthClock) Avanzar(time.Time)          {}
+
+func TestSaludReportsInjectedSimulatedDate(t *testing.T) {
+	expected := time.Date(2099, 3, 4, 0, 0, 0, 0, time.UTC)
+	handler := adapterhttp.HandlerSalud(salud{
+		proveedorLLM: "gemini",
+		bd:           "OK",
+		reloj:        healthClock{simulated: expected},
+	})
+	recorder := httptest.NewRecorder()
+	handler(recorder, httptest.NewRequest(http.MethodGet, "/salud", nil))
+
+	var got adapterhttp.EstadoSalud
+	if err := json.NewDecoder(recorder.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	if got.FechaSimulada != "2099-03-04" {
+		t.Fatalf("health date=%q, want %q", got.FechaSimulada, "2099-03-04")
 	}
 }

@@ -46,7 +46,7 @@ func TestDemoTiempoAdvancesAndCountsOneTick(t *testing.T) {
 	demoRouter(repo, clock, &events).ServeHTTP(r, httptest.NewRequest(http.MethodPost, "/api/demo/tiempo", strings.NewReader(body)))
 	var got tiempoResponse
 	raw := r.Body.String()
-	if r.Code != http.StatusOK || json.NewDecoder(strings.NewReader(raw)).Decode(&got) != nil || got.HitosDisparados != 0 || got.FechaSimulada != "2026-07-28" || strings.Contains(raw, "T00:00:00") || repo.saves != 1 || events != 1 {
+	if r.Code != http.StatusOK || json.NewDecoder(strings.NewReader(raw)).Decode(&got) != nil || got.HitosDisparados != 0 || got.FechaSimulada != "2026-07-28" || strings.Contains(raw, "T00:00:00") || repo.saves != 1 || events != 1 || !clock.FechaSimulada().Equal(start.AddDate(0, 0, 2)) {
 		t.Fatalf("code=%d got=%+v repo=%+v events=%d", r.Code, got, repo, events)
 	}
 }

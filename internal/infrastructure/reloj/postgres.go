@@ -30,13 +30,13 @@ func NuevoPostgres(ctx context.Context, repository usecase.DemoRepository) (*Pos
 	return &Postgres{now: now.UTC()}, nil
 }
 
-func (r *Postgres) Ahora() time.Time {
+func (r *Postgres) Ahora() time.Time { return time.Now().UTC() }
+
+func (r *Postgres) FechaSimulada() time.Time {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.now
 }
-
-func (r *Postgres) FechaSimulada() time.Time { return r.Ahora() }
 
 func (r *Postgres) Avanzar(at time.Time) {
 	r.mu.Lock()
