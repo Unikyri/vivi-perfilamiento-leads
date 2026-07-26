@@ -1,4 +1,5 @@
 import type { ColaLeads, LeadEnCola } from '../models/tipos';
+import { avatarPersona } from '../util/avatares';
 
 const POR_PAGINA = 6;
 
@@ -104,12 +105,11 @@ function renderFilaLead(l: LeadEnCola, seleccionado: boolean): string {
   const bucket = bucketDePrioridad(l.prioridad);
   const claseBucket = bucket === 'Alta' ? 'hot' : bucket === 'Media' ? 'medium' : '';
   const clasePrioridad = bucket === 'Media' ? 'medium' : bucket === 'Baja' ? 'baja' : '';
-  const iniciales = l.nombre.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase() || '?';
   const afiliacion = l.afiliado ? 'Afiliado' : 'No afiliado';
 
   return `
     <button type="button" class="lead-row ${claseBucket} ${seleccionado ? 'selected' : ''}" data-lead-id="${l.lead_id}" role="listitem">
-      <span class="avatar lead-avatar" aria-hidden="true">${escapar(iniciales)}</span>
+      <img class="avatar lead-avatar" src="${avatarPersona(l.lead_id)}" alt="" aria-hidden="true">
       <span class="lead-info">
         <span class="lead-name">${escapar(l.nombre)}</span>
         <span class="lead-meta">${escapar(afiliacion)}</span>
