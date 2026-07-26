@@ -130,7 +130,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Puerto,
-		Handler:           mux,
+		Handler:           adapterhttp.NuevoLimitadorTasa(mux, cfg.TrustedProxyCIDRs),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

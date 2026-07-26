@@ -49,7 +49,7 @@ func errorCode(err error) string {
 	if err == nil {
 		return "ERROR_INTERNO"
 	}
-	if errors.Is(err, ErrTurnoEnProceso) {
+	if errors.Is(err, ErrLimiteTasaHTTP) || errors.Is(err, ErrTurnoEnProceso) {
 		return "LIMITE_TASA"
 	}
 	if errors.Is(err, usecase.ErrValidacion) {
