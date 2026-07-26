@@ -1,0 +1,124 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-21-nutrition-plan
+issue:
+  number: 21
+  title: "Nutrition with explicit consent and time advancement"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: archived
+current_phase: archive
+next_recommended: none
+worktree: /tmp/vivi-issue-21
+branch: feat/issue-21-nutrition-plan
+delivery_strategy: auto-chain
+strict_tdd: false
+artifacts:
+  exploration:
+    engram_topic: sdd/issue-21-nutrition-plan/explore
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/exploration.md
+    status: done
+  proposal:
+    engram_topic: sdd/issue-21-nutrition-plan/proposal
+    engram_observation_id: 584
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/proposal.md
+    status: done
+  specs:
+    engram_topic: sdd/issue-21-nutrition-plan/spec
+    engram_observation_id: 585
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/specs/plan-nutricion/spec.md
+    status: done
+  design:
+    engram_topic: sdd/issue-21-nutrition-plan/design
+    engram_observation_id: 586
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/design.md
+    status: done
+  tasks:
+    engram_topic: sdd/issue-21-nutrition-plan/tasks
+    engram_observation_id: 587
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/tasks.md
+    status: done
+  apply_progress:
+    engram_topic: sdd/issue-21-nutrition-plan/apply-progress
+    engram_observation_id: 588
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/apply-progress.md
+    status: done
+  verify_report:
+    engram_topic: sdd/issue-21-nutrition-plan/verify-report
+    engram_observation_id: 589
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/verify-report.md
+    status: done
+  archive_report:
+    engram_topic: sdd/issue-21-nutrition-plan/archive-report
+    openspec_path: openspec/changes/archive/2026-07-25-issue-21-nutrition-plan/archive-report.md
+    status: done
+constraints:
+  review_budget_changed_lines: 400
+  no_llm: true
+  no_http_or_adk_or_composition_wiring: true
+  no_new_ports_or_repository_methods: true
+  contract_authority: "Wiki document 10"
+risks:
+  - "Cross-repository plan/lead persistence and outbound retry are intentionally non-atomic."
+  - "Gateway send success followed by append or mark failure can duplicate outbound delivery on retry."
+  - "Event/coordinator integration belongs to later Issues #22/#23."
+  - "Slice 1 remains at its existing 400 authored runtime/test-line hard cap; no Slice 1 runtime/test files changed during remediation."
+  - "Historical verify report #589 and the prior review receipt must be refreshed/revalidated after remediation before archive."
+  - "Approved exact-tree review lineage review-601bbe35173758f9 returned allow at the post-apply gate."
+apply_slice:
+  name: focused-remediation-f2-f8-f7
+  completed_tasks: [1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3]
+  pending_tasks: []
+  authored_runtime_test_lines: 391
+  slice_1_authored_runtime_test_lines: 400
+  slice_1_budget: 400
+  slice_2_budget: 400
+  review_budget: 400
+  runtime_harness: "N/A: callable-only scope; wiring deferred"
+  native_attempt:
+    available: false
+    fallback_evidence: "gentle-ai sdd-attempt status returned unknown command"
+verification:
+  verdict: "pass_with_warnings"
+  reason: "requirements and runtime evidence are green; validator unavailable; approved exact-tree post-apply review gate resolved the historical review blocker"
+  requirements: "8/8"
+  scenarios: "8/8"
+  blockers: 0
+  critical_findings: 0
+  evidence_revision: "sha256:349469185fa6b87505dda1a3043cbfcf85762e6be6b39ed4406dd3949893b2f9"
+  superseded_evidence_revision: "sha256:4bbf7fbaa146bf7be82aa499df36ff7dc919303be186baddeab597ba6e661a60"
+  go_toolchain: "go1.25.0 linux/amd64"
+  focused: "go test ./internal/domain/motor ./internal/usecase -run 'TestDisenarHitos|TestGestionarPlan|TestEjecutarHitos' -v -count=1 (exit 0, 10 tests + 9 subtests PASS)"
+  full: "go test ./... -count=1 (exit 0, hash sha256:97f3e75ebcda4bc4ea7eea531fa6bdf611d8246636b57755fb6aaaa7033f8bc6)"
+  race: "go test -race ./... -count=1 (exit 0, full module)"
+  build: "go build ./... (exit 0, hash sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)"
+  vet: "go vet ./... (exit 0)"
+  modules: "go mod verify (exit 0); go mod tidy -diff (exit 0, no drift)"
+  formatting: "gofmt -l internal/domain/motor internal/usecase empty; git diff --check exit 0; pre-existing drift in internal/pipeline/*_test.go is out of scope"
+  remediation_confirmed:
+    below_budget_meta_monto_zero: true
+    zero_meta_no_threshold_handoff: true
+    reevaluacion_handoff: true
+    already_paused_lead_plan_pausado_without_farewell: true
+  validator_available: false
+  validator_attested: false
+  admission_mode: "self-checked-fallback (sdd-verify-validate absent from gentle-ai 2.1.11 and 1.43.3)"
+  envelope_note: "strict envelope carries only schema fields; validator transparency lives in report prose because native 2.1.11 rejects unknown envelope fields"
+  authority_only_recovery_shape_used: false
+  authority_only_recovery_shape_note: "not used: both declared commands were executed and passed, so exit 125 with empty-output hashes would misstate the evidence"
+review:
+  prior_lineage_id: review-8ef03c0648bfd232
+  prior_terminal_state: approved
+  prior_findings: 0
+  valid_for_archive: true
+  invalidated_by_remediation: false
+  current_lineage_id: review-601bbe35173758f9
+  current_terminal_state: approved
+  native_gate:
+    command: "gentle-ai review validate --gate post-apply --cwd /tmp/vivi-issue-21"
+    result: allow
+    allowed: true
+    action: continue
+    reason: "authoritative transaction, current repository target, and content-bound artifacts match"
+last_updated: 2026-07-26
