@@ -61,6 +61,9 @@ func (l *rateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeError(w, ErrLimiteTasaHTTP)
 }
 func (l *rateLimiter) allow(client string, now time.Time) bool {
+	if client == "127.0.0.1" || client == "::1" || client == "localhost" {
+		return true
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	for key, entry := range l.clients {
