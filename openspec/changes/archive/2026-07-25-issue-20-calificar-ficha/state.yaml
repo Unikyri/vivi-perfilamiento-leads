@@ -7,9 +7,19 @@ artifact_store:
   mode: hybrid
   primary: engram
   repository: openspec
-status: active
-current_phase: apply
-next_recommended: verify
+status: archived
+current_phase: archive
+next_recommended: none
+archive:
+  date: 2026-07-25
+  path: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha
+  report: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/archive-report.md
+  review_lineage: review-13aee636b643f8cd
+  review_gate: post-apply
+  review_result: allow
+  specs_synced:
+    - openspec/specs/calificar-lead/spec.md
+    - openspec/specs/generar-ficha/spec.md
 branch: test/issue-20-qualification-edges
 worktree: /tmp/vivi-issue-20-verify
 base: origin/main
@@ -51,16 +61,16 @@ scope:
     - Contract/Wiki
     - LLM/narrative port
 artifacts:
-  exploration: openspec/changes/issue-20-calificar-ficha/exploration.md
-  proposal: openspec/changes/issue-20-calificar-ficha/proposal.md
+  exploration: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/exploration.md
+  proposal: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/proposal.md
   specs:
-    - openspec/changes/issue-20-calificar-ficha/specs/calificar-lead/spec.md
-    - openspec/changes/issue-20-calificar-ficha/specs/generar-ficha/spec.md
-  design: openspec/changes/issue-20-calificar-ficha/design.md
-  tasks: openspec/changes/issue-20-calificar-ficha/tasks.md
-  apply_progress: openspec/changes/issue-20-calificar-ficha/apply-progress.md
-  verify_report: openspec/changes/issue-20-calificar-ficha/verify-report.md
-  state: openspec/changes/issue-20-calificar-ficha/state.yaml
+    - openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/specs/calificar-lead/spec.md
+    - openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/specs/generar-ficha/spec.md
+  design: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/design.md
+  tasks: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/tasks.md
+  apply_progress: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/apply-progress.md
+  verify_report: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/verify-report.md
+  state: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/state.yaml
 engram_topics:
   exploration: sdd/issue-20-calificar-ficha/explore
   proposal: sdd/issue-20-calificar-ficha/proposal
@@ -94,9 +104,9 @@ delivery_slices:
       maximum: 400
 task_progress:
   total: 10
-  completed: 9
-  pending: 1
-  all_complete: false
+  completed: 10
+  pending: 0
+  all_complete: true
 constraints:
   - Calificar only CALIFICADO leads.
   - Choose lowest positive catalog PrecioDesde within preliminary budget.
@@ -142,30 +152,29 @@ slice_2:
   legacy_api_removed: true
   runtime_harness: N/A — synchronous provider-free usecase; fixed clock/ID and retry-after-CAS fake harness exercised
   rollback: revert the two Slice 2 usecase files
-  commit: deferred by explicit no-commit executor constraint
+  commit: '21751e1 feat(usecase): generate advisor ficha'
 verify:
   schema: gentle-ai.verify-result/v1
-  run: independent requirements/runtime final verification (read-only)
-  verdict: fail
-  failure_class: authority_only_and_incomplete_tasks
+  run: independent final requirements/runtime verification
+  verdict: pass_with_warnings
   substantive_failure: false
   command_failed: false
-  blockers:
-    - missing bound review authority; 'review validate --gate post-apply' = invalidated / receipt_ambiguous
-    - task 3.2 work-unit commit closure still open (native sdd-status verify = blocked)
-  evidence_revision: sha256:e4416745362d02b07293ebed31095881a724d0cac210f1fe73aae8899dbefc96
-  observed_authority_revision: sha256:94d4d3fead9e3fdf8fa536f780b29806b8fff2737e644eece8bdaee27e7debb3
-  declared_envelope_commands: not executed under authority (exit 125, empty-output hash)
-  requirements_compliant: 4/6
-  scenarios_compliant: 5/7
-  tasks: 9/10
+  authority_lineage: review-90c09c25bf720d01
+  authority_gate: post-apply allow
+  evidence_revision: sha256:defc2383caf6f10de695bf896254b23201d457882190ceec0cee07483aa615ea
+  observed_authority_revision: sha256:af0ef565cb7571ae04d4b06d9ea4be86e0c795c77389acb16bb19dc88a7b84ab
+  requirements_compliant: 6/6
+  scenarios_compliant: 7/7
+  tasks: 10/10
   slice_1_source_lines: 400
   slice_2_source_lines: 388
+  hardening_test_lines: 63
   validator_available: false
   admission: self_checked_validator_unavailable
   diagnostics:
+    focused_edges: 'go test ./internal/usecase -run TestCalificarLead(PriorityCapsRatioAndUsesPartialConfidence|NonCanonicalCatalogKeyOmitsKNNZone|RutaDecididaPayloadContainsCopiedDecisionData) -count=1 -v — exit 0'
+    focused_calificar: 'go test ./internal/usecase -run TestCalificarLead -count=1 -v — exit 0'
     focused_ficha: 'go test ./internal/usecase -run TestGenerarFicha -count=1 -v — exit 0'
-    focused_calificar: 'go test ./internal/usecase -run TestCalificarLead -count=1 — exit 0'
     full_test: 'go test ./... -count=1 — exit 0'
     race_test: 'go test -race ./... -count=1 — exit 0'
     build: 'go build ./... — exit 0'
@@ -175,11 +184,7 @@ verify:
     gofmt: 'gofmt -l internal/usecase/ — no output'
     diff_check: 'git diff --check — no output'
   warnings:
-    - ratio cap asserted only at exactly 1.2; ratio>1.2 case asserts no priority
-    - priority confidence factor always 1.0 in tests
-    - non-canonical catalog zone exclusion untested
-    - event payload prioridad/recomendaciones keys unasserted
-    - engram state topic still records 393/204 authored/runtime lines vs actual 388/199
-    - engram spec and apply-progress topics hold change notes, not full artifact text
-  archive_ready: false
-last_updated: 2026-07-25T22:40:00-05:00
+    - 'gentle-ai sdd-verify-validate is unavailable; this report is transparent self-checked fallback, not validator-attested.'
+    - 'Engram spec/apply-progress observations retain correction/progress summaries; OpenSpec files remain the complete repository audit source.'
+  archive_ready: true
+last_updated: 2026-07-25T22:58:00-05:00
