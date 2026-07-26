@@ -96,3 +96,52 @@ func (uc *GestionarPlan) CrearPlan(ctx context.Context, entrada EntradaCrearPlan
 	}
 	return existing, nil
 }
+
+const farewellPausado = "Entendido, pausaremos estos mensajes por ahora. Si deseas retomarlos, escríbenos cuando estés listo."
+
+func (uc *GestionarPlan) PausarPlan(ctx context.Context, leadID string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if strings.TrimSpace(leadID) == "" {
+		return fmt.Errorf("%w: lead_id vacio", ErrValidacion)
+	}
+	if uc.Leads == nil || uc.Planes == nil || uc.Reloj == nil || uc.IDs == nil {
+		return fmt.Errorf("%w: repositorios y puertos requeridos", ErrValidacion)
+	}
+	plan, err := uc.Planes.PorLead(ctx, leadID)
+	if errors.Is(err, ErrNoEncontrado) || plan == nil {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("consultar plan: %w", err)
+	}
+	if plan.Estado == domain.EstadoPlanPausado {
+		return nil
+	}
+	lead, err := uc.Leads.PorID(ctx, leadID)
+	if err != nil {
+		return fmt.Errorf("consultar lead: %w", err)
+	}
+	if lead == nil {
+		return ErrDatosLeadAusentes
+	}
+	plan.Estado = domain.EstadoPlanPausado
+	if err := uc.Planes.Guardar(ctx, plan); err != nil {
+		return fmt.Errorf("pausar plan: %w", err)
+	}
+	if lead.Estado == domain.EstadoLeadPausado {
+		return nil
+	}
+	if err := lead.Transicionar(domain.EstadoLeadPausado); err != nil {
+		return fmt.Errorf("transicionar lead: %w", err)
+	}
+	if err := uc.Leads.Guardar(ctx, lead); err != nil {
+		return fmt.Errorf("guardar lead: %w", err)
+	}
+	farewell := &domain.Mensaje{MensajeID: uc.IDs.Nuevo(), LeadID: leadID, Autor: domain.AutorMensajeVivi, TipoContenido: domain.TipoContenidoTexto, Texto: farewellPausado, CreadoEn: uc.Reloj.Ahora()}
+	if err := uc.Leads.AgregarMensaje(ctx, farewell); err != nil {
+		return fmt.Errorf("guardar despedida: %w", err)
+	}
+	return nil
+}
