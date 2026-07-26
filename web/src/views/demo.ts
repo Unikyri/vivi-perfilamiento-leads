@@ -9,6 +9,11 @@ export function renderBotoneraDemo(
 ): void {
   contenedor.innerHTML = `
     <div class="botonera-demo">
+      <label class="campo-fecha">
+        Avanzar a
+        <input type="date" id="demo-fecha" value="2026-08-01" min="2026-07-26" />
+      </label>
+
       <button id="btn-avanzar-tiempo" class="btn-demo-action" type="button" title="Simular avance en la línea de tiempo">
         ⏩ Avanzar tiempo
       </button>
@@ -16,6 +21,8 @@ export function renderBotoneraDemo(
       <button id="btn-reiniciar-demo" class="btn-demo-action" type="button" title="Reiniciar demo al estado inicial (<3s)">
         ↺ Reiniciar demo
       </button>
+
+      <span id="demo-aviso" role="status" aria-live="polite" class="demo-aviso"></span>
     </div>
   `;
 
