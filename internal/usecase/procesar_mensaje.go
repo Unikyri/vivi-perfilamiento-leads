@@ -25,11 +25,15 @@ var (
 )
 
 type EntradaMensaje struct {
-	LeadID string
-	Tipo   domain.TipoMensaje
-	Texto  string
-	Audio  *Audio
+	LeadID     string
+	Tipo       domain.TipoMensaje
+	Texto      string
+	Audio      *Audio
+	MensajeID  string
+	RecibidoEn time.Time
 }
+
+func ValidarEntradaMensaje(entrada EntradaMensaje) error { return validarEntrada(entrada) }
 
 type ProcesarMensaje struct {
 	Leads LeadRepository
@@ -71,6 +75,10 @@ func (uc *ProcesarMensaje) Ejecutar(ctx context.Context, entrada EntradaMensaje)
 		return ErrLimiteTurnos
 	}
 
+	recibidoEn := entrada.RecibidoEn
+	if recibidoEn.IsZero() {
+		recibidoEn = uc.Reloj.Ahora()
+	}
 	current := domain.Mensaje{LeadID: lead.LeadID, Texto: entrada.Texto, TipoContenido: domain.TipoContenidoTexto}
 	history := historialReciente(conversation, current)
 	turn := EntradaTurno{
@@ -116,9 +124,13 @@ func (uc *ProcesarMensaje) Ejecutar(ctx context.Context, entrada EntradaMensaje)
 		}
 	}
 
+	mensajeID := entrada.MensajeID
+	if mensajeID == "" {
+		mensajeID = uc.IDs.Nuevo()
+	}
 	inbound := &domain.Mensaje{
-		MensajeID: uc.IDs.Nuevo(), LeadID: lead.LeadID, Autor: domain.AutorMensajeLead,
-		TipoContenido: domain.TipoContenidoTexto, Texto: entrada.Texto, CreadoEn: lead.ActualizadoEn,
+		MensajeID: mensajeID, LeadID: lead.LeadID, Autor: domain.AutorMensajeLead,
+		TipoContenido: domain.TipoContenidoTexto, Texto: entrada.Texto, CreadoEn: recibidoEn.UTC(),
 	}
 	if entrada.Tipo == domain.TipoMensajeAudio {
 		inbound.Adjunto = map[string]any{"audio_original": true}

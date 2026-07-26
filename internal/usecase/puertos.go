@@ -170,6 +170,34 @@ type Reloj interface {
 	Avanzar(time.Time)
 }
 
+type DemoRepository interface {
+	FechaSimulada(context.Context) (time.Time, error)
+	GuardarFechaSimulada(context.Context, time.Time) error
+}
+
+// DemoResetRepository owns the destructive, demo-only reset transaction.
+type DemoResetRepository interface {
+	Reiniciar(context.Context) (time.Time, error)
+}
+
+type ResultadoTick struct {
+	HitosDisparados int
+	Err             error
+}
+
+type tickResultKey struct{}
+
+func ConResultadoTick(ctx context.Context, result *ResultadoTick) context.Context {
+	return context.WithValue(ctx, tickResultKey{}, result)
+}
+
+func ResultadoTickDeContexto(ctx context.Context) *ResultadoTick {
+	if result, ok := ctx.Value(tickResultKey{}).(*ResultadoTick); ok {
+		return result
+	}
+	return nil
+}
+
 // BusEventos publishes and subscribes to internal domain events.
 type BusEventos interface {
 	Publicar(context.Context, Evento)
