@@ -39,7 +39,7 @@ func Cargar() (Config, error) {
 		return Config{}, fmt.Errorf("TASA_EA no es un número válido: %w", err)
 	}
 	c.TasaEA = tasa
-	c.DemoSeed = valor("DEMO_SEED", "true") == "true"
+	c.DemoSeed = valor("DEMO_SEED", "false") == "true"
 
 	if c.DatabaseURL == "" {
 		return Config{}, fmt.Errorf("DATABASE_URL es obligatoria")

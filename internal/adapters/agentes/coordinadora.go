@@ -101,7 +101,11 @@ func (c *Coordinadora) tickReloj(ctx context.Context, event usecase.Evento) erro
 	if !ok {
 		return errSkipped
 	}
-	_, err := c.deps.Nutricionista.Ejecutar(ctx, hasta)
+	count, err := c.deps.Nutricionista.Ejecutar(ctx, hasta)
+	if result := usecase.ResultadoTickDeContexto(ctx); result != nil {
+		result.HitosDisparados = count
+		result.Err = err
+	}
 	return err
 }
 
@@ -124,13 +128,16 @@ func timeFromPayload(payload map[string]any) (time.Time, bool) {
 	if payload == nil {
 		return time.Time{}, false
 	}
-	switch value := payload["hasta"].(type) {
-	case time.Time:
-		return value, !value.IsZero()
-	case string:
-		parsed, err := time.Parse(time.RFC3339, value)
-		return parsed, err == nil
-	default:
-		return time.Time{}, false
+	for _, key := range []string{"fecha_simulada", "hasta"} {
+		switch value := payload[key].(type) {
+		case time.Time:
+			return value, !value.IsZero()
+		case string:
+			parsed, err := time.Parse(time.RFC3339, value)
+			if err == nil {
+				return parsed, true
+			}
+		}
 	}
+	return time.Time{}, false
 }

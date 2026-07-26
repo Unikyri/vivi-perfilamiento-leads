@@ -31,11 +31,14 @@ func (f *fakeDocumentadora) Ejecutar(_ context.Context, id string) (*domain.Fich
 	return nil, nil
 }
 
-type fakeNutricionista struct{ times []time.Time }
+type fakeNutricionista struct {
+	times []time.Time
+	count int
+}
 
 func (f *fakeNutricionista) Ejecutar(_ context.Context, at time.Time) (int, error) {
 	f.times = append(f.times, at)
-	return 0, nil
+	return f.count, nil
 }
 
 func TestCoordinadoraDeterministicRouting(t *testing.T) {
@@ -74,6 +77,18 @@ func TestCoordinadoraDeterministicRouting(t *testing.T) {
 	b.Publicar(context.Background(), usecase.Evento{Tipo: usecase.EvTickReloj, Payload: map[string]any{"hasta": at.Format(time.RFC3339)}})
 	if len(nutrition.times) != 2 || !nutrition.times[0].Equal(at) || !nutrition.times[1].Equal(at) {
 		t.Fatalf("ticks=%v", nutrition.times)
+	}
+}
+
+func TestCoordinadoraBridgesTickCountAndCanonicalDate(t *testing.T) {
+	at := time.Date(2026, 7, 27, 0, 0, 0, 0, time.UTC)
+	nutrition := &fakeNutricionista{count: 3}
+	b := bus.Nuevo(nil)
+	Nueva(b, Dependencias{Nutricionista: nutrition}).Registrar()
+	result := &usecase.ResultadoTick{}
+	b.Publicar(usecase.ConResultadoTick(context.Background(), result), usecase.Evento{Tipo: usecase.EvTickReloj, Payload: map[string]any{"fecha_simulada": at.Format(time.RFC3339)}})
+	if result.HitosDisparados != 3 || len(nutrition.times) != 1 || !nutrition.times[0].Equal(at) {
+		t.Fatalf("result=%+v times=%v", result, nutrition.times)
 	}
 }
 

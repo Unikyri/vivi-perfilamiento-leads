@@ -295,3 +295,22 @@ func TestProcesarMensajeEdges(t *testing.T) {
 		}
 	})
 }
+
+func TestProcesarMensajeUsesAcceptedMetadata(t *testing.T) {
+	uc, repo := coreUC(&coreLLM{out: SalidaTurno{Respuesta: "ok"}})
+	received := time.Date(2026, 7, 26, 7, 0, 0, 0, time.UTC)
+	input := EntradaMensaje{LeadID: "lead-1", Tipo: domain.TipoMensajeTexto, Texto: "hola", MensajeID: "accepted-1", RecibidoEn: received}
+	if err := uc.Ejecutar(context.Background(), input); err != nil {
+		t.Fatal(err)
+	}
+	messages, _ := repo.Conversacion(context.Background(), "lead-1")
+	found := false
+	for _, message := range messages {
+		if message.MensajeID == "accepted-1" && message.CreadoEn.Equal(received) {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("message=%+v", messages)
+	}
+}

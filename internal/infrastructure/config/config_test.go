@@ -25,3 +25,17 @@ func TestCargarFallaSinDatabaseURL(t *testing.T) {
 		t.Fatal("se esperaba error por DATABASE_URL vacía")
 	}
 }
+
+func TestCargarDemoSeedRequiresExplicitTrue(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("DEMO_SEED", "false")
+	c, err := Cargar()
+	if err != nil || c.DemoSeed {
+		t.Fatalf("config=%+v err=%v", c, err)
+	}
+	t.Setenv("DEMO_SEED", "true")
+	c, err = Cargar()
+	if err != nil || !c.DemoSeed {
+		t.Fatalf("enabled config=%+v err=%v", c, err)
+	}
+}

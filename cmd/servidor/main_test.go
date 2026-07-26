@@ -38,4 +38,7 @@ func TestSaludReportsLiveBreakerState(t *testing.T) {
 	if got.CircuitBreaker != "ABIERTO" {
 		t.Fatalf("health breaker=%q", got.CircuitBreaker)
 	}
+	if got.FechaSimulada == "" {
+		t.Fatal("health date must be present")
+	}
 }
