@@ -69,18 +69,26 @@ function cambiarTab(nuevaTab: 'cola' | 'ficha' | 'gerencia', btns: NodeListOf<HT
   });
 }
 
+let ultimoTabRenderizado: string | null = null;
+let ultimoColaRenderizado: unknown = null;
+let ultimoLeadFichaRenderizado: string | null = null;
+
 function renderTabActiva(contenedor: HTMLElement): void {
   const st = obtener();
+  const tabCambio = st.tabActiva !== ultimoTabRenderizado;
 
   switch (st.tabActiva) {
     case 'cola':
       if (st.cola) {
-        renderCola(
-          contenedor,
-          st.cola,
-          leadId => seleccionarLead(leadId),
-          leadId => seleccionarChat(leadId),
-        );
+        if (tabCambio || st.cola !== ultimoColaRenderizado) {
+          ultimoColaRenderizado = st.cola;
+          renderCola(
+            contenedor,
+            st.cola,
+            leadId => seleccionarLead(leadId),
+            leadId => seleccionarChat(leadId),
+          );
+        }
       } else {
         contenedor.innerHTML = '<div style="padding:1rem; color:#6B7280">Cargando cola de leads…</div>';
       }
@@ -88,16 +96,23 @@ function renderTabActiva(contenedor: HTMLElement): void {
 
     case 'ficha':
       if (st.leadActivo) {
-        cargarYRenderizarFicha(contenedor, st.leadActivo);
+        if (tabCambio || st.leadActivo !== ultimoLeadFichaRenderizado) {
+          ultimoLeadFichaRenderizado = st.leadActivo;
+          cargarYRenderizarFicha(contenedor, st.leadActivo);
+        }
       } else {
         contenedor.innerHTML = '<div style="padding:1.5rem; text-align:center; color:#6B7280">Selecciona un lead de la cola para ver su ficha comercial.</div>';
       }
       break;
 
     case 'gerencia':
-      cargarYRenderizarGerencia(contenedor, proyectoGerenciaSeleccionado);
+      if (tabCambio) {
+        cargarYRenderizarGerencia(contenedor, proyectoGerenciaSeleccionado);
+      }
       break;
   }
+
+  ultimoTabRenderizado = st.tabActiva;
 }
 
 function seleccionarLead(leadId: string): void {
