@@ -2,39 +2,50 @@
 
 ## Batch
 - Change: `issue-20-calificar-ficha`
-- Slice: 1 — qualification
-- Branch: `feat/issue-20-calificar-ficha`
+- Slice: 2 — deterministic ficha generation remediation
+- Branch: `feat/issue-20-generar-ficha`
+- Worktree: `/tmp/vivi-issue-20-ficha`
 - Mode: Standard (strict TDD disabled by project configuration)
-- Delivery: feature-branch-chain, PR #1 boundary; no size exception
+- Delivery: feature-branch-chain, Slice 2 boundary; no size exception
 
 ## Completed Tasks
-- [x] 1.1 Deterministic guards/read-failure tests with no lead save or event.
-- [x] 1.2 Provider-free qualification service and package-private decision/candidate helpers.
-- [x] 1.3 Conversion, route, priority-cap, semáforo, cupo, candidate-zero fallback, KNN, and deterministic recommendation tests.
-- [x] 1.4 Route/state mapping, required event payload, and durable lead-save-before-single-event ordering.
-- [ ] 2.1–2.4 Slice 2 ficha generation (reserved for the next apply batch).
-- [ ] 3.2 Final commit/work-unit closure (commit explicitly forbidden in this executor session).
+- [x] 1.1–1.4 Slice 1 qualification, shared decision, routing, CAS, and event ordering (inherited from Slice 1).
+- [x] 2.1 Eligibility/read/cancellation tests prove invalid leads and failures produce no ficha or lead writes.
+- [x] 2.2 `GenerarFicha` reconstructs the shared deterministic decision and emits ordered Contract content, warning, benefits, rent argument, and strict withdrawal alert.
+- [x] 2.3 Fixed-clock/ID tests cover deterministic content, recommendation parity, threshold `.20` versus `>.20`, no-rent behavior, and read-only output isolation.
+- [x] 2.4 Ficha-first persistence and repair retry preserve stable ficha ID/time, leave failed lead CAS unchanged, and complete `ENTREGADO` on retry without events; the public API is `Ejecutar(ctx context.Context, leadID string) (*domain.Ficha, error)` and successful handoff stamps `ActualizadoEn` from `Reloj`.
+- [x] 3.1 Slice validation and physical source budget evidence recorded below.
+- [ ] 3.2 Commit/work-unit closure remains pending because this executor was explicitly instructed not to commit.
 
 ## Implementation
-- `internal/usecase/calificar_lead.go`: added `CalificarLead`, qualification result/input types, capacity candidate selection, exact catalog-zone KNN input, conversion predicate, matrix routing, priority cap, semáforo/cupo mapping, state transitions, CAS persistence, and post-save `RutaDecidida` publication.
-- `internal/usecase/calificar_lead_test.go`: rewrote the previously semicolon-compressed test into gofmt-formatted table-driven subtests and readable helpers, preserving guards/no-write, candidate/fallback, KNN K=30, deterministic recommendations, conversions, routes, priority cap, semáforo/cupo, event payload, save-before-event, and save-failure coverage.
+- `internal/usecase/generar_ficha.go`: removed `EntradaGenerarFicha`, `EntradaFicha`, and `SalidaGenerarFicha`; changed `Ejecutar` to the explicit leadID/pointer-result API; preserved all guards, read failures, ficha-first save, transition, CAS, retry, no-event, and no-LLM behavior; set `toSave.ActualizadoEn = uc.Reloj.Ahora()` immediately before the successful lead save.
+- `internal/usecase/generar_ficha_test.go`: updated existing helper and retry calls to the explicit API and asserted the fixed Reloj timestamp on the persisted delivered lead.
+- `internal/usecase/calificar_lead.go`: unchanged.
 
 ## Work Unit Evidence
 | Evidence | Result |
 |---|---|
-| Focused test | `go test ./internal/usecase -run TestCalificarLead -count=1` — PASS; all three qualification test functions and subcases passed. |
-| Runtime harness | N/A — slice 1 is a synchronous provider-free application service with no HTTP, process, shell, or external runtime boundary. Deterministic fake repository/bus ordering scenario exercised the durability boundary. |
-| Rollback boundary | Revert/delete only `internal/usecase/calificar_lead.go` and `internal/usecase/calificar_lead_test.go`; slice 2 remains untouched. |
+| Focused test | `go test ./internal/usecase -run TestGenerarFicha -count=1` — PASS; all GenerarFicha tests and subcases passed. |
+| Runtime harness | N/A — synchronous provider-free usecase has no HTTP, process, shell, or external runtime boundary; deterministic fake catalog, ficha repository, fixed clock/ID, and retry-after-CAS-failure harness exercised the persistence boundary. |
+| Rollback boundary | Revert only `internal/usecase/generar_ficha.go` and `internal/usecase/generar_ficha_test.go`; Slice 1 qualification files remain untouched. |
 
 ## Full Validation
+- `go test ./internal/usecase -run TestGenerarFicha -count=1` — PASS.
 - `go test ./...` — PASS.
-- `go vet ./...` — PASS.
+- `go test -race ./...` — PASS.
 - `go build ./...` — PASS.
+- `go vet ./...` — PASS.
+- `go mod verify` — PASS (`all modules verified`).
+- `go list ./...` — PASS; 14 packages listed.
+- `gofmt -l internal/usecase/generar_ficha.go internal/usecase/generar_ficha_test.go` — no output.
+- `git diff --check` — PASS.
+- Legacy API grep (`EntradaGenerarFicha|EntradaFicha|SalidaGenerarFicha`) — no references.
+- Scope/status — only the two Slice 2 Go files and active SDD artifacts are changed; no forbidden or Slice 1 implementation path changed.
+- Physical Slice 2 source — `199 + 189 = 388` formatted lines, within the 400-line hard ceiling.
 
-## Scope and Workload
-- Final formatted source count: `238` lines in `calificar_lead.go` + `162` lines in `calificar_lead_test.go` = `400` total, exactly at the hard slice ceiling. Production behavior was not changed by this remediation; the test source was rewritten for readability.
-- Only the two assigned usecase files and active SDD artifacts were changed; no domain, motor, port, adapter, infrastructure, HTTP, frontend, migration, config, Contract, or Wiki paths were modified.
-- Deviation: none from the slice-1 design. The existing `ASESOR`/`CALIFICADO` result is read-only on repeat invocation to avoid duplicate CAS/event delivery.
+## Deviations and Risks
+- No implementation deviation from the Slice 2 design; remediation only aligns the public API and lead timestamp behavior with Issue #20.
+- Commit closure is intentionally pending under the explicit no-commit constraint; implementation is ready for independent verification after work-unit commit handling by the parent workflow.
 
 ## Next
-Slice 1 is ready for independent verification. Slice 2 should implement `GenerarFicha` and its tests on this branch without modifying the qualification scope.
+Independent SDD verification should run after commit/work-unit closure. No events or LLM calls are introduced by this slice.

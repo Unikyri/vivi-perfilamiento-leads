@@ -35,15 +35,15 @@ Both authored totals are <=400. PR #1 targets `feature/bloque-a`; PR #2 targets 
 
 ## Phase 2: Slice 2 — Generate ficha
 
-- [ ] 2.1 In `internal/usecase/generar_ficha_test.go`, add RED eligibility/read/cancellation tests proving non-`CALIFICADO`/non-`ASESOR` and failures write neither ficha nor lead.
-- [ ] 2.2 Create `internal/usecase/generar_ficha.go` using the shared decision; build Contract fields in fixed order, exact low-confidence warning, ordered benefits/rent argument, and alert active only for rate `>0.20`.
-- [ ] 2.3 Add fixed-clock/ID tests for byte-stable content, recommendation parity, non-aliasing, threshold `0.20` inactive versus above active, and no LLM use.
-- [ ] 2.4 Implement and test ficha-upsert before `ENTREGADO` CAS: ficha-save leaves lead unchanged; lead-save failure remains `CALIFICADO`/`ASESOR`; retry reuses ID/time, upserts, then saves. Change `calificar_lead.go` helper only if <=20 authored lines.
+- [x] 2.1 In `internal/usecase/generar_ficha_test.go`, add RED eligibility/read/cancellation tests proving non-`CALIFICADO`/non-`ASESOR` and failures write neither ficha nor lead.
+- [x] 2.2 Create `internal/usecase/generar_ficha.go` using the shared decision; build Contract fields in fixed order, exact low-confidence warning, ordered benefits/rent argument, and alert active only for rate `>0.20`.
+- [x] 2.3 Add fixed-clock/ID tests for byte-stable content, recommendation parity, non-aliasing, threshold `0.20` inactive versus above active, and no LLM use.
+- [x] 2.4 Implement and test ficha-upsert before `ENTREGADO` CAS: ficha-save leaves lead unchanged; lead-save failure remains `CALIFICADO`/`ASESOR`; retry reuses ID/time, upserts, then saves. Change `calificar_lead.go` helper only if <=20 authored lines.
 
 ## Phase 3: Slice evidence and guard
 
-- [ ] 3.1 Run each unit's focused command, record exact result and fail-at-step harness evidence; keep each PR's authored `git diff --stat` total <=400.
-- [ ] 3.2 Run `go test ./... && go vet ./... && go build ./...`; review only the four allowed usecase files, then commit each tested slice as one rollbackable work unit.
+- [x] 3.1 Run each unit's focused command, record exact result and fail-at-step harness evidence; keep each PR's authored `git diff --stat` total <=400.
+- [ ] 3.2 Validation commands (`go test ./...`, `go vet ./...`, `go build ./...`, race/module/diff checks) pass; commit/work-unit closure remains pending because this executor was explicitly instructed not to commit.
 
 ## Scope and Definition of Done
 
