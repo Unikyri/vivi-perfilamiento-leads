@@ -36,11 +36,12 @@ type EntradaMensaje struct {
 func ValidarEntradaMensaje(entrada EntradaMensaje) error { return validarEntrada(entrada) }
 
 type ProcesarMensaje struct {
-	Leads LeadRepository
-	LLM   LLMProvider
-	IDs   GeneradorID
-	Bus   BusEventos
-	Reloj Reloj
+	Leads  LeadRepository
+	LLM    LLMProvider
+	IDs    GeneradorID
+	Bus    BusEventos
+	Reloj  Reloj
+	Saludo *SaludarLead
 }
 
 func (uc *ProcesarMensaje) Ejecutar(ctx context.Context, entrada EntradaMensaje) error {
@@ -104,6 +105,12 @@ func (uc *ProcesarMensaje) Ejecutar(ctx context.Context, entrada EntradaMensaje)
 	}
 	if err != nil {
 		return err
+	}
+	if salida.Accion == AccionConsentimientoNo {
+		if uc.Saludo == nil {
+			return fmt.Errorf("%w: colaborador de consentimiento requerido", ErrValidacion)
+		}
+		return uc.Saludo.RechazarConsentimiento(ctx, lead, entrada)
 	}
 	campos, err := normalizarCampos(salida.CamposExtraidos)
 	if err != nil {
