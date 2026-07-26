@@ -38,9 +38,9 @@ Docs/vivi-perfilamiento-leads.wiki/
 # Binarios compilados
 bin/
 
-# La SPA compilada SÍ se versiona: //go:embed all:estaticos (issue #27) sólo
-# puede empaquetar lo que está en el árbol de git al compilar. Regenerar con
-# `make front-build` y commitear el resultado. El CI verifica que esté al día.
+# Compiled SPA output is versioned: //go:embed packages the exact reviewed tree.
+# Regenerate it with `make front-build` (or `npm run heroku-postbuild`) when
+# web/ changes; CI verifies the generated index and all referenced assets.
 
 # Node
 web/node_modules/
@@ -64,3 +64,5 @@ data/informacion_desglozada_proyectos/
 # WSL/Windows zone-identifier sidecar files
 *:Zone.Identifier
 
+# Local Heroku diagnostic screenshots (may contain sensitive configuration)
+Pruebas-Heroku/

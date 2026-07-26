@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"log"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
@@ -58,6 +60,7 @@ func NuevoCatalogo(data fs.FS) (*CatalogoRepository, error) {
 		snapshot.proyectos[proyecto.ProyectoID] = proyecto
 	}
 	buyerIDs := make(map[int]struct{}, len(compradores))
+	huerfanos := make(map[string]int)
 	for _, comprador := range compradores {
 		if comprador.ID == 0 {
 			return nil, fmt.Errorf("catalogo: comprador has empty id")
@@ -65,10 +68,30 @@ func NuevoCatalogo(data fs.FS) (*CatalogoRepository, error) {
 		if _, exists := buyerIDs[comprador.ID]; exists {
 			return nil, fmt.Errorf("catalogo: duplicate comprador id %d", comprador.ID)
 		}
+		// A comprador whose proyecto_id has no matching catalog entry is
+		// legitimate historical data (a real transaction outside the current
+		// 16-project marketing catalog), not corruption: GemeloKNN and
+		// RecomendarProyectos already treat these buyers as valid kNN
+		// comparison points that simply resolve to no catalog zone. Rejecting
+		// them here would crash the app on boot against the real dataset,
+		// where ~20% of compradores.json falls in this category.
 		if _, exists := snapshot.proyectos[comprador.ProyectoID]; !exists {
-			return nil, fmt.Errorf("catalogo: comprador %d references unknown proyecto_id %q", comprador.ID, comprador.ProyectoID)
+			huerfanos[comprador.ProyectoID]++
 		}
 		buyerIDs[comprador.ID] = struct{}{}
+	}
+	if len(huerfanos) > 0 {
+		ids := make([]string, 0, len(huerfanos))
+		for id := range huerfanos {
+			ids = append(ids, id)
+		}
+		sort.Strings(ids)
+		total := 0
+		for _, id := range ids {
+			total += huerfanos[id]
+		}
+		log.Printf("catalogo: %d compradores (%d proyectos fuera del catalogo) sin catalogo asociado, se conservan para el kNN: %v",
+			total, len(ids), ids)
 	}
 	for _, afiliado := range afiliados {
 		if afiliado.Cedula == "" {

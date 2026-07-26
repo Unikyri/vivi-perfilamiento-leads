@@ -16,10 +16,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configurar Go
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Empaquetar frontend antes de compilar Go
+        run: npm run heroku-postbuild
+      - name: Verificar entrypoint y assets hasheados
+        run: |
+          test -s internal/adapters/http/estaticos/index.html
+          test -n "$(find internal/adapters/http/estaticos/assets -type f -print -quit 2>/dev/null)" || {
+            echo "::error::faltan assets hasheados de Vite"
+            exit 1
+          }
+      - name: Configurar Go desde go.mod
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.0'
+          go-version-file: go.mod
           cache: true
       - name: Descargar dependencias
         run: go mod download

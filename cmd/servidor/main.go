@@ -77,6 +77,9 @@ func main() {
 	log.Println("migraciones aplicadas")
 
 	demoRepo := postgres.NuevoDemoRepository(pool)
+	if err := (&usecase.CargarSeed{Repository: demoRepo, Habilitado: cfg.DemoSeed}).Ejecutar(ctx); err != nil {
+		log.Fatalf("seed demo: %v", err)
+	}
 	reloj, err := infrareloj.NuevoPostgres(ctx, demoRepo)
 	if err != nil {
 		log.Fatalf("reloj simulado: %v", err)
@@ -104,11 +107,11 @@ func main() {
 	busEventos := bus.Nuevo(slog.Default())
 	ids := ids.NuevoGeneradorID()
 	perfilador := &usecase.PerfilarLead{Leads: leadRepo, Catalogo: catalogo, IDs: ids, Bus: busEventos, Reloj: reloj}
-	saludo := &usecase.SaludarLead{Leads: leadRepo, IDs: ids, Reloj: reloj}
+	saludo := &usecase.SaludarLead{Leads: leadRepo, LLM: provider, IDs: ids, Reloj: reloj}
 	planRepo := postgres.NuevoPlanRepository(pool)
 	hitos := &usecase.EjecutarHitos{Leads: leadRepo, Planes: planRepo, Gateway: demoGateway{}, Reloj: reloj, IDs: ids, Bus: busEventos}
 	agentes.Nueva(busEventos, agentes.Dependencias{LeadNuevo: saludo.Ejecutar, Nutricionista: hitos}).Registrar()
-	procesarMensaje := &usecase.ProcesarMensaje{Leads: leadRepo, LLM: provider, IDs: ids, Bus: busEventos, Reloj: reloj}
+	procesarMensaje := &usecase.ProcesarMensaje{Leads: leadRepo, LLM: provider, IDs: ids, Bus: busEventos, Reloj: reloj, Saludo: saludo}
 	turnos := adapterhttp.NuevoEjecutorTurnos(procesarMensaje, ids, reloj)
 	defer turnos.Cerrar()
 	controlador, err := adapterhttp.NuevoControlador(adapterhttp.Dependencias{Perfilar: perfilador, Leads: leadRepo, Fichas: fichaRepo, Planes: planRepo, Catalogo: catalogo, Turnos: turnos, Demo: demoRepo, Reloj: reloj, AvanzarDemo: &usecase.AvanzarDemo{Demo: demoRepo, Reloj: reloj, Bus: busEventos}, ReiniciarDemo: &usecase.ReiniciarDemo{Repository: demoRepo, Reloj: reloj, Habilitado: cfg.DemoSeed}})
@@ -119,12 +122,15 @@ func main() {
 
 	// (issues #13, #15, #16, #25)
 
-	// === BLOQUE B: registrar aquí el servido de estáticos de web/ y las rutas del dashboard ===
+	// === BLOQUE B: estáticos empaquetados y rutas del dashboard ===
+	if err := adapterhttp.RegistrarEstaticos(mux); err != nil {
+		log.Fatalf("estáticos: %v", err)
+	}
 	// (issues #29, #35)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Puerto,
-		Handler:           mux,
+		Handler:           adapterhttp.NuevoLimitadorTasa(mux, cfg.TrustedProxyCIDRs),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

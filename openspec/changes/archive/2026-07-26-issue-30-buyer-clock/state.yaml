@@ -1,0 +1,49 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-30-buyer-clock
+issue: 30
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: archived
+current_phase: archive
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+  archive_report: true
+task_progress:
+  total: 9
+  completed: 9
+  pending: 0
+  all_complete: true
+delivery_strategy: single-pr
+next_recommended: none
+last_updated: 2026-07-26T07:15:00-05:00
+archive:
+  status: archived_and_closed
+  path: openspec/changes/archive/2026-07-26-issue-30-buyer-clock
+  date: 2026-07-26
+  specs_synced:
+    - demo-control
+    - reloj-produccion
+  review_gate: allow_from_supplied_approved_native_receipt
+  review_lineage: review-80fb7e68586ebfe2
+  review_binding_revision: sha256:f045541eddb4272c0a2b634b6308dd000211dbbed938b14417bcc817ddd7c33c
+  review_receipt_hash: sha256:4e9355dafe0c7411334b1241b0e25dc439911e91af8fce4b6a1fea0234eb5def
+  source_merge: 255bb5743f2f0e8f5dae5ef935a74e1e3f50fdb5
+  post_merge_validation_note: intended_untracked_paths_are_tracked_after_pr_merge
+constraints:
+  product_code_changes: false
+  commits: false
+  pushes: false
+  deploys: false
+  github_issue_changes: false
+allowed_edit_roots:
+  - /tmp/vivi-issue-30/openspec/specs
+  - /tmp/vivi-issue-30/openspec/changes/issue-30-buyer-clock
+  - /tmp/vivi-issue-30/openspec/changes/archive/2026-07-26-issue-30-buyer-clock

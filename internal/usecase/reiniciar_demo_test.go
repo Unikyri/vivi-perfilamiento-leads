@@ -4,15 +4,24 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
 )
 
 type resetDemoFake struct {
 	date   time.Time
 	resets int
+	seeds  int
 }
 
 func (f *resetDemoFake) Reiniciar(context.Context) (time.Time, error) {
 	f.resets++
+	return f.date, nil
+}
+
+func (f *resetDemoFake) ReiniciarConSeed(_ context.Context, leads []domain.Lead) (time.Time, error) {
+	f.resets++
+	f.seeds += len(leads)
 	return f.date, nil
 }
 
@@ -38,8 +47,8 @@ func TestReiniciarDemoIsIdempotentAndFast(t *testing.T) {
 	started := time.Now()
 	first, firstErr := uc.Ejecutar(context.Background())
 	second, secondErr := uc.Ejecutar(context.Background())
-	if firstErr != nil || secondErr != nil || !first.Reiniciado || !second.Reiniciado || !first.FechaSimulada.Equal(second.FechaSimulada) || repo.resets != 2 || !clock.date.Equal(date) {
-		t.Fatalf("first=%+v/%v second=%+v/%v resets=%d clock=%v", first, firstErr, second, secondErr, repo.resets, clock.date)
+	if firstErr != nil || secondErr != nil || !first.Reiniciado || !second.Reiniciado || !first.FechaSimulada.Equal(second.FechaSimulada) || repo.resets != 2 || repo.seeds != 6 || !clock.date.Equal(date) {
+		t.Fatalf("first=%+v/%v second=%+v/%v resets=%d seeds=%d clock=%v", first, firstErr, second, secondErr, repo.resets, repo.seeds, clock.date)
 	}
 	if elapsed := time.Since(started); elapsed >= 3*time.Second {
 		t.Fatalf("reset took %s", elapsed)

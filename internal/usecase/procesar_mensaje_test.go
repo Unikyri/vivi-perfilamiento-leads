@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -38,7 +39,9 @@ func coreLead() *domain.Lead {
 func coreUC(llm LLMProvider) (*ProcesarMensaje, *LeadRepoFake) {
 	repo := NuevoLeadRepoFake()
 	_ = repo.Crear(context.Background(), coreLead())
-	return &ProcesarMensaje{Leads: repo, LLM: llm, IDs: NuevoIDFake("msg"), Reloj: NuevoRelojFake(time.Unix(100, 0))}, repo
+	reloj := NuevoRelojFake(time.Unix(100, 0))
+	saludo := &SaludarLead{Leads: repo, IDs: NuevoIDFake("farewell"), Reloj: reloj}
+	return &ProcesarMensaje{Leads: repo, LLM: llm, IDs: NuevoIDFake("msg"), Reloj: reloj, Saludo: saludo}, repo
 }
 
 func TestSiguientePreguntaCore(t *testing.T) {
@@ -169,7 +172,9 @@ func edgeSetup(out SalidaTurno) (*ProcesarMensaje, *edgeRepo, *coreLLM, *edgeBus
 	r := &edgeRepo{LeadRepoFake: NuevoLeadRepoFake()}
 	_ = r.Crear(context.Background(), coreLead())
 	b, l := &edgeBus{}, &coreLLM{out: out}
-	return &ProcesarMensaje{Leads: r, LLM: l, IDs: NuevoIDFake("edge"), Bus: b, Reloj: NuevoRelojFake(time.Unix(100, 0))}, r, l, b
+	reloj := NuevoRelojFake(time.Unix(100, 0))
+	saludo := &SaludarLead{Leads: r, IDs: NuevoIDFake("farewell"), Reloj: reloj}
+	return &ProcesarMensaje{Leads: r, LLM: l, IDs: NuevoIDFake("edge"), Bus: b, Reloj: reloj, Saludo: saludo}, r, l, b
 }
 func edgeInput() EntradaMensaje {
 	return EntradaMensaje{LeadID: "lead-1", Tipo: domain.TipoMensajeTexto, Texto: "respuesta"}
@@ -312,5 +317,79 @@ func TestProcesarMensajeUsesAcceptedMetadata(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("message=%+v", messages)
+	}
+}
+
+func TestProcesarMensajeConsentDenialIsTerminalAndProfileSafe(t *testing.T) {
+	llm := &coreLLM{out: SalidaTurno{
+		Accion: AccionConsentimientoNo, Respuesta: "no gracias",
+		CamposExtraidos: []CampoExtraido{{Campo: "ingreso_hogar", Valor: int64(99999999), Fuente: domain.FuenteCampoDeclarado, Confianza: 1}},
+		Intencion:       domain.Intencion{Nivel: domain.NivelAlta, Confianza: domain.NivelAlta},
+	}}
+	uc, repo, provider, bus := edgeSetup(llm.out)
+	before, _ := repo.PorID(context.Background(), "lead-1")
+	before.Perfil["recursos_propios"] = domain.CampoPerfil{Valor: int64(2000000), Fuente: domain.FuenteCampoDeclarado}
+	before.Perfil["zona_deseada"] = domain.CampoPerfil{Valor: "Norte", Fuente: domain.FuenteCampoDeclarado}
+	if !PerfilEstaCompleto(before.Perfil) {
+		t.Fatal("denial fixture must be structurally complete before processing")
+	}
+	before.Capacidad = &domain.Capacidad{PresupuestoMax: 10, SubsidioAplicable: 4}
+	before.Intencion = &domain.Intencion{Nivel: domain.NivelBaja, Confianza: domain.NivelMedia, Senales: []string{"original"}}
+	if err := repo.Guardar(context.Background(), before); err != nil {
+		t.Fatal(err)
+	}
+	input := EntradaMensaje{LeadID: "lead-1", Tipo: domain.TipoMensajeTexto, Texto: "No autorizo", MensajeID: "denial-1"}
+	if err := uc.Ejecutar(context.Background(), input); err != nil {
+		t.Fatal(err)
+	}
+	after, _ := repo.PorID(context.Background(), "lead-1")
+	messages, _ := repo.Conversacion(context.Background(), "lead-1")
+	if after.Estado != domain.EstadoLeadDespedido || after.Ruta != domain.RutaDespedida {
+		t.Fatalf("terminal route/state=%s/%s", after.Estado, after.Ruta)
+	}
+	if !reflect.DeepEqual(after.Perfil, before.Perfil) || !reflect.DeepEqual(after.Capacidad, before.Capacidad) || !reflect.DeepEqual(after.Intencion, before.Intencion) {
+		t.Fatalf("profile data changed: before=%+v after=%+v", before, after)
+	}
+	if len(messages) != 2 || messages[0].Texto != input.Texto || messages[0].Autor != domain.AutorMensajeLead || messages[1].Autor != domain.AutorMensajeVivi || !strings.Contains(messages[1].Texto, "Respeto tu decisión") {
+		t.Fatalf("denial conversation=%+v", messages)
+	}
+	if len(bus.events) != 0 || provider.textCalls != 1 {
+		t.Fatalf("events/calls=%d/%d", len(bus.events), llm.textCalls)
+	}
+	for _, event := range bus.events {
+		if event.Tipo == EvPerfilCompleto {
+			t.Fatal("consent denial published PerfilCompleto")
+		}
+	}
+}
+
+func TestRechazarConsentimientoStopsAfterOrderedWriteFailures(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		failAdd    int
+		failSave   bool
+		wantWrites int
+	}{
+		{"inbound failure", 1, false, 0},
+		{"farewell failure", 2, false, 1},
+		{"CAS failure", 0, true, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := &edgeRepo{LeadRepoFake: NuevoLeadRepoFake(), failAdd: tc.failAdd, failSave: tc.failSave}
+			lead := coreLead()
+			if err := r.Crear(context.Background(), lead); err != nil {
+				t.Fatal(err)
+			}
+			clock := NuevoRelojFake(time.Unix(100, 0))
+			uc := &SaludarLead{Leads: r, IDs: NuevoIDFake("denial"), Reloj: clock}
+			err := uc.RechazarConsentimiento(context.Background(), lead, EntradaMensaje{LeadID: lead.LeadID, Tipo: domain.TipoMensajeTexto, Texto: "No"})
+			if err == nil {
+				t.Fatal("expected ordered write failure")
+			}
+			messages, _ := r.Conversacion(context.Background(), lead.LeadID)
+			if len(messages) != tc.wantWrites {
+				t.Fatalf("messages=%d want %d", len(messages), tc.wantWrites)
+			}
+		})
 	}
 }

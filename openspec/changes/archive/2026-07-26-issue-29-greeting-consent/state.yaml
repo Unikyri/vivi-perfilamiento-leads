@@ -1,0 +1,32 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-29-greeting-consent
+issue: 29
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: archived
+current_phase: archive
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+  archive_report: true
+task_progress:
+  total: 11
+  completed: 11
+  pending: 0
+  all_complete: true
+delivery_strategy: single-pr
+review_gate:
+  result: allow
+  lineage: review-5a58f2792e8bbdbd
+  receipt_hash: sha256:aa07d3dd7a1d996a5e5a4668cde2d6d564e583ca9d96207744869e56fbfc5571
+source_merge_commit: 78188575856d1232dfd402e01979ba22c68adde8
+archive_path: openspec/changes/archive/2026-07-26-issue-29-greeting-consent
+next_recommended: none
+last_updated: 2026-07-26T07:12:47-05:00

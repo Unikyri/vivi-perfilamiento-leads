@@ -77,6 +77,8 @@ func (c *Controlador) apiNoEncontrada(w http.ResponseWriter, _ *http.Request) {
 
 type relojSistema struct{}
 
+// relojSistema is a non-persistent real wall clock; Avanzar is intentionally a no-op.
+
 func (relojSistema) Ahora() time.Time         { return time.Now().UTC() }
 func (relojSistema) FechaSimulada() time.Time { return time.Now().UTC() }
 func (relojSistema) Avanzar(time.Time)        {}
