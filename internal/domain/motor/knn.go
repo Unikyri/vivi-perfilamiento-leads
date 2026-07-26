@@ -157,6 +157,77 @@ func normalizeOptionalText(value string) string {
 	return normalized
 }
 
+// plegarAcento reduce las vocales acentuadas y la eñe del español a ASCII.
+// Se resuelve con un switch en vez de golang.org/x/text para que el paquete
+// domain siga sin dependencias externas (NFR-M-01).
+func plegarAcento(r rune) rune {
+	switch r {
+	case 'á', 'à', 'ä', 'â':
+		return 'a'
+	case 'é', 'è', 'ë', 'ê':
+		return 'e'
+	case 'í', 'ì', 'ï', 'î':
+		return 'i'
+	case 'ó', 'ò', 'ö', 'ô':
+		return 'o'
+	case 'ú', 'ù', 'ü', 'û':
+		return 'u'
+	case 'ñ':
+		return 'n'
+	}
+	return r
+}
+
+// palabrasVaciasZona son términos de mercadeo que aparecen en el nombre
+// comercial de la zona pero no identifican un lugar. Sin esto, "Ciudadela
+// Maiporé - Soacha" y "Ciudadela Calle 80 - Bogotá" coincidirían por la
+// palabra "ciudadela", que es exactamente lo que no queremos.
+var palabrasVaciasZona = map[string]bool{
+	"ciudadela": true, "conjunto": true, "agrupacion": true,
+	"residencial": true, "vivienda": true, "urbanizacion": true,
+	"de": true, "del": true, "la": true, "el": true,
+	"los": true, "las": true, "y": true,
+}
+
+// zonaTokens reduce una zona a su conjunto de tokens identificadores.
+func zonaTokens(zona string) map[string]bool {
+	plegado := strings.Map(plegarAcento, strings.ToLower(normalizeOptionalText(zona)))
+	plegado = strings.NewReplacer("-", " ", ",", " ", ".", " ", "/", " ").Replace(plegado)
+
+	tokens := make(map[string]bool)
+	for _, token := range strings.Fields(plegado) {
+		if palabrasVaciasZona[token] {
+			continue
+		}
+		tokens[token] = true
+	}
+	return tokens
+}
+
+// zonasCoinciden compara zonas por intersección de tokens identificadores,
+// no por igualdad exacta: el lead escribe "Soacha" y el catálogo dice
+// "Ciudadela Maiporé - Soacha".
+//
+// El recorrido del mapa es no determinista, pero el resultado no depende del
+// orden: es una intersección booleana. NO introducir aquí lógica que dependa
+// del orden (primer match ganador con retorno de valor, acumulación en slice).
+func zonasCoinciden(izquierda, derecha string) bool {
+	tokensIzq := zonaTokens(izquierda)
+	if len(tokensIzq) == 0 {
+		return false
+	}
+	tokensDer := zonaTokens(derecha)
+	if len(tokensDer) == 0 {
+		return false
+	}
+	for token := range tokensIzq {
+		if tokensDer[token] {
+			return true
+		}
+	}
+	return false
+}
+
 const (
 	gowerCategoryWeight    = 0.35
 	gowerZoneWeight        = 0.20
@@ -284,7 +355,7 @@ func gowerDistance(left, right featureVector) float64 {
 		}
 	}
 	if left.tieneZona && right.tieneZona {
-		if left.zona == right.zona {
+		if zonasCoinciden(left.zona, right.zona) {
 			add(gowerZoneWeight, 0)
 		} else {
 			add(gowerZoneWeight, 1)

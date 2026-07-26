@@ -431,3 +431,99 @@ func TestGemeloKNNSelection(t *testing.T) {
 		}
 	})
 }
+
+func TestZonasCoinciden(t *testing.T) {
+	casos := []struct {
+		nombre   string
+		lead     string
+		catalogo string
+		want     bool
+	}{
+		{"municipio suelto contra nombre comercial", "Soacha", "Ciudadela Maiporé - Soacha", true},
+		{"acentos plegados", "maipore", "Ciudadela Maiporé - Soacha", true},
+		{"mayusculas y espacios sobrantes", "  SOACHA  ", "Ciudadela Maiporé - Soacha", true},
+		{"bogota contra ciudadela calle 80", "Bogotá", "Ciudadela Calle 80 - Bogotá", true},
+		{"numero de via", "Calle 80", "Ciudadela Calle 80 - Bogotá", true},
+		{"zona de un solo token", "Ricaurte", "Ricaurte", true},
+		{"municipios distintos NO coinciden", "Soacha", "Ciudadela Calle 80 - Bogotá", false},
+		{"palabra vacia no basta", "Ciudadela", "Ciudadela Maiporé - Soacha", false},
+		{"conjunto no basta", "conjunto residencial", "Ciudadela Maiporé - Soacha", false},
+		{"lead vacio", "", "Ciudadela Maiporé - Soacha", false},
+		{"catalogo vacio", "Soacha", "", false},
+		{"SIN_DATO se trata como vacio", "SIN_DATO", "Ciudadela Maiporé - Soacha", false},
+	}
+
+	for _, c := range casos {
+		t.Run(c.nombre, func(t *testing.T) {
+			if got := zonasCoinciden(c.lead, c.catalogo); got != c.want {
+				t.Errorf("zonasCoinciden(%q, %q) = %v, want %v", c.lead, c.catalogo, got, c.want)
+			}
+		})
+	}
+}
+
+func TestZonasCoincidenEsSimetrica(t *testing.T) {
+	pares := [][2]string{
+		{"Soacha", "Ciudadela Maiporé - Soacha"},
+		{"Bogotá", "Ciudadela Calle 80 - Bogotá"},
+		{"Soacha", "Ricaurte"},
+	}
+	for _, p := range pares {
+		if zonasCoinciden(p[0], p[1]) != zonasCoinciden(p[1], p[0]) {
+			t.Errorf("asimetría entre %q y %q", p[0], p[1])
+		}
+	}
+}
+
+// TestZonaParcialNoVaciaRecomendaciones fija el defecto que motivó este
+// cambio: una zona escrita por el lead no puede dejar el catálogo en cero.
+func TestZonaParcialNoVaciaRecomendaciones(t *testing.T) {
+	catalogo := map[string]domain.Proyecto{
+		"mongui":   {ProyectoID: "mongui", Nombre: "Monguí", Zona: "Ciudadela Maiporé - Soacha", PrecioDesde: 156_470_000},
+		"macarena": {ProyectoID: "macarena", Nombre: "La Macarena", Zona: "Ciudadela Maiporé - Soacha", PrecioDesde: 128_340_000},
+	}
+	zonas := map[string]string{}
+	for id, p := range catalogo {
+		zonas[id] = p.Zona
+	}
+
+	compradores := []domain.Comprador{
+		{ID: 1, ProyectoID: "mongui", Afiliado: true, Categoria: "A", RangoEdad: "20-35", PersonasACargo: 2},
+		{ID: 2, ProyectoID: "macarena", Afiliado: true, Categoria: "A", RangoEdad: "20-35", PersonasACargo: 2},
+		// Comprador fuera del catálogo: sin zona resoluble.
+		{ID: 3, ProyectoID: "la_arboleda", Afiliado: true, Categoria: "A", RangoEdad: "20-35", PersonasACargo: 2},
+	}
+
+	personas := 2
+	perfil := domain.Perfil{
+		"ingreso_hogar": domain.CampoPerfil{Valor: int64(2_600_000), Fuente: domain.FuenteCampoVerificadoBase},
+		"edad":          domain.CampoPerfil{Valor: int64(32), Fuente: domain.FuenteCampoVerificadoBase},
+		"zona_deseada":  domain.CampoPerfil{Valor: "Soacha", Fuente: domain.FuenteCampoDeclarado},
+	}
+
+	vecinos := GemeloKNN(EntradaGemelo{
+		Perfil: perfil, Afiliado: true, PersonasACargo: &personas,
+		Compradores: compradores, ZonasCatalogo: zonas, K: 3,
+	})
+
+	enCatalogo := 0
+	for _, v := range vecinos {
+		if _, ok := catalogo[v.ProyectoID]; ok {
+			enCatalogo++
+		}
+	}
+	if enCatalogo == 0 {
+		t.Fatal("regresión: una zona parcial dejó cero vecinos en catálogo")
+	}
+
+	recs := RecomendarProyectos(vecinos, catalogo, 166_771_122)
+	if len(recs) == 0 {
+		t.Fatal("regresión: cero recomendaciones con zona_deseada=\"Soacha\"")
+	}
+
+	// El comprador del catálogo cuya zona coincide debe quedar MÁS CERCA
+	// que el de fuera del catálogo, no más lejos.
+	if vecinos[0].ProyectoID == "la_arboleda" {
+		t.Errorf("el comprador fuera de catálogo quedó primero: la zona sigue penalizando al catálogo")
+	}
+}
