@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/usecase"
 )
 
@@ -20,6 +21,10 @@ func NuevoDemoRepository(pool pgxPool) *DemoRepository { return &DemoRepository{
 
 var _ usecase.DemoRepository = (*DemoRepository)(nil)
 var _ usecase.DemoResetRepository = (*DemoRepository)(nil)
+var _ usecase.DemoSeedRepository = (*DemoRepository)(nil)
+var _ usecase.DemoResetSeedRepository = (*DemoRepository)(nil)
+
+const demoLeadUpsertSQL = `INSERT INTO leads (lead_id,nombre,telefono,cedula,fuente,estado,ruta,afiliado,prioridad,consume_cupo_10,perfil,capacidad,intencion,version,creado_en,actualizado_en) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) ON CONFLICT (lead_id) DO UPDATE SET nombre=EXCLUDED.nombre,telefono=EXCLUDED.telefono,cedula=EXCLUDED.cedula,fuente=EXCLUDED.fuente,estado=EXCLUDED.estado,ruta=EXCLUDED.ruta,afiliado=EXCLUDED.afiliado,prioridad=EXCLUDED.prioridad,consume_cupo_10=EXCLUDED.consume_cupo_10,perfil=EXCLUDED.perfil,capacidad=EXCLUDED.capacidad,intencion=EXCLUDED.intencion,version=EXCLUDED.version,creado_en=EXCLUDED.creado_en,actualizado_en=EXCLUDED.actualizado_en`
 
 func (r *DemoRepository) FechaSimulada(ctx context.Context) (time.Time, error) {
 	var value string
@@ -51,9 +56,32 @@ func (r *DemoRepository) GuardarFechaSimulada(ctx context.Context, value time.Ti
 	return repositoryError("demo", demoClockKey, err)
 }
 
-// Reiniciar atomically clears only demo-owned lead data and restores the
-// canonical simulated date. Catalog buyers and schema objects are untouched.
+func (r *DemoRepository) Sembrar(ctx context.Context, leads []domain.Lead) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return repositoryError("demo seed", "", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	for i := range leads {
+		if err := insertDemoLead(ctx, tx, leads[i]); err != nil {
+			return err
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return repositoryError("demo seed", "commit", err)
+	}
+	return nil
+}
+
 func (r *DemoRepository) Reiniciar(ctx context.Context) (time.Time, error) {
+	return r.reiniciar(ctx, nil)
+}
+
+func (r *DemoRepository) ReiniciarConSeed(ctx context.Context, leads []domain.Lead) (time.Time, error) {
+	return r.reiniciar(ctx, leads)
+}
+
+func (r *DemoRepository) reiniciar(ctx context.Context, leads []domain.Lead) (time.Time, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return time.Time{}, repositoryError("demo reset", "", err)
@@ -67,6 +95,11 @@ func (r *DemoRepository) Reiniciar(ctx context.Context) (time.Time, error) {
 	if _, err := tx.Exec(ctx, `INSERT INTO demo (clave,valor) VALUES ($1,$2) ON CONFLICT (clave) DO UPDATE SET valor=EXCLUDED.valor`, demoClockKey, approvedDemoDate); err != nil {
 		return time.Time{}, repositoryError("demo reset", demoClockKey, err)
 	}
+	for i := range leads {
+		if err := insertDemoLead(ctx, tx, leads[i]); err != nil {
+			return time.Time{}, err
+		}
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return time.Time{}, repositoryError("demo reset", "commit", err)
 	}
@@ -75,4 +108,27 @@ func (r *DemoRepository) Reiniciar(ctx context.Context) (time.Time, error) {
 		return time.Time{}, err
 	}
 	return date, nil
+}
+
+func insertDemoLead(ctx context.Context, tx pgx.Tx, lead domain.Lead) error {
+	perfil, err := encodeJSONB(lead.Perfil)
+	if err != nil {
+		return err
+	}
+	capacidad, err := encodeJSONB(lead.Capacidad)
+	if err != nil {
+		return err
+	}
+	intencion, err := encodeJSONB(lead.Intencion)
+	if err != nil {
+		return err
+	}
+	version := lead.Version
+	if version == 0 {
+		version = 1
+	}
+	if _, err := tx.Exec(ctx, demoLeadUpsertSQL, lead.LeadID, lead.Nombre, lead.Telefono, lead.Cedula, lead.Fuente, lead.Estado, lead.Ruta, lead.Afiliado, lead.Prioridad, lead.ConsumeCupo10, perfil, capacidad, intencion, version, lead.CreadoEn, lead.ActualizadoEn); err != nil {
+		return repositoryError("demo lead", lead.LeadID, err)
+	}
+	return nil
 }

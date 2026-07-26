@@ -28,7 +28,13 @@ func (uc *ReiniciarDemo) Ejecutar(ctx context.Context) (SalidaReiniciarDemo, err
 	if !uc.Habilitado {
 		return SalidaReiniciarDemo{}, ErrDemoDeshabilitado
 	}
-	date, err := uc.Repository.Reiniciar(ctx)
+	var date time.Time
+	var err error
+	if repository, ok := uc.Repository.(DemoResetSeedRepository); ok {
+		date, err = repository.ReiniciarConSeed(ctx, SemillasDemo())
+	} else {
+		date, err = uc.Repository.Reiniciar(ctx)
+	}
 	if err != nil {
 		return SalidaReiniciarDemo{}, fmt.Errorf("reiniciar demo: %w", err)
 	}

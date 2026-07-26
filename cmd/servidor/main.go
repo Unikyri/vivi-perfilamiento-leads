@@ -77,6 +77,9 @@ func main() {
 	log.Println("migraciones aplicadas")
 
 	demoRepo := postgres.NuevoDemoRepository(pool)
+	if err := (&usecase.CargarSeed{Repository: demoRepo, Habilitado: cfg.DemoSeed}).Ejecutar(ctx); err != nil {
+		log.Fatalf("seed demo: %v", err)
+	}
 	reloj, err := infrareloj.NuevoPostgres(ctx, demoRepo)
 	if err != nil {
 		log.Fatalf("reloj simulado: %v", err)
@@ -119,7 +122,10 @@ func main() {
 
 	// (issues #13, #15, #16, #25)
 
-	// === BLOQUE B: registrar aquí el servido de estáticos de web/ y las rutas del dashboard ===
+	// === BLOQUE B: estáticos empaquetados y rutas del dashboard ===
+	if err := adapterhttp.RegistrarEstaticos(mux); err != nil {
+		log.Fatalf("estáticos: %v", err)
+	}
 	// (issues #29, #35)
 
 	srv := &http.Server{

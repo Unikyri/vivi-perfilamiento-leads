@@ -1,0 +1,66 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-27-deploy-demo
+issue:
+  number: 27
+  title: "[B6] Deploy a Heroku, seed del demo y guion de entrega"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+phase: apply
+artifacts:
+  explore: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: false
+tasks_progress:
+  total: 14
+  completed: 14
+  pending: []
+next: sdd-verify
+last_slice: focused-verifier-remediation
+s4_doc12_source: unavailable-in-target-checkout-and-git-history
+delivery:
+  strategy: ask-on-risk
+  review_budget_changed_lines: 400
+  slices:
+    - s1-ci-toolchain-build-order
+    - s2-embedded-spa-serving
+    - s3-demo-seed-and-reset
+    - s4-demo-and-ops-docs
+    - s5-credential-gated-heroku-promotion
+constraints:
+  demo_seed_default: false
+  secrets_in_repo: forbidden
+  adk_go: excluded
+  dynos: 1
+  external_calls_in_sdd_phases: forbidden
+blockers:
+  external: []
+  decisions: []
+allowed_edit_roots:
+  - /tmp/vivi-issue-27/.github/workflows
+  - /tmp/vivi-issue-27/app.json
+  - /tmp/vivi-issue-27/Makefile
+  - /tmp/vivi-issue-27/go.mod
+  - /tmp/vivi-issue-27/.gitignore
+  - /tmp/vivi-issue-27/.env.example
+  - /tmp/vivi-issue-27/web/vite.config.ts
+  - /tmp/vivi-issue-27/web/package.json
+  - /tmp/vivi-issue-27/cmd/servidor
+  - /tmp/vivi-issue-27/internal/adapters/http
+  - /tmp/vivi-issue-27/internal/usecase
+  - /tmp/vivi-issue-27/docs
+  - /tmp/vivi-issue-27/openspec/changes/issue-27-deploy-demo
+last_updated: 2026-07-26
+remediation:
+  status: complete
+  scope: verifier-warnings-only
+  warnings:
+    - heroku-node-lifecycle-before-go-compile
+    - ignored-static-placeholder-stale-output
+  external_calls: none
