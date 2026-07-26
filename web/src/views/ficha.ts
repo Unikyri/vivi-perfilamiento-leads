@@ -64,7 +64,10 @@ export function renderFicha(contenedor: HTMLElement, ficha: Ficha | null, leadNo
 
         <!-- Columna 1: Capacidad Financiera -->
         <article class="card-seccion">
-          <h4>Capacidad Financiera</h4>
+          <div class="seccion-header-title">
+            <span class="sec-icon">💳</span>
+            <h4>Capacidad Financiera</h4>
+          </div>
           <div class="desglose-monto-item">
             <span>Presupuesto Máx:</span>
             <span class="monto-num">$${(cap.presupuesto_max / 1_000_000).toFixed(1)}M ${badgeFuente('VERIFICADO_BASE')}</span>
@@ -85,9 +88,12 @@ export function renderFicha(contenedor: HTMLElement, ficha: Ficha | null, leadNo
 
         <!-- Columna 2: Intención de Compra (Nivel + Confianza + Señales) -->
         <article class="card-seccion">
-          <h4>Intención de Compra</h4>
+          <div class="seccion-header-title">
+            <span class="sec-icon">🎯</span>
+            <h4>Intención de Compra</h4>
+          </div>
           <p class="nivel-destacado nivel-${intenc.nivel}">
-            Nivel ${escapar(intenc.nivel)} <small style="font-size:0.75rem; color:#6B7280">(Confianza ${escapar(intenc.confianza)})</small>
+            Nivel ${escapar(intenc.nivel)} <small style="font-size:0.75rem; color:#64748B">(Confianza ${escapar(intenc.confianza)})</small>
           </p>
           <ul class="lista-puntos">
             ${intenc.senales.map(s => `<li>${escapar(s)}</li>`).join('')}
@@ -96,11 +102,17 @@ export function renderFicha(contenedor: HTMLElement, ficha: Ficha | null, leadNo
 
         <!-- Columna 3: Argumentos y Beneficios -->
         <article class="card-seccion">
-          <h4>Argumentos de Venta</h4>
+          <div class="seccion-header-title">
+            <span class="sec-icon">💡</span>
+            <h4>Argumentos de Venta</h4>
+          </div>
           <ul class="lista-puntos">
             ${ficha.argumentos_venta.map(a => `<li>${escapar(a)}</li>`).join('')}
           </ul>
-          <h4 style="margin-top:0.5rem">Beneficios Colsubsidio</h4>
+          <div class="seccion-header-title" style="margin-top:0.85rem">
+            <span class="sec-icon">✨</span>
+            <h4 style="margin:0">Beneficios Colsubsidio</h4>
+          </div>
           <ul class="lista-puntos">
             ${ficha.beneficios.map(b => `<li>${escapar(b)}</li>`).join('')}
           </ul>

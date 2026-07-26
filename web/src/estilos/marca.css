@@ -642,14 +642,30 @@
   gap: 0.6rem;
 }
 
+.seccion-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-bottom: 1px solid var(--borde-suave);
+  padding-bottom: 0.4rem;
+}
+
+.seccion-header-title h4 {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin: 0;
+}
+
+.sec-icon {
+  font-size: 1.1rem;
+}
+
 .card-seccion h4 {
   font-size: 0.9rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--colsubsidio-azul);
-  border-bottom: 1px solid var(--borde-suave);
-  padding-bottom: 0.4rem;
 }
 
 .nivel-destacado {
