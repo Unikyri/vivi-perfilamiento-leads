@@ -17,6 +17,7 @@ type Config struct {
 	GeminiAPIKey      string
 	QwenAPIKey        string
 	QwenBaseURL       string
+	QwenModel         string
 	LLMFallback       string
 	TasaEA            float64
 	DemoSeed          bool
@@ -33,6 +34,7 @@ func Cargar() (Config, error) {
 		GeminiAPIKey: valor("GEMINI_API_KEY", ""),
 		QwenAPIKey:   valor("QWEN_API_KEY", ""),
 		QwenBaseURL:  valor("QWEN_BASE_URL", ""),
+		QwenModel:    valor("QWEN_MODEL", "qwen3.7-plus"),
 		LLMFallback:  valor("LLM_FALLBACK", "qwen"),
 		LogNivel:     valor("LOG_NIVEL", "info"),
 	}
