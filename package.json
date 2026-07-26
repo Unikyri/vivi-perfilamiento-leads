@@ -1,0 +1,7 @@
+{
+  "name": "vivi-perfilamiento-leads",
+  "private": true,
+  "scripts": {
+    "heroku-postbuild": "npm --prefix web ci && npm --prefix web run build && npm --prefix web run verify:build"
+  }
+}

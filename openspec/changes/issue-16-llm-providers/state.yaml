@@ -1,0 +1,153 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-16-llm-providers
+issue:
+  number: 16
+  title: "LLM provider adapters and fallback"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: in-progress
+current_phase: apply
+next_recommended: verify
+dependencies:
+  issue_11:
+    status: satisfied
+    evidence: "Existing internal/usecase/puertos.go declares the LLMProvider port and Contract-aligned DTOs; no signature changes are required."
+scope:
+  include:
+    - internal/infrastructure/llm/
+    - existing configuration consumption in internal/infrastructure/config/config.go
+    - composition-root wiring in cmd/servidor/main.go if required by the issue checklist
+    - focused provider, parser, fallback, and audio tests
+  exclude:
+    - internal/usecase/puertos.go signature changes
+    - unrelated domain/motor behavior
+    - frontend and data pipeline
+    - Contract/Wiki source documents
+    - proposal.md
+    - specs/
+    - design.md
+phases:
+  explore: success
+  propose: success
+  spec: success
+  design: success
+  tasks: success
+  apply: success
+  verify: attempted
+  archive: not-started
+verification:
+  status: admission_blocked
+  reason: "Full validation passed, but native verify admission could not run because ./.tools/gentle-ai is unavailable in this worktree. No verify report, receipt, review artifact, or archive artifact exists."
+delivery:
+  strategy: chained
+  line_budget: 400
+  forecast: high
+  slices:
+    - "shared typed errors, deterministic prompt, strict SalidaTurno parser, and tests; target <=300 lines"
+    - "Gemini/Qwen HTTP adapters with text/audio behavior and HTTP tests; target <=400 lines"
+    - "factory, fallback, circuit breaker, composition wiring, and tests; target <=400 lines"
+    - "bounded critical-failure remediation: malformed fallback, token bucket, live health, accounting; target <=400 lines"
+    - "bounded parser remediation: contextual bare grouped Colombian monetary values; target <=400 lines"
+    - "bounded warning remediation: exact contextual money parsing, intentional limiter defaults, and consecutive breaker semantics; target <=400 lines"
+capabilities:
+  new:
+    - llm-providers
+  modified: []
+decisions:
+  transport: "net/http adapters with injectable HTTPDoer; no provider SDK dependency"
+  compatibility: "preserve usecase.LLMProvider and config.Config APIs; no environment or toolchain changes"
+  parser: "strict Contract §7 validation rejects unknown members, non-§2.1 fields, invalid levels/actions, and non-DECLARADO/INFERIDO sources"
+  prompt: "fixed sections, lexicographically sorted maps, history ordered by creation time then message id, user content delimited as data, and full current-lead profile including VERIFICADO_BASE source values; the instruction forbids requesting those verified fields"
+  audio: "Gemini supports text plus inlineData audio; Qwen audio returns typed capability error with zero requests and never reroutes to Gemini"
+  selection: "config-only primary/fallback from existing Config fields; no new environment variables"
+  calls: "one normal provider request; malformed/non-JSON output gets one same-provider format retry; strict validation errors are non-fallbackable"
+  fallback: "only transient transport/timeout, HTTP 408/429/500/502/503/504, circuit-open, or exhausted malformed-JSON repair; not config/auth/request, cancellation, Contract validation, or capability errors"
+  resilience: "8-second per-attempt cap, 10-second logical budget, and per-provider breaker opening after three consecutive eligible failures for 60 seconds with one half-open probe"
+  slice7_parser: "Bare monetary context is lexical and sentence-aware (maximum three intervening words, no intervening number or clause boundary); exact integer parsing rejects non-integral pesos and avoids float rounding."
+  slice7_rate_limiter: "Named internal defaults use burst 3 and refill 0.5 tokens/second for a bounded conversational burst without new configuration."
+  slice7_breaker: "Ineligible failures reset the consecutive eligible-failure counter; exactly three consecutive eligible failures open the breaker."
+  provider_ux: "Both-provider courtesy text belongs to a future conversation use case; this layer returns typed errors"
+  decorators: "full guardrail and metrics decorators are deferred to future usecase integration; adapters expose sanitized typed seams"
+  ci: "no toolchain change because CI run 30168602827 passed main 43907ec"
+open_questions: []
+notes:
+  - "Worktree HEAD verified at 43907ecd8aafa71f36344f5ee592191396e85ff; branch feat/issue-16-llm-providers."
+  - "Hybrid exploration, proposal, and spec artifacts are persisted in both Engram and OpenSpec."
+  - "Design written in English at openspec/changes/issue-16-llm-providers/design.md; no production code, specs, or tasks touched by the design phase."
+  - "Final cross-slice verification task 4.1 completed through full validation; native admission remains blocked because the local native binary is unavailable."
+  - "Slice 1 original source/test accounting is a historical estimate of 295 authored physical lines; later errors.go additions are tracked separately and cannot be reconstructed from the uncommitted worktree."
+apply_progress:
+  completed:
+    - 1.1
+    - 1.2
+    - 1.3
+    - 1.4
+    - 2.1
+    - 2.2
+    - 2.3
+    - 3.1
+    - 3.2
+    - 3.3
+    - 3.4
+    - 4.1
+    - 5.1
+    - 5.2
+    - 5.3
+    - 5.4
+    - 6.1
+    - 6.2
+    - 7.1
+    - 7.2
+    - 8.1
+    - 8.2
+    - 8.3
+  current_slice: 8
+  current_slice_direct_edit_lines: 32
+  current_tree_line_counts:
+    parser_test.go: 141
+    resilience_test.go: 289
+    parser.go: 317
+    breaker.go: 91
+    fallback.go: 158
+    rate_limiter.go: 81
+    cmd/servidor/main.go: 102
+  cumulative_authored_implementation_estimate: "Historical estimate only; prior 1,764 plus direct Slice 8 edit content 32. Exact per-slice Git delta is not reconstructible while Issue 16 files remain uncommitted/untracked."
+  focused_validation: "go test ./internal/infrastructure/llm -run 'TestParserInt64OverflowIsInvalidWithoutWrap|TestCompositeBreakerBypassesPrimaryAfterThreeEligibleFailures' -count=1 — passed"
+  validation: "Focused/full/race tests; go build ./...; go vet ./...; go mod verify; scoped gofmt; tracked and untracked git diff --check — all passed."
+  line_measurement: "Slice 8 direct edit content is 32 physical lines (parser_test.go 9, resilience_test.go 23), below the 400-line bound. Current-tree counts are reported separately; historical Slice 1–7 totals are estimates because uncommitted/untracked files prevent Git delta reconstruction."
+  runtime_harness: "Deterministic in-process parser execution, fake providers, fake rate limiters, and existing fake transports; no provider/network/API, credentials, message/audio calls, or content logging."
+  rollback: "Revert only the two Slice 8 test blocks in parser_test.go and resilience_test.go; retain Slices 1–7 and unrelated behavior."
+  final_cross_slice_verification: "Task 4.1 marked complete after full validation; native verify admission attempted and blocked because ./.tools/gentle-ai is unavailable."
+last_updated: 2026-07-25
+
+remediation:
+  required: true
+  reason: "Critical Issue 16 remediation: exhausted malformed output was not fallback-eligible; no real per-provider token bucket existed; server health hard-coded CERRADO instead of reporting the retained breaker; prior Slice 1 accounting wording was ambiguous."
+  files:
+    - "internal/infrastructure/llm/factory.go"
+    - "internal/infrastructure/llm/rate_limiter.go"
+    - "internal/infrastructure/llm/health.go"
+    - "internal/infrastructure/llm/fallback.go"
+    - "internal/infrastructure/llm/errors.go"
+    - "internal/infrastructure/llm/parser.go"
+    - "internal/infrastructure/llm/parser_test.go"
+    - "internal/infrastructure/llm/resilience_test.go"
+    - "cmd/servidor/main.go"
+    - "cmd/servidor/main_test.go"
+  malformed_fix: "KindMalformed is fallback-eligible only after the adapter's single same-provider retry; valid JSON Contract violations remain KindInvalidOutput and non-fallbackable."
+  limiter_fix: "FallbackProvider gates each provider with a bounded injected-clock TokenBucket; local denial is sanitized and configured fallback remains eligible."
+  health_fix: "The server retains the NewFromConfig provider composition and asks the same FallbackProvider breaker for a live health label; nil/unconfigured remains safe."
+  numeric_fix: "Response validation restricts only currency-marked amounts to NUMEROS_DEL_MOTOR and ignores arbitrary count/date tokens."
+  single_provider_fix: "NewFromConfig always wraps a valid primary in FallbackProvider, even when fallback is absent or invalid, preserving the live primary breaker and limiter for health and runtime calls."
+  million_parser_fix: "Currency-marked Colombian expressions including 2 millones, $2 millones, and COP 2 millones normalize to 2,000,000; unauthorized amounts remain invalid and ordinary counts/dates remain accepted."
+  contextual_bare_amount_fix: "Bare amounts use lexical adjacency of at most three intervening words, reject intervening numbers and sentence/clause boundaries, accept grouped zero-decimal and ungrouped whole values only when they match the motor, and reject non-integral pesos without float rounding."
+  rate_limiter_fix: "Default per-provider token buckets use named internal burst 3 and refill 0.5 tokens/second constants; no new config or environment variable is introduced."
+  breaker_fix: "Ineligible failures reset consecutive eligible failures; success continues to reset; exactly three consecutive eligible failures are required to open."
+  budget: "Historical estimate only: Slice 7 was previously recorded at 247 net physical implementation lines and cumulative 1,764; current Slice 8 direct edit content is 32 lines. Issue 16 files remain uncommitted/untracked, so exact historical per-slice Git deltas cannot be reconstructed; current-tree counts are recorded under apply_progress."
+  focused_validation: "go test ./internal/infrastructure/llm ./cmd/servidor -count=1 — passed"
+  validation: "Focused/full/race tests, build, vet, mod verify, gofmt, diff, and no-live-network/credential audits — all passed."
+  runtime_harness: "Direct ParseSalida, fake providers, injected fake clock, and fake HTTP transports; no real APIs, credentials, message/audio calls, or content logging."
+  rollback: "Revert Slice 7 changes in parser.go, parser_test.go, rate_limiter.go, fallback.go, breaker.go, and resilience_test.go plus documentation additions; retain Slices 1–6."
+  verify_archive: "Verification attempted after full validation, but native admission is blocked because ./.tools/gentle-ai is unavailable; no verify report, receipt, review artifact, or archive was created."

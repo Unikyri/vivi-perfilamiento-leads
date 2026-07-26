@@ -8,9 +8,9 @@ artifact_store:
   mode: hybrid
   primary: engram
   repository: openspec
-status: active
-current_phase: apply
-next_recommended: apply
+status: verification-admission-blocked
+current_phase: verify
+next_recommended: resolve-verification-admission
 dependencies:
   issue_3:
     status: satisfied
@@ -45,7 +45,7 @@ phases:
   spec: success
   design: success
   tasks: success
-  apply: ready
-  verify: not-started
-  archive: not-started
+  apply: success
+  verify: blocked
+  archive: blocked
 last_updated: 2026-07-25

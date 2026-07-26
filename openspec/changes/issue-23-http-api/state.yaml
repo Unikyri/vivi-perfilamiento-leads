@@ -1,0 +1,124 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-23-http-api
+issue:
+  number: 23
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/23
+  title: "[A15] API HTTP completa (Contrato §3) + endpoints de demo"
+  labels: [bloque-a, contrato, bloqueante, status:approved]
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply
+next_recommended: sdd-verify
+worktree: /tmp/vivi-issue-23
+branch: feat/issue-23-http-api
+delivery_strategy: auto-chain
+strict_tdd: false
+artifacts:
+  exploration:
+    engram_topic: sdd/issue-23-http-api/explore
+    engram_observation_id: 604
+    openspec_path: openspec/changes/issue-23-http-api/exploration.md
+    status: done
+  proposal:
+    engram_topic: sdd/issue-23-http-api/proposal
+    engram_observation_id: 606
+    openspec_path: openspec/changes/issue-23-http-api/proposal.md
+    status: done
+  specs:
+    engram_topic: sdd/issue-23-http-api/spec
+    engram_observation_id: 608
+    openspec_path: openspec/changes/issue-23-http-api/specs/
+    status: done
+    domains: [api-http, cola-leads, buyer-persona, demo-control]
+  design:
+    engram_topic: sdd/issue-23-http-api/design
+    engram_observation_id: 607
+    openspec_path: openspec/changes/issue-23-http-api/design.md
+    status: done
+  tasks:
+    engram_topic: sdd/issue-23-http-api/tasks
+    engram_observation_id: 609
+    openspec_path: openspec/changes/issue-23-http-api/tasks.md
+    status: done
+  apply_progress:
+    engram_topic: sdd/issue-23-http-api/apply-progress
+    openspec_path: openspec/changes/issue-23-http-api/apply-progress.md
+    status: done
+  verify_report:
+    engram_topic: sdd/issue-23-http-api/verify-report
+    openspec_path: openspec/changes/issue-23-http-api/verify-report.md
+    status: pending
+  archive_report:
+    engram_topic: sdd/issue-23-http-api/archive-report
+    openspec_path: openspec/changes/archive/YYYY-MM-DD-issue-23-http-api/archive-report.md
+    status: pending
+task_progress:
+  total: 12
+  completed: 12
+  pending: 0
+  completed_tasks: [1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1, 5.2, 6.1, 6.2]
+  pending_slices: []
+  ready_slices: []
+  blocked_slices: []
+capabilities:
+  new:
+    - api-http
+    - cola-leads
+    - buyer-persona
+    - demo-control
+  modified: []
+constraints:
+  review_budget_changed_lines: 400
+  no_adk_or_adk_integration: true
+  no_runtime_code_in_propose: true
+  contract_authority: "Wiki doc 10 (Contrato v1.1) §0-§3, §5, §6 — read from /tmp/vivi-perfilamiento-leads.wiki"
+  architecture_authority: "Wiki doc 11 — ADR-3 (202 + polling), §4.1 turn sequence, §4.3 TickReloj"
+  nfr_authority: "Wiki doc 09 — NFR-R-02 (<300 ms no-LLM), NFR-D-02 (reset <3 s), NFR-S-02 (no PII in logs)"
+  delivery: "Feature Branch Chain, auto-chain S1-S6; each <=400 authored runtime/test lines"
+  strict_tdd: false
+blocked_reasons: []
+resolved_blockers:
+  - "Issue #23 text recovered via gh issue view."
+  - "Contract v1.1 §3 read from /tmp/vivi-perfilamiento-leads.wiki/10-Contratos."
+  - "Architecture doc 11 ADR-3 and sequences 4.1/4.3 read from the same clone."
+contract_conflicts_resolved:
+  - "turno_en_proceso: exploration assumed synchronous/false; Contract §3.2 + ADR-3 win (202 + background turn, true while processing)."
+  - "Issue sketch leaked err.Error() as ERROR_INTERNO message; NFR-S-02 wins (generic message, structured log detail)."
+  - "cupo_10 shape: Contract §3.5 {usados, porcentaje_ventana} wins over issue prose."
+  - "FICHA_NO_DISPONIBLE 404 included per §3.6 even though the §3 catalog line omits it."
+  - "semaforo/resumen are not persisted; derived deterministically in the queue read model from persisted Contract fields."
+capability_gaps_confirmed:
+  - "No queue read model providing semaforo/resumen/cupo_10."
+  - "No buyer-persona aggregation use case."
+  - "Reloj is interface-only; no production simulated-clock implementation."
+  - "No demo reset/seed port; POST /api/demo/reiniciar needs a new bounded port (destructive, config-gated, final slice)."
+open_questions:
+  - "Exact identity data for precargado_id seeds ana/carlos/luisa."
+  - "Required wording of LeadEnCola.resumen for the dashboard."
+  - "Field set of buyer-persona catalog summary when proyecto_id is absent."
+  - "Single-instance assumption for the in-process turn tracker."
+delivery_slices:
+  - {id: S1, status: done, scope: "HTTP foundation, lead creation/conversation, deterministic LeadNuevo greeting, wiring, tests", est_lines: 390}
+  - {id: S2, status: done, scope: "POST /mensajes 202 + turn tracker + text/audio limits, tests", est_lines: 320}
+  - {id: S3, status: done, scope: "GET /api/leads queue read model, GET /api/leads/{id}, GET /ficha, tests", est_lines: 360}
+  - {id: S4, status: done, scope: "buyer-persona aggregation use case + endpoint, tests", est_lines: 330}
+  - {id: S5, status: done, scope: "persisted simulated clock, TickReloj result bridge, POST /demo/tiempo, /salud clock, tests", est_lines: 370}
+  - {id: S6, status: done, scope: "POST /demo/reiniciar reset port + Postgres impl, idempotency tests", est_lines: 300}
+last_apply:
+  slice: verifier-remediation-critical-1-2
+  status: done
+  authored_runtime_test_lines: 0
+  focused: "go test ./internal/usecase ./internal/adapters/http ./cmd/servidor -count=1"
+  full: "go test ./... -count=1"
+  race: "go test -race ./... -count=1"
+  build: "go build ./..."
+  vet: "go vet ./..."
+  gofmt: "gofmt -w remediation-touched Go files (pass); repository-wide gofmt -l reports pre-existing internal/pipeline/compradores_test.go and internal/pipeline/proyectos_test.go"
+  diff_check: "git diff --check"
+  verify_validator: unavailable
+  next: sdd-verify
+  note: "Verifier CRITICAL-1/2 remediation complete: detail includes semaforo and plan/null without PII; demo/reset dates are YYYY-MM-DD; filtered cupo is global; fuente enum is validated."
+last_updated: 2026-07-26T04:00:00-05:00

@@ -1,8 +1,17 @@
-.PHONY: build test vet run datos validar-datos limpiar db-up db-down db-reset db-validate ci-local
+.PHONY: build build-todo check-static-assets test vet run datos validar-datos limpiar db-up db-down db-reset db-validate ci-local front-instalar front-dev front-build front-verificar
 
-build:
+# Production order: package Vite output before compiling Go.
+build: build-todo
+
+build-todo:
+	npm run heroku-postbuild
+	$(MAKE) check-static-assets
 	go build -o bin/servidor ./cmd/servidor
 	go build -o bin/pipeline ./cmd/pipeline
+
+check-static-assets:
+	test -s internal/adapters/http/estaticos/index.html
+	@test -n "$$(find internal/adapters/http/estaticos/assets -type f -print -quit 2>/dev/null)" || (echo "missing hashed frontend assets" >&2; exit 1)
 
 test:
 	go test ./... -count=1

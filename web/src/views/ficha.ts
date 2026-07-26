@@ -1,14 +1,20 @@
-import type { Ficha, FuenteCampo } from '../models/tipos';
+import type { Ficha, FuenteCampo, ItemDesglose, Nivel } from '../models/tipos';
 
-const BADGE_FUENTE = {
-  VERIFICADO_BASE: { txt: 'VERIFICADO', icono: '✓', clase: 'badge-verificado' },
-  DECLARADO:       { txt: 'DECLARADO',  icono: '✍', clase: 'badge-declarado'  },
-  INFERIDO:        { txt: 'INFERIDO',   icono: '~', clase: 'badge-inferido'   },
+const SELLO_FUENTE = {
+  VERIFICADO_BASE: { txt: 'VERIFICADO', clase: 'sello-verificado' },
+  DECLARADO: { txt: 'DECLARADO', clase: 'sello-declarado' },
+  INFERIDO: { txt: 'INFERIDO', clase: 'sello-inferido' },
 } as const;
 
-function badgeFuente(f: FuenteCampo): string {
-  const b = BADGE_FUENTE[f] ?? BADGE_FUENTE.DECLARADO;
-  return `<span class="badge-fuente ${b.clase}" title="Fuente: ${b.txt}">${b.icono} ${b.txt}</span>`;
+const ZONA_NIVEL: Record<Nivel, string> = {
+  ALTA: 'zona-verde',
+  MEDIA: 'zona-ambar',
+  BAJA: 'zona-gris',
+};
+
+function selloFuente(f: FuenteCampo): string {
+  const b = SELLO_FUENTE[f] ?? SELLO_FUENTE.DECLARADO;
+  return `<span class="sello-fuente ${b.clase}" title="Fuente: ${b.txt}">${b.txt}</span>`;
 }
 
 /**
@@ -23,114 +29,135 @@ export function renderFicha(contenedor: HTMLElement, ficha: Ficha | null, leadNo
 
   const advertencia = ficha.banda_advertencia
     ? `<div class="banda-advertencia" role="alert">
-         <span>⚠️</span> <span>${escapar(ficha.banda_advertencia)}</span>
+         <span class="banda-advertencia-etiqueta">Alerta</span>
+         <span>${escapar(ficha.banda_advertencia)}</span>
        </div>`
     : '';
 
-  const pctConfianza = (ficha.confianza_perfil * 100).toFixed(0);
+  const pctConfianza = Math.round(ficha.confianza_perfil * 100);
   const iden = ficha.identificacion;
   const cap = ficha.capacidad;
   const intenc = ficha.intencion;
+  const zonaIntencion = ZONA_NIVEL[intenc.nivel] ?? ZONA_NIVEL.BAJA;
 
   contenedor.innerHTML = `
-    <div class="ficha-container">
+    <div class="hoja-informe informe-ficha">
       ${advertencia}
 
-      <!-- Identificación Principal (F-Layout Top) -->
-      <header class="ficha-header-card">
-        <div class="ficha-id-info">
-          <h3>${escapar(iden.nombre || leadNombreFallback)}</h3>
-          <div class="ficha-meta-grid">
-            <div class="ficha-meta-item">
-              <strong>Afiliada:</strong> ${iden.afiliada ? `Sí (Cat. ${escapar(iden.categoria)})` : 'No'}
+      <!-- Masthead: identidad a la izquierda, medidor de confianza a la derecha -->
+      <header class="masthead-ficha">
+        <div class="masthead-identidad">
+          <span class="masthead-kicker">Ficha comercial</span>
+          <h3 class="masthead-nombre">${escapar(iden.nombre || leadNombreFallback)}</h3>
+          <dl class="registro-identidad">
+            <div class="registro-identidad-item">
+              <dt>Afiliación</dt>
+              <dd>${iden.afiliada ? `Afiliado · Categoría ${escapar(iden.categoria)}` : 'No afiliado'}</dd>
             </div>
-            <div class="ficha-meta-item">
-              <strong>Teléfono:</strong> ${escapar(iden.telefono || 'No registrado')}
+            <div class="registro-identidad-item">
+              <dt>Teléfono</dt>
+              <dd class="cifra">${escapar(iden.telefono || 'No registrado')}</dd>
             </div>
-            <div class="ficha-meta-item">
-              <strong>Cupo 10%:</strong> ${ficha.consume_cupo_10 ? 'Consume cupo' : 'No aplica'}
+            <div class="registro-identidad-item">
+              <dt>Cupo 10%</dt>
+              <dd>${ficha.consume_cupo_10 ? 'Consume cupo' : 'No aplica'}</dd>
             </div>
-          </div>
+          </dl>
         </div>
 
-        <div class="confianza-bar-container" title="Confianza general del perfilamiento">
-          <span class="confianza-val">${pctConfianza}% Confianza</span>
-          <progress class="confianza-progress" value="${ficha.confianza_perfil}" max="1"></progress>
+        <div class="medidor-confianza" role="img" aria-label="Confianza del perfil: ${pctConfianza} por ciento">
+          <span class="medidor-confianza-etiqueta">Confianza del perfil</span>
+          <div class="medidor-confianza-escala">
+            <span class="medidor-confianza-tick" style="left: 25%"></span>
+            <span class="medidor-confianza-tick" style="left: 50%"></span>
+            <span class="medidor-confianza-tick" style="left: 75%"></span>
+            <div class="medidor-confianza-relleno" style="transform: scaleX(${pctConfianza / 100})"></div>
+            <div class="medidor-confianza-marcador" style="left: ${pctConfianza}%"></div>
+          </div>
+          <span class="medidor-confianza-cifra cifra">${pctConfianza}<span class="medidor-confianza-unidad">/100</span></span>
         </div>
       </header>
 
-      <!-- Bloque 3 Columnas: Intención, Capacidad, Recomendación -->
-      <div class="grid-tres-columnas">
+      <!-- Cartera de capacidad financiera -->
+      <section class="seccion-informe seccion-capacidad">
+        <div class="seccion-header-title">
+          <span class="sec-icon">💳</span>
+          <h4 class="seccion-titulo">Capacidad financiera</h4>
+        </div>
+        <div class="ledger-scroll">
+          <table class="ledger">
+            <thead>
+              <tr>
+                <th>Concepto</th>
+                <th>Regla aplicada</th>
+                <th class="ledger-num">Monto</th>
+                <th>Fuente</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cap.desglose.map(renderFilaLedger).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="ledger-total">
+                <td colspan="2">Presupuesto máximo</td>
+                <td class="ledger-num cifra">$${formatoMonto(cap.presupuesto_max)}</td>
+                <td></td>
+              </tr>
+              <tr class="ledger-ratio">
+                <td colspan="2">Ratio de endeudamiento</td>
+                <td class="ledger-num cifra">${(cap.ratio * 100).toFixed(0)}%</td>
+                <td class="cifra">conf. ${(cap.confianza * 100).toFixed(0)}%</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
 
-        <!-- Columna 1: Capacidad Financiera -->
-        <article class="card-seccion">
-          <div class="seccion-header-title">
-            <span class="sec-icon">💳</span>
-            <h4>Capacidad Financiera</h4>
-          </div>
-          <div class="desglose-monto-item">
-            <span>Presupuesto Máx:</span>
-            <span class="monto-num">$${(cap.presupuesto_max / 1_000_000).toFixed(1)}M ${badgeFuente('VERIFICADO_BASE')}</span>
-          </div>
-          <div class="desglose-monto-item">
-            <span>Crédito Máx:</span>
-            <span class="monto-num">$${(cap.credito_max / 1_000_000).toFixed(1)}M ${badgeFuente('INFERIDO')}</span>
-          </div>
-          <div class="desglose-monto-item">
-            <span>Subsidio Aplicable:</span>
-            <span class="monto-num">$${(cap.subsidio_aplicable / 1_000_000).toFixed(1)}M ${badgeFuente('VERIFICADO_BASE')}</span>
-          </div>
-          <div class="desglose-monto-item">
-            <span>Recursos Propios:</span>
-            <span class="monto-num">$${(cap.recursos_propios / 1_000_000).toFixed(1)}M ${badgeFuente('DECLARADO')}</span>
-          </div>
-        </article>
-
-        <!-- Columna 2: Intención de Compra (Nivel + Confianza + Señales) -->
-        <article class="card-seccion">
+      <div class="informe-columnas">
+        <!-- Zona de intención: banda con el veredicto de nivel -->
+        <section class="seccion-informe zona-veredicto ${zonaIntencion}">
           <div class="seccion-header-title">
             <span class="sec-icon">🎯</span>
-            <h4>Intención de Compra</h4>
+            <h4 class="seccion-titulo">Intención de compra</h4>
           </div>
-          <p class="nivel-destacado nivel-${intenc.nivel}">
-            Nivel ${escapar(intenc.nivel)} <small style="font-size:0.75rem; color:#64748B">(Confianza ${escapar(intenc.confianza)})</small>
-          </p>
-          <ul class="lista-puntos">
+          <p class="veredicto-nivel">Nivel <span class="cifra">${escapar(intenc.nivel)}</span></p>
+          <p class="veredicto-confianza">Confianza: ${escapar(intenc.confianza)}</p>
+          <ul class="lista-observaciones">
             ${intenc.senales.map(s => `<li>${escapar(s)}</li>`).join('')}
           </ul>
-        </article>
+        </section>
 
-        <!-- Columna 3: Argumentos y Beneficios -->
-        <article class="card-seccion">
+        <!-- Argumentos y beneficios -->
+        <section class="seccion-informe">
           <div class="seccion-header-title">
             <span class="sec-icon">💡</span>
-            <h4>Argumentos de Venta</h4>
+            <h4 class="seccion-titulo">Argumentos de venta</h4>
           </div>
-          <ul class="lista-puntos">
+          <ul class="lista-observaciones">
             ${ficha.argumentos_venta.map(a => `<li>${escapar(a)}</li>`).join('')}
           </ul>
           <div class="seccion-header-title" style="margin-top:0.85rem">
             <span class="sec-icon">✨</span>
-            <h4 style="margin:0">Beneficios Colsubsidio</h4>
+            <h5 class="subseccion-titulo" style="margin:0">Beneficios Colsubsidio</h5>
           </div>
-          <ul class="lista-puntos">
+          <ul class="lista-observaciones">
             ${ficha.beneficios.map(b => `<li>${escapar(b)}</li>`).join('')}
           </ul>
-        </article>
+        </section>
       </div>
 
-      <!-- Banner Azul Siguiente Paso (Doc 12 §3.4) -->
+      <!-- Banner de instrucción única -->
       <div class="banner-siguiente-paso">
-        <span>▶ Siguiente paso: agendar visita sala de ventas</span>
+        <span><strong class="banner-etiqueta">Siguiente paso</strong> Agendar visita a sala de ventas</span>
         <button class="btn-copiar-resumen" id="btn-copiar-resumen" type="button">
-          📋 Copiar Resumen
+          📋 Copiar resumen
         </button>
       </div>
 
-      <!-- Timeline Plegado de la Conversación -->
+      <!-- Nota al pie plegable -->
       <details class="timeline-plegable">
-        <summary>💬 Ver historial de perfilamiento con Vivi</summary>
-        <p style="font-size:0.83rem; margin-top:0.5rem; color:#4B5563">
+        <summary>Ver historial de perfilamiento con Vivi</summary>
+        <p class="timeline-texto">
           Conversación iniciada. Canal WhatsApp. Transcripción procesada por Vivi.
         </p>
       </details>
@@ -141,26 +168,42 @@ export function renderFicha(contenedor: HTMLElement, ficha: Ficha | null, leadNo
   const btnCopiar = contenedor.querySelector<HTMLButtonElement>('#btn-copiar-resumen');
   if (btnCopiar) {
     btnCopiar.addEventListener('click', () => {
-      const texto = `RESUMEN FICHA - ${iden.nombre}\nPresupuesto: $${(cap.presupuesto_max/1e6).toFixed(1)}M | Afiliada: ${iden.afiliada ? 'Sí' : 'No'}\nIntención: ${intenc.nivel}\nSiguiente paso: Agendar visita sala de ventas.`;
+      const texto = `RESUMEN FICHA - ${iden.nombre}\nPresupuesto: $${formatoMonto(cap.presupuesto_max)} | Afiliada: ${iden.afiliada ? 'Sí' : 'No'}\nIntención: ${intenc.nivel}\nSiguiente paso: Agendar visita sala de ventas.`;
       navigator.clipboard.writeText(texto).then(() => {
-        btnCopiar.textContent = '✓ Copiado!';
-        setTimeout(() => { btnCopiar.textContent = '📋 Copiar Resumen'; }, 2000);
+        btnCopiar.textContent = '✓ Copiado';
+        setTimeout(() => { btnCopiar.textContent = '📋 Copiar resumen'; }, 2000);
       });
     });
   }
 }
 
+function renderFilaLedger(item: ItemDesglose): string {
+  return `
+    <tr>
+      <td>${escapar(item.concepto)}</td>
+      <td class="ledger-regla">${escapar(item.regla)}</td>
+      <td class="ledger-num cifra">$${formatoMonto(item.monto)}</td>
+      <td>${selloFuente(item.fuente)}</td>
+    </tr>
+  `;
+}
+
+function formatoMonto(monto: number): string {
+  return `${(monto / 1_000_000).toFixed(1)}M`;
+}
+
 /** Estado vacío amable si la ficha aún no existe (404 FICHA_NO_DISPONIBLE) */
 function renderEstadoVacio(contenedor: HTMLElement, nombreLead: string): void {
   contenedor.innerHTML = `
-    <div class="estado-vacio-amable">
-      <h3>💬 Este lead aún está conversando con Vivi</h3>
-      <p style="margin-bottom: 1rem; font-size: 0.9rem;">
+    <div class="hoja-informe informe-vacio">
+      <span class="masthead-kicker">Ficha comercial</span>
+      <h3>Aún sin generar</h3>
+      <p>
         La ficha comercial completa de <strong>${escapar(nombreLead)}</strong> se generará automáticamente cuando Vivi complete la calificación.
       </p>
-      <details class="timeline-plegable" style="max-width: 400px; margin: 0 auto; text-align: left;">
+      <details class="timeline-plegable">
         <summary>Ver avance actual</summary>
-        <p style="font-size:0.82rem; margin-top:0.5rem; color:#4B5563">
+        <p class="timeline-texto">
           Estado: En proceso de perfilamiento en tiempo real desde el chat.
         </p>
       </details>

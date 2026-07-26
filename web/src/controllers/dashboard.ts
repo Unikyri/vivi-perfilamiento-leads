@@ -10,6 +10,9 @@ const INTERVALO_POLL_COLA_MS = 5000;
 let pollColaTimer: ReturnType<typeof setInterval> | null = null;
 let proyectoGerenciaSeleccionado = 'mongui';
 
+let ultimaFichaCargada: string | null = null;
+let ultimaGerenciaCargada: string | null = null;
+
 /**
  * Inicializa el Panel del Asesor y sus tres pestañas (Cola, Ficha, Gerencia) + Botonera Demo.
  */
@@ -71,7 +74,6 @@ function cambiarTab(nuevaTab: 'cola' | 'ficha' | 'gerencia', btns: NodeListOf<HT
 
 let ultimoTabRenderizado: string | null = null;
 let ultimoColaRenderizado: unknown = null;
-let ultimoLeadFichaRenderizado: string | null = null;
 
 function renderTabActiva(contenedor: HTMLElement): void {
   const st = obtener();
@@ -79,6 +81,8 @@ function renderTabActiva(contenedor: HTMLElement): void {
 
   switch (st.tabActiva) {
     case 'cola':
+      ultimaFichaCargada = null;
+      ultimaGerenciaCargada = null;
       if (st.cola) {
         if (tabCambio || st.cola !== ultimoColaRenderizado) {
           ultimoColaRenderizado = st.cola;
@@ -95,18 +99,20 @@ function renderTabActiva(contenedor: HTMLElement): void {
       break;
 
     case 'ficha':
-      if (st.leadActivo) {
-        if (tabCambio || st.leadActivo !== ultimoLeadFichaRenderizado) {
-          ultimoLeadFichaRenderizado = st.leadActivo;
-          cargarYRenderizarFicha(contenedor, st.leadActivo);
-        }
-      } else {
+      if (!st.leadActivo) {
+        ultimaFichaCargada = null;
         contenedor.innerHTML = '<div style="padding:1.5rem; text-align:center; color:#6B7280">Selecciona un lead de la cola para ver su ficha comercial.</div>';
+        break;
+      }
+      if (tabCambio || st.leadActivo !== ultimaFichaCargada) {
+        ultimaFichaCargada = st.leadActivo;
+        cargarYRenderizarFicha(contenedor, st.leadActivo);
       }
       break;
 
     case 'gerencia':
-      if (tabCambio) {
+      if (tabCambio || proyectoGerenciaSeleccionado !== ultimaGerenciaCargada) {
+        ultimaGerenciaCargada = proyectoGerenciaSeleccionado;
         cargarYRenderizarGerencia(contenedor, proyectoGerenciaSeleccionado);
       }
       break;
@@ -152,20 +158,19 @@ async function cargarYRenderizarFicha(contenedor: HTMLElement, leadId: string): 
 }
 
 async function cargarYRenderizarGerencia(contenedor: HTMLElement, proyectoId: string): Promise<void> {
+  const alCambiarProyecto = (id: string) => {
+    proyectoGerenciaSeleccionado = id;
+    ultimaGerenciaCargada = id;
+    cargarYRenderizarGerencia(contenedor, id);
+  };
+
   try {
     const bp = await api.buyerPersona(proyectoId);
-    renderGerencia(contenedor, bp, proyectoId, id => {
-      proyectoGerenciaSeleccionado = id;
-      cargarYRenderizarGerencia(contenedor, id);
-    });
+    renderGerencia(contenedor, bp, proyectoId, alCambiarProyecto);
   } catch {
-    renderGerencia(contenedor, null, proyectoId, id => {
-      proyectoGerenciaSeleccionado = id;
-      cargarYRenderizarGerencia(contenedor, id);
-    });
+    renderGerencia(contenedor, null, proyectoId, alCambiarProyecto);
   }
 }
-
 
 function montarBotoneraDemo(contenedor: HTMLElement): void {
   renderBotoneraDemo(
@@ -182,11 +187,11 @@ function montarBotoneraDemo(contenedor: HTMLElement): void {
 
       if (hasta) {
         try {
-          await api.avanzarTiempo(hasta);
+          const r = await api.avanzarTiempo(hasta);
           await mostrarNotificacion({
             icono: '✅',
             titulo: 'Tiempo Avanzado',
-            mensaje: `El reloj de simulación avanzó correctamente a ${hasta}.`,
+            mensaje: `El reloj de simulación avanzó correctamente a ${hasta} (${r.hitos_disparados ?? 0} hitos disparados).`,
           });
           cargarCola();
         } catch (e) {
@@ -211,7 +216,16 @@ function montarBotoneraDemo(contenedor: HTMLElement): void {
       if (confirmado) {
         try {
           await api.reiniciar();
-          actualizar({ leadActivo: 'mock-1', tabActiva: 'cola' });
+
+          // Recrear lead dinámicamente si aplica
+          let nuevoLead: string | null = null;
+          try {
+            nuevoLead = (await api.crearLead('ana')).lead_id;
+          } catch {
+            nuevoLead = 'mock-1';
+          }
+
+          actualizar({ leadActivo: nuevoLead, tabActiva: 'cola' });
           cargarCola();
           await mostrarNotificacion({
             icono: '✅',

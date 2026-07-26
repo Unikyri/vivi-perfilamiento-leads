@@ -8,13 +8,12 @@ import (
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/usecase"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type scanner interface{ Scan(...any) error }
-type LeadRepository struct{ pool *pgxpool.Pool }
+type LeadRepository struct{ pool pgxPool }
 
-func NuevoLeadRepository(pool *pgxpool.Pool) *LeadRepository { return &LeadRepository{pool: pool} }
+func NuevoLeadRepository(pool pgxPool) *LeadRepository { return &LeadRepository{pool: pool} }
 
 var _ usecase.LeadRepository = (*LeadRepository)(nil)
 

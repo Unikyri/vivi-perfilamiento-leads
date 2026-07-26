@@ -1,0 +1,37 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-31-nfr-hardening
+issue: 31
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: archived
+current_phase: archive
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+  archive_report: true
+task_progress:
+  total: 12
+  completed: 12
+  pending: 0
+  all_complete: true
+delivery_strategy: chained-prs
+completed_delivery:
+  - PR #103: rate-limit middleware
+  - PR #104: local-only k6 harness
+  - PR #105: README and architecture documentation
+review_gate:
+  result: allow
+  lineage: review-396dac85dd08d7f1
+  receipt_hash: sha256:bfb2fb1b57a8753777a567470b600e37f652150b75f421c724a642188f6f0ce4
+  terminal_state: approved
+next_recommended: none
+archived_to: openspec/changes/archive/2026-07-26-issue-31-nfr-hardening/
+closed_at: 2026-07-26T07:55:34-05:00
+last_updated: 2026-07-26T07:55:34-05:00

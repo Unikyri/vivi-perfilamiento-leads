@@ -2,23 +2,26 @@ package config
 
 import (
 	"fmt"
+	"net/netip"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Config contiene toda la configuración del proceso.
 // Contrato v1.1 §8 — tabla de variables de entorno.
 type Config struct {
-	Puerto       string
-	DatabaseURL  string
-	LLMProvider  string
-	GeminiAPIKey string
-	QwenAPIKey   string
-	QwenBaseURL  string
-	LLMFallback  string
-	TasaEA       float64
-	DemoSeed     bool
-	LogNivel     string
+	Puerto            string
+	DatabaseURL       string
+	LLMProvider       string
+	GeminiAPIKey      string
+	QwenAPIKey        string
+	QwenBaseURL       string
+	LLMFallback       string
+	TasaEA            float64
+	DemoSeed          bool
+	LogNivel          string
+	TrustedProxyCIDRs []netip.Prefix
 }
 
 // Cargar lee la configuración del entorno y valida lo obligatorio.
@@ -39,7 +42,12 @@ func Cargar() (Config, error) {
 		return Config{}, fmt.Errorf("TASA_EA no es un número válido: %w", err)
 	}
 	c.TasaEA = tasa
-	c.DemoSeed = valor("DEMO_SEED", "true") == "true"
+	c.DemoSeed = valor("DEMO_SEED", "false") == "true"
+	trusted, err := parseTrustedProxyCIDRs(valor("TRUSTED_PROXY_CIDRS", ""))
+	if err != nil {
+		return Config{}, err
+	}
+	c.TrustedProxyCIDRs = trusted
 
 	if c.DatabaseURL == "" {
 		return Config{}, fmt.Errorf("DATABASE_URL es obligatoria")
@@ -52,4 +60,24 @@ func valor(clave, porDefecto string) string {
 		return v
 	}
 	return porDefecto
+}
+
+func parseTrustedProxyCIDRs(raw string) ([]netip.Prefix, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, nil
+	}
+	parts := strings.Split(raw, ",")
+	prefixes := make([]netip.Prefix, 0, len(parts))
+	for _, part := range parts {
+		value := strings.TrimSpace(part)
+		if value == "" {
+			return nil, fmt.Errorf("TRUSTED_PROXY_CIDRS contiene un CIDR vacío")
+		}
+		prefix, err := netip.ParsePrefix(value)
+		if err != nil {
+			return nil, fmt.Errorf("TRUSTED_PROXY_CIDRS contiene un CIDR inválido: %q", value)
+		}
+		prefixes = append(prefixes, prefix.Masked())
+	}
+	return prefixes, nil
 }

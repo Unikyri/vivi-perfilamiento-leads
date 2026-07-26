@@ -41,7 +41,7 @@ export function renderCola(
             <span class="cupo-metrica">${usados} / ${ventana} (${pct}%)</span>
           </div>
           <div class="cupo-track-custom">
-            <div class="cupo-fill-custom" style="width: ${pct}%;"></div>
+            <div class="cupo-fill-custom" style="transform: scaleX(${pct / 100}); transform-origin: left;"></div>
           </div>
         </div>
       </header>
@@ -101,6 +101,9 @@ export function renderCola(
 function renderFilaTabla(l: LeadEnCola, posicion: number): string {
   const sem = CONFIG_SEMAFORO[l.semaforo] ?? CONFIG_SEMAFORO.GRIS;
   const inicial = l.nombre.trim().charAt(0).toUpperCase() || 'L';
+  const afilBadge = l.afiliado !== undefined 
+    ? `<span class="badge-afiliado-pill ${l.afiliado ? 'es-afiliado' : 'no-afiliado'}">${l.afiliado ? 'Afiliado' : 'No afiliado'}</span>` 
+    : '';
 
   return `
     <tr class="fila-lead-tabla" data-lead-id="${l.lead_id}" tabindex="0" role="row">
@@ -117,7 +120,7 @@ function renderFilaTabla(l: LeadEnCola, posicion: number): string {
         <div class="lead-avatar-wrap">
           <div class="lead-avatar">${inicial}</div>
           <div class="lead-meta">
-            <span class="lead-nombre-txt">${escapar(l.nombre)}</span>
+            <span class="lead-nombre-txt">${escapar(l.nombre)} ${afilBadge}</span>
             <span class="lead-id-sub">ID: ${escapar(l.lead_id)}</span>
           </div>
         </div>
@@ -126,7 +129,7 @@ function renderFilaTabla(l: LeadEnCola, posicion: number): string {
         <span class="badge-ruta" title="Origen del lead">${escapar(l.ruta)}</span>
       </td>
       <td class="td-prio">
-        <span class="badge-prio-score" title="Puntuación de Priorización Vivi">
+        <span class="badge-prio-score cifra" title="Puntuación de Priorización Vivi">
           ${l.prioridad.toFixed(1)} <small>pts</small>
         </span>
       </td>

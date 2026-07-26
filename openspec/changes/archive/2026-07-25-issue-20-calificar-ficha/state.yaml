@@ -1,0 +1,190 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-20-calificar-ficha
+issue:
+  number: 20
+  title: "Calificar lead and generate deterministic advisor ficha"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: archived
+current_phase: archive
+next_recommended: none
+archive:
+  date: 2026-07-25
+  path: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha
+  report: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/archive-report.md
+  review_lineage: review-13aee636b643f8cd
+  review_gate: post-apply
+  review_result: allow
+  specs_synced:
+    - openspec/specs/calificar-lead/spec.md
+    - openspec/specs/generar-ficha/spec.md
+branch: test/issue-20-qualification-edges
+worktree: /tmp/vivi-issue-20-verify
+base: origin/main
+base_sha: 0345180
+apply_batch:
+  name: qualification-edge-hardening
+  files:
+    - internal/usecase/calificar_lead_edges_test.go
+  authored_lines: 63
+  runtime_lines: 0
+  test_lines: 63
+  focused_test: 'go test ./internal/usecase -run TestCalificarLead(PriorityCapsRatioAndUsesPartialConfidence|NonCanonicalCatalogKeyOmitsKNNZone|RutaDecididaPayloadContainsCopiedDecisionData)$ -count=1 -v'
+  result: pass
+  scope: test-only; no production or forbidden paths changed
+  timestamp: 2026-07-25T22:42:29-05:00
+delivery:
+  strategy: feature-branch-chain
+  target: main
+  review_budget_authored_lines: 400
+  planned_authored_lines: 500-700
+  hard_stop_authored_lines: 400
+  budget_risk: high
+  decision_needed_before_apply: false
+  chained_prs_recommended: true
+  size_exception: prohibited
+scope:
+  include:
+    - internal/usecase/calificar_lead.go
+    - internal/usecase/generar_ficha.go
+    - deterministic usecase tests
+  exclude:
+    - internal/domain
+    - internal/domain/motor
+    - internal/usecase/puertos.go
+    - internal/infrastructure
+    - internal/adapters
+    - HTTP/frontend
+    - migrations/config
+    - Contract/Wiki
+    - LLM/narrative port
+artifacts:
+  exploration: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/exploration.md
+  proposal: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/proposal.md
+  specs:
+    - openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/specs/calificar-lead/spec.md
+    - openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/specs/generar-ficha/spec.md
+  design: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/design.md
+  tasks: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/tasks.md
+  apply_progress: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/apply-progress.md
+  verify_report: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/verify-report.md
+  state: openspec/changes/archive/2026-07-25-issue-20-calificar-ficha/state.yaml
+engram_topics:
+  exploration: sdd/issue-20-calificar-ficha/explore
+  proposal: sdd/issue-20-calificar-ficha/proposal
+  spec: sdd/issue-20-calificar-ficha/spec
+  design: sdd/issue-20-calificar-ficha/design
+  tasks: sdd/issue-20-calificar-ficha/tasks
+  apply_progress: sdd/issue-20-calificar-ficha/apply-progress
+  verify_report: sdd/issue-20-calificar-ficha/verify-report
+  state: sdd/issue-20-calificar-ficha/state
+capabilities:
+  new:
+    - calificar-lead
+    - generar-ficha
+  modified: []
+delivery_slices:
+  - id: 1
+    content: internal/usecase/calificar_lead.go + deterministic tests
+    target: feature/bloque-a
+    forecast_authored_lines:
+      runtime: 130
+      tests: 210
+      total: 340
+      maximum: 400
+  - id: 2
+    content: internal/usecase/generar_ficha.go + deterministic tests and error/retry paths
+    target: slice-1 branch
+    forecast_authored_lines:
+      runtime: 135
+      tests: 215
+      total: 350
+      maximum: 400
+task_progress:
+  total: 10
+  completed: 10
+  pending: 0
+  all_complete: true
+constraints:
+  - Calificar only CALIFICADO leads.
+  - Choose lowest positive catalog PrecioDesde within preliminary budget.
+  - Recalculate capacity with candidate price; motor median fallback applies when candidate is zero.
+  - Use GemeloKNN K=30, exact catalog zones, and existing recommendation and matrix motors.
+  - Conversion is INDEPENDIENTE OR hogar_con_afiliado OR nonblank caja_externa.
+  - Apply Contract priority formula with ratio capped at 1.2 and derive semaforo via helper.
+  - Set ConsumeCupo10 only for non-affiliate ASESOR.
+  - Keep ASESOR as CALIFICADO for GenerarFicha; transition other routes to EN_NUTRICION, REMARKETING, or DESPEDIDO.
+  - Publish RutaDecidida only after durable lead save.
+  - GenerarFicha accepts only CALIFICADO ASESOR and emits deterministic Contract Ficha content with fixed-order benefits/arguments/alert.
+  - Persist ficha before transitioning lead to ENTREGADO and saving lead.
+  - No LLM, narrative field, new port, domain/motor, adapter, infrastructure, HTTP, frontend, migration, config, or Contract/Wiki changes.
+  - Document partial writes; ficha upsert makes retry repair feasible.
+slice_2:
+  id: 2
+  files:
+    - internal/usecase/generar_ficha.go
+    - internal/usecase/generar_ficha_test.go
+  authored_lines: 388
+  runtime_lines: 199
+  test_lines: 189
+  focused_test: 'go test ./internal/usecase -run TestGenerarFicha -count=1'
+  focused_result: pass
+  full_test: 'go test ./...'
+  full_test_result: pass
+  race_test: 'go test -race ./...'
+  race_test_result: pass
+  vet: 'go vet ./...'
+  vet_result: pass
+  build: 'go build ./...'
+  build_result: pass
+  module_verify: 'go mod verify'
+  module_verify_result: pass
+  package_list: 'go list ./...'
+  package_list_result: pass
+  format: 'gofmt -l internal/usecase/generar_ficha.go internal/usecase/generar_ficha_test.go'
+  format_result: pass
+  diff_check: 'git diff --check'
+  diff_check_result: pass
+  api_signature: 'func (uc *GenerarFicha) Ejecutar(ctx context.Context, leadID string) (*domain.Ficha, error)'
+  timestamp_update: 'toSave.ActualizadoEn = uc.Reloj.Ahora() before LeadRepository.Guardar'
+  legacy_api_removed: true
+  runtime_harness: N/A — synchronous provider-free usecase; fixed clock/ID and retry-after-CAS fake harness exercised
+  rollback: revert the two Slice 2 usecase files
+  commit: '21751e1 feat(usecase): generate advisor ficha'
+verify:
+  schema: gentle-ai.verify-result/v1
+  run: independent final requirements/runtime verification
+  verdict: pass_with_warnings
+  substantive_failure: false
+  command_failed: false
+  authority_lineage: review-90c09c25bf720d01
+  authority_gate: post-apply allow
+  evidence_revision: sha256:defc2383caf6f10de695bf896254b23201d457882190ceec0cee07483aa615ea
+  observed_authority_revision: sha256:af0ef565cb7571ae04d4b06d9ea4be86e0c795c77389acb16bb19dc88a7b84ab
+  requirements_compliant: 6/6
+  scenarios_compliant: 7/7
+  tasks: 10/10
+  slice_1_source_lines: 400
+  slice_2_source_lines: 388
+  hardening_test_lines: 63
+  validator_available: false
+  admission: self_checked_validator_unavailable
+  diagnostics:
+    focused_edges: 'go test ./internal/usecase -run TestCalificarLead(PriorityCapsRatioAndUsesPartialConfidence|NonCanonicalCatalogKeyOmitsKNNZone|RutaDecididaPayloadContainsCopiedDecisionData) -count=1 -v — exit 0'
+    focused_calificar: 'go test ./internal/usecase -run TestCalificarLead -count=1 -v — exit 0'
+    focused_ficha: 'go test ./internal/usecase -run TestGenerarFicha -count=1 -v — exit 0'
+    full_test: 'go test ./... -count=1 — exit 0'
+    race_test: 'go test -race ./... -count=1 — exit 0'
+    build: 'go build ./... — exit 0'
+    vet: 'go vet ./... — exit 0'
+    mod_verify: 'go mod verify — exit 0'
+    mod_tidy_diff: 'go mod tidy -diff — exit 0'
+    gofmt: 'gofmt -l internal/usecase/ — no output'
+    diff_check: 'git diff --check — no output'
+  warnings:
+    - 'gentle-ai sdd-verify-validate is unavailable; this report is transparent self-checked fallback, not validator-attested.'
+    - 'Engram spec/apply-progress observations retain correction/progress summaries; OpenSpec files remain the complete repository audit source.'
+  archive_ready: true
+last_updated: 2026-07-25T22:58:00-05:00

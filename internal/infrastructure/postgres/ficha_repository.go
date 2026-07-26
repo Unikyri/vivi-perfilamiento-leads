@@ -6,12 +6,11 @@ import (
 
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/domain"
 	"github.com/Unikyri/vivi-perfilamiento-leads/internal/usecase"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type FichaRepository struct{ pool *pgxpool.Pool }
+type FichaRepository struct{ pool pgxPool }
 
-func NuevoFichaRepository(pool *pgxpool.Pool) *FichaRepository { return &FichaRepository{pool: pool} }
+func NuevoFichaRepository(pool pgxPool) *FichaRepository { return &FichaRepository{pool: pool} }
 
 var _ usecase.FichaRepository = (*FichaRepository)(nil)
 

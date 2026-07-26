@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "verificar": "tsc --noEmit"
+    "verificar": "tsc --noEmit",
+    "verify:build": "node -e \"const fs=require('fs'),path=require('path');const root=path.resolve('..','internal','adapters','http','estaticos'),index=path.join(root,'index.html'),assets=path.join(root,'assets');if(!fs.statSync(index).isFile()||fs.statSync(index).size===0||!fs.readdirSync(assets).some(name=>fs.statSync(path.join(assets,name)).isFile()))throw new Error('Vite output missing index.html or hashed assets');const refs=fs.readFileSync(index,'utf8').split(/(?:src|href)=/).slice(1).map(value=>value.split(/[\\\\s>]/)[0].replaceAll(String.fromCharCode(34),'').replaceAll(String.fromCharCode(39),'')).filter(value=>value.startsWith('/')).map(value=>value.slice(1));for(const ref of refs){if(!fs.statSync(path.join(root,ref)).isFile())throw new Error('Generated asset is missing: '+ref)}\""
   },
   "devDependencies": {
     "typescript": "5.8.3",

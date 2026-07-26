@@ -1,0 +1,151 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-19-procesar-mensaje
+issue:
+  number: 19
+  url: https://github.com/Unikyri/vivi-perfilamiento-leads/issues/19
+  title: "[A11] Caso de uso: ProcesarMensaje (turno conversacional, US-03..06)"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: archived
+current_phase: archive
+next_recommended: none
+parallel_ready:
+  - verify
+branch: feat/issue-19-procesar-mensaje
+worktree: /tmp/vivi-issue-19-edges
+base: origin/main
+delivery:
+  strategy: feature-branch-chain
+  tracker_branch: feat/issue-19-procesar-mensaje
+  target: main
+  review_budget_authored_lines: 400
+  hard_stop_authored_lines: 400
+  budget_risk: high_measured_585
+  size_exception: prohibited
+  decision_needed_before_apply: false
+  exact_forecast:
+    additions: 585
+    deletions: 0
+    by_file:
+      internal/usecase/procesar_mensaje.go: { additions: 265, deletions: 0 }
+      internal/usecase/siguiente_pregunta.go: { additions: 42, deletions: 0 }
+      internal/usecase/procesar_mensaje_test.go: { additions: 278, deletions: 0 }
+  final_measured:
+    base: origin/main
+    files:
+      internal/usecase/procesar_mensaje.go: { additions: 127, deletions: 14 }
+      internal/usecase/siguiente_pregunta.go: { additions: 5, deletions: 1 }
+      internal/usecase/procesar_mensaje_test.go: { additions: 179, deletions: 2 }
+    additions: 311
+    deletions: 17
+    total: 328
+    within_budget: true
+  slices:
+    - name: core
+      base: feat/issue-19-procesar-mensaje
+      budget: 317
+    - name: edges
+      base: pr-1-core
+      budget: 268
+scope:
+  include:
+    - internal/usecase/procesar_mensaje.go
+    - internal/usecase/siguiente_pregunta.go
+    - internal/usecase/procesar_mensaje_test.go
+    - validated text/audio turn using existing ports
+    - profile merge, motor recalculation, limits, ordered messages, completion event de-duplication
+  exclude:
+    - ADK graph and agent wiring
+    - HTTP handlers and frontend/polling
+    - changes to LLMProvider, EntradaTurno, SalidaTurno, domain profile vocabulary, or Contract files
+    - kNN, recommendations, routing, ficha, nutrition plan, migrations, and external services
+    - provider-returned audio transcription (separate contrato change)
+dependencies:
+  issue_7: satisfied
+  issue_8: satisfied
+  issue_11: satisfied
+  issue_15: satisfied
+  issue_16: satisfied_for_boundary
+  issue_17: satisfied_for_boundary
+  issue_18: satisfied
+blocks:
+  - 20
+  - 24
+phases:
+  explore: success
+  propose: success
+  spec: success
+  design: success
+  tasks: success
+  apply: success
+  verify: success
+  archive: success
+task_progress:
+  total: 7
+  completed: 7
+  pending: 0
+  all_complete: true
+artifacts:
+  exploration: openspec/changes/issue-19-procesar-mensaje/exploration.md
+  proposal: openspec/changes/issue-19-procesar-mensaje/proposal.md
+  spec: openspec/changes/issue-19-procesar-mensaje/specs/procesar-mensaje/spec.md
+  design: openspec/changes/issue-19-procesar-mensaje/design.md
+  tasks: openspec/changes/issue-19-procesar-mensaje/tasks.md
+  apply_progress: openspec/changes/issue-19-procesar-mensaje/apply-progress.md
+  state: openspec/changes/issue-19-procesar-mensaje/state.yaml
+engram_topics:
+  exploration: sdd/issue-19-procesar-mensaje/explore
+  proposal: sdd/issue-19-procesar-mensaje/proposal
+  spec: sdd/issue-19-procesar-mensaje/spec
+  design: sdd/issue-19-procesar-mensaje/design
+  tasks: sdd/issue-19-procesar-mensaje/tasks
+  apply_progress: sdd/issue-19-procesar-mensaje/apply-progress
+  state: sdd/issue-19-procesar-mensaje/state
+capabilities:
+  new:
+    - procesar-mensaje
+  modified: []
+decisions:
+  files: Create exactly procesar_mensaje.go, siguiente_pregunta.go, procesar_mensaje_test.go; no ADK, HTTP, port, DTO, or Contract edits.
+  interface: EntradaMensaje, ProcesarMensaje, sentinels, and question helpers are declared only in the new usecase files; preserve existing port signatures.
+  helpers: Use exact issue priority ingreso_hogar, recursos_propios, zona_deseada, plazo_compra_meses, arriendo_actual, personas_hogar; completion requires the first three.
+  motor: Use motor.CalcularCapacidad(updatedPerfil, lead.Afiliado, 0); no ParametrosCredito, no domain.Campo* symbols.
+  profile_integrity: Validate all recognized output before mutation; preserve verified fields, downgrade provider VERIFICADO_BASE to DECLARADO, ignore unknown keys, reject duplicate recognized keys, and normalize integral JSON numbers.
+  ordering: Validate -> PorID -> Conversacion/count -> one provider call -> validate/merge/motor -> inbound LEAD message -> lead CAS Guardar -> VIVI response -> PerfilCompleto event; no transaction exists across these writes.
+  validation: Text valid UTF-8, nonblank and <=2000 runes; audio strict-decodes, is nonempty and <=2MB, 1-60s, MIME audio/webm, audio/ogg, or audio/mpeg; invalid input makes no provider call and no write.
+  history: Count all persisted AutorMensajeLead records; pass the last six existing chronological messages plus current MensajeUsuario to the one provider call.
+  turns: Accepted input is existing lead turns plus one; caps are 4 affiliate and 6 non-affiliate; post-cap is rejected before dispatch and cap plus CONTINUAR completes.
+  completion: Complete on PERFIL_COMPLETO, completed critical trio, or cap plus CONTINUAR unless a terminal safety/consent action prevails; transition PERFILANDO to CALIFICADO and publish PerfilCompleto once after durability.
+  completion_gate: Conversational gate is ingreso_hogar, recursos_propios, zona_deseada; domain.CamposCriticos remains unchanged.
+  audio: Texto is caller-supplied transcription; valid audio has one in-memory ProcesarAudio call, persisted normal audio has audio_original=true, and raw bytes are discarded.
+  audio_inintelligible: Persist only SalidaTurno.Respuesta; do not persist inbound history or mutate profile, capacity, intention, or state and do not emit completion.
+  transcription_followup: Provider-returned transcription requires a separate contrato-labelled change adding SalidaTurno.transcripcion plus parser, guardrails, Gemini/Qwen adapters, and tests.
+  pausar_contacto: PAUSAR_CONTACTO stores only the response; no ad-hoc non-Contract event; consent/route lifecycle belongs to issue 20.
+  isolation: No ADK, HTTP, coordinator, recommendation, routing, or ficha work; provider retries and fallback remain provider-owned.
+risks:
+  - Non-atomic lead CAS plus message inserts can leave partial state; event is only after final response durability.
+  - Contract 2.5 transcription is unavailable without a caller transcript; separate DTO change is required.
+  - Exact likely scope is 585 authored additions and requires two chained PRs of 317 and 268 lines; no size exception is permitted.
+  - Rejecting non-PERFILANDO turns blocks post-qualification chat until issue 20.
+  - The one-call constraint means post-merge motor values can only be offered to the next turn, not safely quoted in the current response.
+  - Qwen ProcesarAudio returns a typed capability error.
+last_updated: 2026-07-25T20:35:00-05:00
+remediation:
+  status: complete
+  warnings: [W2, W3, W4, W6]
+  receipt_status: superseded_by_remediation
+  review_started: false
+  review_finalized: false
+  archive_started: false
+
+archive:
+  date: 2026-07-25
+  path: openspec/changes/archive/2026-07-25-issue-19-procesar-mensaje
+  review_gate: allow
+  review_lineage: review-f584989d93fb41b9
+  native_review_receipt: approved-and-bound
+  native_review_post_archive: receipt remains historical evidence for the pre-archive candidate; gates that rediscover the moved paths must validate a new candidate or explicitly use archive evidence
+  runtime_code_test_delta_against_origin_main: 328
+  source_and_tests_preserved: true

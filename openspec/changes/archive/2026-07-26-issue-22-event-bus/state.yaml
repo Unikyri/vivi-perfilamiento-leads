@@ -1,0 +1,61 @@
+schema: gentle-ai.sdd-state/v1
+change: issue-22-event-bus
+issue:
+  number: 22
+  title: "[A14] Bus de eventos + Coordinadora (Mediator) y agentes"
+artifact_store:
+  mode: hybrid
+  primary: engram
+  repository: openspec
+status: active
+current_phase: apply
+next_recommended: verify
+worktree: /tmp/vivi-issue-22
+branch: feat/issue-22-event-bus
+delivery_strategy: auto-chain
+strict_tdd: false
+artifacts:
+  exploration: done
+  proposal: done
+  specs: done
+  design: done
+  tasks: done
+  apply_progress: done
+  verify_report: pending
+  archive_report: pending
+capabilities:
+  new:
+    - bus-eventos
+    - coordinadora-agentes
+  modified: []
+constraints:
+  review_budget_changed_lines: 400
+  no_llm_or_adk_or_http_or_composition: true
+  no_ports_or_domain_or_existing_usecase_changes: true
+  no_duplicate_ruta_decidida: true
+  plain_go_only: true
+  privacy_safe_logging_only: true
+  deep_copy_per_subscriber: true
+paths:
+  create:
+    - internal/infrastructure/bus/memoria.go
+    - internal/infrastructure/bus/memoria_test.go
+    - internal/adapters/agentes/agentes.go
+    - internal/adapters/agentes/coordinadora.go
+    - internal/adapters/agentes/coordinadora_test.go
+slices:
+  - id: 1
+    scope: "In-memory bus: order, sync dispatch, deep copy, panic isolation, safe logging"
+    forecast_authored_lines: 340
+  - id: 2
+    scope: "Coordinadora: deterministic routing table, qualification skip, ASESOR ficha, tick dispatch"
+    forecast_authored_lines: 340
+risks:
+  - "Issue #22 code sketch republishes RutaDecidida and would duplicate the canonical #20 event."
+  - "Issue sketch calls CalificarLead.Ejecutar(ctx, leadID); the merged signature takes EntradaCalificar."
+  - "PerfilCompleto is also emitted by the #21 reprofile handoff; qualification must skip ErrLeadNoCalificable."
+  - "Evento.Payload is untyped; handlers must validate, never guess."
+notes:
+  - "File paths follow Issue #22 and ADR-1, superseding the exploration's internal/usecase placement."
+  - "Runtime harness is N/A for both slices; deterministic in-memory tests are the correct evidence boundary."
+last_updated: 2026-07-26T01:34:00-05:00
