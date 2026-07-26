@@ -3,69 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Vivi — Asesora digital de vivienda Colsubsidio. Sistema inteligente de perfilamiento y calificación de leads." />
-    <title>Vivi — Asesora digital de vivienda</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index-9EMKoASS.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BO4L7bib.css">
+    <meta name="description" content="Vivi — consola comercial de perfilamiento de leads." />
+    <title>Vivi · Asesora de vivienda</title>
+    <script type="module" crossorigin src="/assets/index-CCuR7Abi.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-VLs-dZ76.css">
   </head>
   <body>
-    <header class="barra-superior">
-      <div class="brand-container">
-        <img src="/logo-colsubsidio-blanco.png" alt="Colsubsidio" class="logo-colsubsidio-img" />
-        <span class="brand-divider">|</span>
-        <span class="brand-subtitle">Vivi - Asesora Digital</span>
-      </div>
-
-      <div id="botonera-demo" class="botonera-demo"></div>
-      <span class="badge-demo">DEMO</span>
-    </header>
-
-    <main class="split">
-      <!-- Panel Izquierdo: Vista Chat (Issue #25) -->
-      <section id="panel-chat" class="panel panel-chat" aria-label="Vista del cliente en WhatsApp"></section>
-
-      <button type="button" class="btn-colapsar btn-colapsar-chat" data-colapsar="panel-chat"
-        aria-expanded="true" aria-controls="panel-chat" title="Contraer/expandir chat">‹</button>
-
-      <!-- Panel Derecho: Vista Asesor / Dashboard (Issue #26) -->
-      <section id="panel-asesor" class="panel panel-asesor" aria-label="Panel del Asesor Comercial">
-        <!--
-          THESIS: Vivi's advisor panel is a calm lead workspace — legible,
-          breathable rounded cards — not an audited paper report.
-          OWN-WORLD: Colsubsidio blue/amarillo kept exactly as brand-fixed;
-          white rounded cards (14-16px) on a soft blue-gray ground; Inter
-          throughout with tabular figures (no separate mono register);
-          semaphore state as a small rounded pill plus a left accent bar;
-          color spent selectively — blue for identity/actions, amarillo for
-          the single next-step, semaphore trio for status only.
-          STORY: Advisor scans the queue as clean cards, opens a lead and
-          reads capacity/verdict as calm data cards, never dense rows.
-          FIRST VIEWPORT: Cola tab — masthead with lead count + cupo gauge,
-          then a scrollable list of rounded lead cards (avatar initials,
-          name, ruta, afiliado badge, semaphore pill, priority, chat button).
-          FORM: direct redesign from a user-pinned reference image, adapted
-          to the real API contract (no lead segment in /api/leads) and the
-          existing Colsubsidio brand constraints — no ideation tournament
-          run, the reference was pinned, not open.
-        -->
-        <nav class="tabs" role="tablist" aria-label="Navegación del Asesor">
-          <button role="tab" id="tab-cola" data-tab="cola" aria-selected="true" aria-controls="contenido-tab">Cola</button>
-          <button role="tab" id="tab-ficha" data-tab="ficha" aria-selected="false" aria-controls="contenido-tab">Ficha</button>
-          <button role="tab" id="tab-gerencia" data-tab="gerencia" aria-selected="false" aria-controls="contenido-tab">Gerencia</button>
-        </nav>
-        <div id="contenido-tab" role="tabpanel" aria-labelledby="tab-cola"></div>
-      </section>
-
-      <button type="button" class="btn-colapsar btn-colapsar-asesor" data-colapsar="panel-asesor"
-        aria-expanded="true" aria-controls="panel-asesor" title="Contraer/expandir panel del asesor">›</button>
-    </main>
-
-    <footer class="pie">
-      Demo con datos sintéticos y anonimizados. No contiene información real de personas.
-    </footer>
-
+    <div id="app" aria-live="polite"></div>
   </body>
 </html>
