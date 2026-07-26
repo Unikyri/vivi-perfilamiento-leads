@@ -1,9 +1,13 @@
 package config
 
-import "testing"
+import (
+	"net/netip"
+	"testing"
+)
 
 func TestCargarUsaDefaults(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("TRUSTED_PROXY_CIDRS", "")
 	c, err := Cargar()
 	if err != nil {
 		t.Fatalf("error inesperado: %v", err)
@@ -37,5 +41,25 @@ func TestCargarDemoSeedRequiresExplicitTrue(t *testing.T) {
 	c, err = Cargar()
 	if err != nil || !c.DemoSeed {
 		t.Fatalf("enabled config=%+v err=%v", c, err)
+	}
+}
+
+func TestCargarTrustedProxyCIDRs(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("TRUSTED_PROXY_CIDRS", "127.0.0.0/8, ::1/128")
+	c, err := Cargar()
+	if err != nil || len(c.TrustedProxyCIDRs) != 2 {
+		t.Fatalf("trusted proxies=%v err=%v", c.TrustedProxyCIDRs, err)
+	}
+	if !c.TrustedProxyCIDRs[0].Contains(netip.MustParseAddr("127.0.0.1")) || !c.TrustedProxyCIDRs[1].Contains(netip.MustParseAddr("::1")) {
+		t.Fatalf("unexpected trusted proxies: %v", c.TrustedProxyCIDRs)
+	}
+}
+
+func TestCargarRejectsMalformedTrustedProxyCIDRs(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("TRUSTED_PROXY_CIDRS", "127.0.0.1/999")
+	if _, err := Cargar(); err == nil {
+		t.Fatal("expected malformed trusted proxy CIDR error")
 	}
 }
